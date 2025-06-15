@@ -8,7 +8,7 @@ import { dashboardNavItems, siteConfig } from '@/config/site';
 import { Logo } from '@/components/shared/logo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // AvatarImage removed
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,11 +26,10 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  // SidebarTrigger, // SidebarTrigger is not used directly here, but good to keep if needed later
   SidebarInset,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, UserCircle } from 'lucide-react'; // UserCircle added
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -51,9 +50,9 @@ function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 border-2 border-primary">
-            <AvatarImage src="https://placehold.co/40x40.png" alt={`${user.firstName} ${user.lastName}`} data-ai-hint="avatar user" />
+            {/* AvatarImage removed */}
             <AvatarFallback>
-              {user.firstName && user.lastName ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase() : user.email.substring(0, 2).toUpperCase()}
+              <UserCircle className="h-7 w-7" />
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -208,7 +207,7 @@ export default function DashboardLayout({
 
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider> {/* Removed defaultOpen prop, managed by cookie/state */}
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex flex-1 flex-col">
