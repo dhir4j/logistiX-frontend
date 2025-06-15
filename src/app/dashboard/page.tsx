@@ -58,7 +58,7 @@ export default function DashboardPage() {
               Our support team is ready to help you with any queries or issues you might have.
               Explore our contact options or use the pricing calculator for quick estimates.
             </p>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
                 <Link href="/dashboard/contact">
                   <MessageSquare className="mr-2 h-4 w-4" /> Contact Support
@@ -71,13 +71,13 @@ export default function DashboardPage() {
               </Button>
             </div>
           </div>
-          <div className="hidden md:block">
+          <div className="hidden md:block p-4"> {/* Added padding for visual separation */}
             <Image
               src="/images/second.png"
               alt="Customer Support Illustration"
-              width={500}
-              height={333}
-              className="object-cover w-full"
+              width={400} // Reduced width
+              height={267} // Reduced height (maintaining aspect ratio approx 3:2)
+              className="object-cover w-full rounded-md" // Added rounded-md for aesthetics
             />
           </div>
         </div>

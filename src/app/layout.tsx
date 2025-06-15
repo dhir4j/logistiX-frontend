@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import { Providers } from '@/components/providers';
 import './globals.css';
-import { LandingFooter } from '@/app/page'; 
+// Removed LandingFooter import as it's handled by specific page layouts
 
 export const metadata: Metadata = {
   title: 'Shed Load Overseas - RS SWIFT COURIERS LLP',
@@ -30,7 +30,7 @@ export default function RootLayout({
           <div className="flex-1 flex flex-col">
             {children}
           </div>
-          <LandingFooter />
+          {/* LandingFooter removed from here to avoid duplication */}
         </Providers>
         <Toaster />
       </body>
