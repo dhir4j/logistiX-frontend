@@ -34,8 +34,8 @@ export default function AboutUsPage() {
                 <Image
                   src="/images/mission.png"
                   alt="Illustration of a compass symbolizing our mission"
-                  width={150}
-                  height={112}
+                  width={173}
+                  height={129}
                   className="object-contain"
                 />
               </div>
