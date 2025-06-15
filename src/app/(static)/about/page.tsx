@@ -33,9 +33,8 @@ export default function AboutUsPage() {
             </div>
             <div className="md:w-1/2">
               <Image
-                src="https://placehold.co/600x450.png"
-                alt="Team working on logistics"
-                data-ai-hint="logistics team meeting"
+                src="/images/girl.png"
+                alt="Smiling woman working on a laptop in a logistics context"
                 width={600}
                 height={450}
                 className="object-cover w-full h-full"
