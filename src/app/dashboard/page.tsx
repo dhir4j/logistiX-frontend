@@ -75,9 +75,9 @@ export default function DashboardPage() {
             <Image
               src="/images/second.png"
               alt="Customer Support Illustration"
-              width={400} // Reduced width
-              height={267} // Reduced height (maintaining aspect ratio approx 3:2)
-              className="object-cover w-full rounded-md" // Added rounded-md for aesthetics
+              width={280} 
+              height={187} 
+              className="object-cover w-full rounded-md" 
             />
           </div>
         </div>
