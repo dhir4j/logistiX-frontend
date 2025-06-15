@@ -51,7 +51,7 @@ function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 border-2 border-primary">
-            <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png?text=${user.firstName?.charAt(0)}${user.lastName?.charAt(0)}`} alt={`${user.firstName} ${user.lastName}`} />
+            <AvatarImage src="https://placehold.co/40x40.png" alt={`${user.firstName} ${user.lastName}`} data-ai-hint="avatar user" />
             <AvatarFallback>
               {user.firstName && user.lastName ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase() : user.email.substring(0, 2).toUpperCase()}
             </AvatarFallback>

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -25,8 +26,8 @@
     --secondary: 215 28% 90%; /* Slightly darker gray for secondary elements */
     --secondary-foreground: 222 47% 11%;
 
-    --accent: 35 85% 60%; /* New: Golden Yellow */
-    --accent-foreground: 20 80% 15%; /* Dark text for accent */
+    --accent: 335 70% 65%; /* New: Pink */
+    --accent-foreground: 335 70% 15%; /* Dark text for accent */
 
     --destructive: 0 72% 51%; /* Updated destructive to be more vibrant */
     --destructive-foreground: 0 0% 98%;
@@ -39,16 +40,16 @@
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 206 69% 50%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 35 85% 58%; /* Adjusted accent for sidebar */
-    --sidebar-accent-foreground: 20 80% 15%;
+    --sidebar-accent: 335 70% 63%; /* Adjusted accent for sidebar */
+    --sidebar-accent-foreground: 335 70% 15%;
     --sidebar-border: 215 20% 80%;
     --sidebar-ring: 206 69% 48%; /* Adjusted ring for sidebar */
 
     --chart-1: 206 69% 55%;
-    --chart-2: 35 85% 60%;
+    --chart-2: 335 70% 65%; /* Pink for charts */
     --chart-3: 215 28% 70%;
     --chart-4: 206 50% 45%;
-    --chart-5: 35 70% 50%;
+    --chart-5: 35 70% 50%; /* Retained a gold/orange for variety if needed */
   }
 
   .dark {
@@ -73,8 +74,8 @@
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --accent: 35 85% 60%;
-    --accent-foreground: 20 80% 15%;
+    --accent: 335 70% 65%; /* New: Pink */
+    --accent-foreground: 335 70% 15%; /* Dark text for accent */
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
@@ -86,13 +87,13 @@
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 206 69% 55%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 35 85% 60%;
-    --sidebar-accent-foreground: 20 80% 15%;
+    --sidebar-accent: 335 70% 65%; /* Pink for dark sidebar */
+    --sidebar-accent-foreground: 335 70% 15%;
     --sidebar-border: 217 33% 25%;
     --sidebar-ring: 206 69% 50%;
     
     --chart-1: 206 69% 55%;
-    --chart-2: 35 85% 60%;
+    --chart-2: 335 70% 65%; /* Pink for charts */
     --chart-3: 210 40% 80%;
     --chart-4: 206 50% 45%;
     --chart-5: 35 70% 50%;
