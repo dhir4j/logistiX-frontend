@@ -30,10 +30,10 @@ export default function AboutUsPage() {
                   We leverage technology and a dedicated team to ensure your shipments are handled with utmost care and precision, from booking to final delivery.
                 </p>
               </div>
-              <div className="lg:w-1/4 mt-6 lg:mt-0 flex items-center justify-center lg:justify-end w-full">
+              <div className="lg:w-1/4 mt-6 lg:mt-0 flex items-center justify-center lg:justify-end w-full p-6">
                 <Image
                   src="/images/mission.png"
-                  alt="Illustration representing our company mission, a compass"
+                  alt="Illustration of a compass symbolizing our mission"
                   width={150}
                   height={112}
                   className="object-contain"
@@ -49,7 +49,7 @@ export default function AboutUsPage() {
           </CardHeader>
           <CardContent>
             <CardDescription className="text-md text-muted-foreground">
-                Shed Load Overseas is a premier service brand under RS SWIFT COURIERS LLP. We combine local expertise with a global outlook to provide top-tier courier and cargo solutions.
+                Shed Load Overseas is a premier service brand proudly operating under the umbrella of RS SWIFT COURIERS LLP. This strategic alignment allows us to combine deep-rooted local expertise with a broad global outlook, ensuring we consistently provide top-tier courier and cargo solutions. RS SWIFT COURIERS LLP is committed to upholding the highest standards of service, reliability, and innovation across all its operations, empowering Shed Load Overseas to deliver excellence.
             </CardDescription>
           </CardContent>
         </Card>
