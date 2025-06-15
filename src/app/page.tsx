@@ -14,8 +14,15 @@ import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, Shiel
 export function LandingHeader() {
   return (
     <header className="py-4 px-6 md:px-10 flex justify-between items-center sticky top-0 z-50 bg-background/90 backdrop-blur-sm border-b">
-      <Link href="/" className="text-2xl font-headline font-semibold text-primary">
-        Shed Load Overseas
+      <Link href="/" className="flex items-center text-primary hover:text-primary/90">
+        <Image
+          src="/images/brand.png"
+          alt="Shed Load Overseas Logo"
+          width={180} 
+          height={45} 
+          className="object-contain"
+          priority
+        />
       </Link>
       <nav className="space-x-2 sm:space-x-4">
         <Button asChild variant="ghost">
@@ -169,7 +176,7 @@ export default function HomePage() {
         <section className="py-16 md:py-24 lg:py-32 px-6 md:px-10 bg-gradient-to-br from-primary/10 via-background to-background text-center">
           <div className="container mx-auto max-w-4xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-extrabold text-primary mb-6">
-              Shed Load Overseas: Your Global Logistics Partner.
+              Shed Load Overseas: <br /> Your Global Logistics Partner.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
               Experience seamless courier and cargo services with Shed Load Overseas. Book, track, and manage your deliveries with unparalleled ease and confidence, worldwide.
@@ -181,19 +188,7 @@ export default function HomePage() {
                 </Link>
               </Button>
             </div>
-            <div className="mt-12">
-              <svg width="600" height="338" viewBox="0 0 200 112.5" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-2xl mx-auto">
-                <rect width="200" height="112.5" rx="8" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="0.5"/>
-                <circle cx="70" cy="56" r="30" fill="hsl(var(--primary) / 0.1)" stroke="hsl(var(--primary))" strokeWidth="1.5"/>
-                <path d="M70 26 Q 85 41, 70 56 Q 55 41, 70 26" stroke="hsl(var(--primary))" strokeWidth="0.75" fill="none"/>
-                <path d="M70 86 Q 85 71, 70 56 Q 55 71, 70 86" stroke="hsl(var(--primary))" strokeWidth="0.75" fill="none"/>
-                <path d="M40 56 H 100" stroke="hsl(var(--primary))" strokeWidth="0.75" fill="none" strokeDasharray="2 2"/>
-                <rect x="115" y="46" width="30" height="20" rx="2" fill="hsl(var(--accent))" stroke="hsl(var(--accent-foreground))" strokeWidth="1"/>
-                <line x1="115" y1="56" x2="145" y2="56" stroke="hsl(var(--accent-foreground))" strokeWidth="0.5"/>
-                <line x1="130" y1="46" x2="130" y2="66" stroke="hsl(var(--accent-foreground))" strokeWidth="0.5"/>
-                <path d="M95 56 L 110 56 M 105 52 L 110 56 L 105 60" stroke="hsl(var(--primary))" strokeWidth="1.5" fill="none"/>
-              </svg>
-            </div>
+            {/* SVG Removed from here */}
           </div>
         </section>
 
