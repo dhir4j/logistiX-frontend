@@ -1,4 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, MessageSquare, MapPin, Info } from 'lucide-react';
 import Image from 'next/image';
@@ -9,12 +10,12 @@ export default function ContactPage() {
       <Card className="shadow-xl overflow-hidden">
         <div className="md:flex">
           <div className="md:w-1/2">
-             <Image 
+             <Image
                 src="https://placehold.co/600x400.png"
                 alt="Contact Us Illustration"
                 data-ai-hint="contact support"
-                width={600} 
-                height={400} 
+                width={600}
+                height={400}
                 className="object-cover w-full h-full"
              />
           </div>
