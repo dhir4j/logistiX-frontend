@@ -75,8 +75,8 @@ export default function DashboardPage() {
       </div>
 
       <Card className="shadow-lg overflow-hidden">
-        <div className="grid md:grid-cols-2 items-center">
-          <div className="p-6 md:p-8">
+        <div className="grid md:grid-cols-3 items-center"> {/* Changed to md:grid-cols-3 */}
+          <div className="p-6 md:p-8 md:col-span-2"> {/* Text content spans 2 columns */}
             <h3 className="font-headline text-2xl font-semibold mb-3 text-primary">Need Assistance?</h3>
             <p className="text-muted-foreground mb-4">
               Our support team is ready to help you with any queries or issues you might have.
@@ -95,13 +95,13 @@ export default function DashboardPage() {
               </Button>
             </div>
           </div>
-          <div className="hidden md:block p-4"> {/* Added padding for visual separation */}
+          <div className="hidden md:block p-4 md:col-span-1"> {/* Image content spans 1 column */}
             <Image
               src="/images/second.png"
               alt="Customer Support Illustration"
-              width={280} 
-              height={187} 
-              className="object-cover w-full rounded-md" 
+              width={200} 
+              height={133} 
+              className="object-contain rounded-md mx-auto" 
             />
           </div>
         </div>
