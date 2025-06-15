@@ -99,7 +99,7 @@ export function PricingCalculator() {
           <Alert className="w-full border-primary/30 bg-primary/10">
             <IndianRupee className="h-5 w-5 text-primary" />
             <AlertTitle className="font-headline text-xl text-primary">Estimated Charge</AlertTitle>
-            <AlertDescription className="text-2xl font-bold text-primary">
+            <AlertDescription className="text-2xl font-bold text-primary font-headline">
               ₹{calculatedCharge.toFixed(2)}
             </AlertDescription>
              <p className="text-xs text-muted-foreground mt-1">
