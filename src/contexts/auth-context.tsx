@@ -31,7 +31,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (email: string) => {
-    const userData: User = { id: 'demo-user', email };
+    // For demo purposes, firstName and lastName are hardcoded.
+    // In a real app, these would come from your authentication response.
+    const userData: User = { id: 'demo-user', email, firstName: 'Demo', lastName: 'User' };
     setUser(userData);
     try {
       localStorage.setItem('swifttrack_user', JSON.stringify(userData));

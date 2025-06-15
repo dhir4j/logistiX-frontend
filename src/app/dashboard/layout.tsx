@@ -51,18 +51,21 @@ function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 border-2 border-primary">
-            <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.email} />
+            <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png?text=${user.firstName?.charAt(0)}${user.lastName?.charAt(0)}`} alt={`${user.firstName} ${user.lastName}`} />
             <AvatarFallback>
-              {user.email.substring(0, 2).toUpperCase()}
+              {user.firstName && user.lastName ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase() : user.email.substring(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-64" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.email}</p>
+            <p className="text-sm font-medium leading-none">{user.firstName} {user.lastName}</p>
             <p className="text-xs leading-none text-muted-foreground">
+              {user.email}
+            </p>
+            <p className="text-xs leading-none text-muted-foreground mt-1">
               RS SWIFT COURIERS LLP
             </p>
           </div>
@@ -197,7 +200,6 @@ export default function DashboardLayout({
 
 
   if (isLoading || !isAuthenticated) {
-    // You can render a loading spinner here
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
   
