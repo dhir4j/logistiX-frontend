@@ -47,7 +47,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <Card className="shadow-lg border-primary/20">
         <CardHeader>
-          <CardTitle className="font-headline text-3xl text-primary">Welcome, {user.firstName || user.email.split('@')[0]}!</CardTitle>
+          <CardTitle className="font-headline text-2xl sm:text-3xl text-primary">Welcome, {user.firstName || user.email.split('@')[0]}!</CardTitle>
           <CardDescription className="text-lg">Manage your shipments efficiently with Shed Load Overseas.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -77,7 +77,7 @@ export default function DashboardPage() {
       <Card className="shadow-lg overflow-hidden">
         <div className="grid md:grid-cols-3 items-center"> {/* Changed to md:grid-cols-3 */}
           <div className="p-6 md:p-8 md:col-span-2"> {/* Text content spans 2 columns */}
-            <h3 className="font-headline text-2xl font-semibold mb-3 text-primary">Need Assistance?</h3>
+            <h3 className="font-headline text-xl sm:text-2xl font-semibold mb-3 text-primary">Need Assistance?</h3>
             <p className="text-muted-foreground mb-4">
               Our support team is ready to help you with any queries or issues you might have.
               Explore our contact options or use the pricing calculator for quick estimates.

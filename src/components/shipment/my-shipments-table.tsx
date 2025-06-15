@@ -51,7 +51,7 @@ export function MyShipmentsTable() {
   return (
     <Card className="shadow-xl">
       <CardHeader>
-        <CardTitle className="font-headline text-3xl flex items-center gap-2">
+        <CardTitle className="font-headline text-2xl sm:text-3xl flex items-center gap-2">
           <ListOrdered className="h-8 w-8 text-primary" /> My Shipments
         </CardTitle>
         <CardDescription>View and manage your shipment history.</CardDescription>

@@ -62,7 +62,7 @@ export function SignupForm() {
     <Card className="w-full max-w-md shadow-xl">
       <CardHeader className="items-center text-center">
         <CompanyLogo className="mb-4" />
-        <CardTitle className="font-headline text-3xl">Create Account</CardTitle>
+        <CardTitle className="font-headline text-2xl sm:text-3xl">Create Account</CardTitle>
         <CardDescription>Join Shed Load Overseas today.</CardDescription>
       </CardHeader>
       <CardContent>

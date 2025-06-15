@@ -32,7 +32,7 @@ export function ShipmentStatusIndicator({ shipmentId, currentStatus, trackingHis
   return (
     <Card className="shadow-lg w-full">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl text-primary">
+        <CardTitle className="font-headline text-xl sm:text-2xl text-primary">
           Tracking ID: {shipmentId}
         </CardTitle>
       </CardHeader>
@@ -42,7 +42,7 @@ export function ShipmentStatusIndicator({ shipmentId, currentStatus, trackingHis
             {stageOrder.map((stage, index) => (
               <div key={stage} className={`flex flex-col items-center text-xs font-medium ${index <= currentStageIndex ? 'text-primary' : 'text-muted-foreground'}`}>
                 {React.createElement(stageIcons[stage], { className: `h-6 w-6 mb-1` })}
-                <span>{stage}</span>
+                <span className="text-center">{stage}</span> {/* Added text-center for better mobile display if text wraps */}
               </div>
             ))}
           </div>
@@ -58,7 +58,7 @@ export function ShipmentStatusIndicator({ shipmentId, currentStatus, trackingHis
         <Separator />
 
         <div>
-          <h4 className="font-headline text-lg font-semibold mb-4">Shipment History</h4>
+          <h4 className="font-headline text-base sm:text-lg font-semibold mb-4">Shipment History</h4>
           {trackingHistory.length > 0 ? (
             <ul className="space-y-4">
               {trackingHistory.map((step, index) => (

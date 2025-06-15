@@ -90,7 +90,7 @@ export function BookShipmentForm() {
   return (
     <Card className="w-full shadow-xl">
       <CardHeader>
-        <CardTitle className="font-headline text-3xl flex items-center gap-2">
+        <CardTitle className="font-headline text-2xl sm:text-3xl flex items-center gap-2">
           <PackagePlus className="h-8 w-8 text-primary" /> Book a New Shipment
         </CardTitle>
         <CardDescription>Fill in the details below to schedule your shipment.</CardDescription>
@@ -98,9 +98,9 @@ export function BookShipmentForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <section className="space-y-6">
-                <h3 className="font-headline text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
+                <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
                   <User className="h-5 w-5" /> Sender Details
                 </h3>
                 <FormField control={form.control} name="senderName" render={({ field }) => (
@@ -127,7 +127,7 @@ export function BookShipmentForm() {
               </section>
 
               <section className="space-y-6">
-                <h3 className="font-headline text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
+                <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
                   <User className="h-5 w-5" /> Receiver Details
                 </h3>
                 <FormField control={form.control} name="receiverName" render={({ field }) => (
@@ -155,10 +155,10 @@ export function BookShipmentForm() {
             </div>
 
             <section className="space-y-6 pt-6 border-t">
-              <h3 className="font-headline text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
+              <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
                 <Package className="h-5 w-5" /> Package Details
               </h3>
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <FormField control={form.control} name="packageWeight" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Weight (kg)</FormLabel>
@@ -191,10 +191,10 @@ export function BookShipmentForm() {
             </section>
             
             <section className="space-y-6 pt-6 border-t">
-              <h3 className="font-headline text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
+              <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
                 <CalendarIcon className="h-5 w-5" /> Pickup & Service
               </h3>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="pickupDate" render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Pickup Date & Time</FormLabel>

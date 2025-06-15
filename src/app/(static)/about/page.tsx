@@ -7,8 +7,8 @@ export default function AboutUsPage() {
   return (
     <div className="space-y-12">
       <section className="text-center">
-        <h1 className="text-4xl font-headline font-bold text-primary mb-4">About Shed Load Overseas</h1>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+        <h1 className="text-3xl sm:text-4xl font-headline font-bold text-primary mb-4">About Shed Load Overseas</h1>
+        <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
           Your trusted partner in global logistics and courier services. We are dedicated to providing seamless, reliable, and efficient shipping solutions for businesses and individuals.
         </p>
       </section>
@@ -16,7 +16,7 @@ export default function AboutUsPage() {
       <section className="grid md:grid-cols-3 gap-8 items-stretch">
         <Card className="shadow-lg md:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="font-headline text-3xl text-primary flex items-center gap-2">
+            <CardTitle className="font-headline text-2xl sm:text-3xl text-primary flex items-center gap-2">
               <Briefcase className="h-8 w-8" /> Our Mission
             </CardTitle>
           </CardHeader>
@@ -45,7 +45,7 @@ export default function AboutUsPage() {
 
         <Card className="shadow-lg bg-muted/30 flex flex-col justify-center md:col-span-1">
           <CardHeader className="pb-2">
-            <CardTitle className="font-headline text-2xl">RS SWIFT COURIERS LLP</CardTitle>
+            <CardTitle className="font-headline text-xl sm:text-2xl">RS SWIFT COURIERS LLP</CardTitle>
           </CardHeader>
           <CardContent>
             <CardDescription className="text-md text-muted-foreground">
@@ -55,7 +55,7 @@ export default function AboutUsPage() {
         </Card>
       </section>
 
-      <section className="grid md:grid-cols-3 gap-8 text-center">
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
         {[
           { icon: Lightbulb, title: "Innovation", description: "Constantly seeking new ways to improve our services and astreamline your shipping experience." , dataAiHint: "bright idea"},
           { icon: Users, title: "Customer Focus", description: "Our customers are at the heart of everything we do. We tailor solutions to meet your unique needs." , dataAiHint: "happy customer"},
@@ -67,7 +67,7 @@ export default function AboutUsPage() {
                 <value.icon className="h-10 w-10 text-primary" />
               </div>
             </div>
-            <h3 className="font-headline text-xl font-semibold mb-2">{value.title}</h3>
+            <h3 className="font-headline text-lg sm:text-xl font-semibold mb-2">{value.title}</h3>
             <p className="text-muted-foreground text-sm">{value.description}</p>
           </Card>
         ))}

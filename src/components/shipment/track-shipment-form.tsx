@@ -128,7 +128,7 @@ export function TrackShipmentForm() {
     <div className="space-y-6">
       <Card className="w-full max-w-2xl mx-auto shadow-xl">
         <CardHeader>
-          <CardTitle className="font-headline text-3xl flex items-center gap-2">
+          <CardTitle className="font-headline text-2xl sm:text-3xl flex items-center gap-2">
             <Search className="h-8 w-8 text-primary" /> Track Your Shipment
           </CardTitle>
           <CardDescription>Enter your shipment ID to see its current status and history.</CardDescription>
@@ -140,7 +140,7 @@ export function TrackShipmentForm() {
                 control={form.control}
                 name="shipmentId"
                 render={({ field }) => (
-                  <FormItem className="flex-grow">
+                  <FormItem className="flex-grow w-full sm:w-auto">
                     <FormLabel className="sr-only">Shipment ID</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter Shipment ID (e.g., RS123456)" {...field} className="text-base py-6" />

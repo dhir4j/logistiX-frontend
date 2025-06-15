@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -45,7 +46,7 @@ export function PricingCalculator() {
   return (
     <Card className="w-full max-w-lg mx-auto shadow-xl">
       <CardHeader>
-        <CardTitle className="font-headline text-3xl flex items-center gap-2">
+        <CardTitle className="font-headline text-2xl sm:text-3xl flex items-center gap-2">
           <Calculator className="h-8 w-8 text-primary" /> Pricing Calculator
         </CardTitle>
         <CardDescription>Estimate your shipment costs quickly.</CardDescription>

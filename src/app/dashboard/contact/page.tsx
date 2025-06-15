@@ -9,7 +9,7 @@ export default function ContactPage() {
     <div className="space-y-8 max-w-4xl mx-auto">
       <Card className="shadow-xl overflow-hidden">
         <div className="md:flex">
-          <div className="md:w-1/2">
+          <div className="md:w-1/2 h-64 md:h-auto"> {/* Added h-64 for mobile, md:h-auto for larger screens */}
              <Image
                 src="/images/girl.png"
                 alt="Customer support representative"
@@ -20,7 +20,7 @@ export default function ContactPage() {
           </div>
           <div className="p-8 md:w-1/2">
             <CardHeader className="p-0 mb-6">
-              <CardTitle className="font-headline text-3xl flex items-center gap-2">
+              <CardTitle className="font-headline text-2xl sm:text-3xl flex items-center gap-2">
                 <MessageSquare className="h-8 w-8 text-primary" /> Get In Touch
               </CardTitle>
               <CardDescription>We're here to help! Reach out to us through any of the channels below.</CardDescription>
@@ -56,7 +56,7 @@ export default function ContactPage() {
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="font-headline text-2xl">Our Core Services</CardTitle>
+          <CardTitle className="font-headline text-xl sm:text-2xl">Our Core Services</CardTitle>
           <CardDescription>Comprehensive logistics solutions for your business.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">

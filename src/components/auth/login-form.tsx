@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -49,7 +50,7 @@ export function LoginForm() {
     <Card className="w-full max-w-md shadow-xl">
       <CardHeader className="items-center text-center">
         <CompanyLogo className="mb-4" />
-        <CardTitle className="font-headline text-3xl">Welcome Back</CardTitle>
+        <CardTitle className="font-headline text-2xl sm:text-3xl">Welcome Back</CardTitle>
         <CardDescription>Sign in to manage your shipments.</CardDescription>
       </CardHeader>
       <CardContent>

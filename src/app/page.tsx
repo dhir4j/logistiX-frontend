@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react'; // Added useState
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,11 +23,11 @@ export function LandingHeader() {
           priority 
         />
       </Link>
-      <nav className="space-x-2 sm:space-x-4">
-        <Button asChild variant="ghost">
+      <nav className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-2">
+        <Button asChild variant="ghost" className="w-full sm:w-auto">
           <Link href="/login">Login</Link>
         </Button>
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/signup">Sign Up</Link>
         </Button>
       </nav>
@@ -208,7 +208,7 @@ export default function HomePage() {
             <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
               Shed Load Overseas provides a comprehensive suite of tools to make your shipping experience smooth and efficient.
             </p>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {coreFeatures.map((feature) => (
                 <Card key={feature.title} className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out transform hover:-translate-y-1">
                   <CardHeader className="items-center text-center">
@@ -235,7 +235,7 @@ export default function HomePage() {
             <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
               Tailored solutions to meet all your logistical requirements.
             </p>
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {serviceHighlights.map((service) => (
                 <Card key={service.title} className="shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out">
                    <CardHeader className="flex flex-row items-start gap-4">
@@ -262,7 +262,7 @@ export default function HomePage() {
                 <h2 className="text-3xl md:text-4xl font-headline font-semibold mb-12">
                     Shipping Made Simple: Just 3 Steps
                 </h2>
-                <div className="grid md:grid-cols-3 gap-8 lg:gap-12 items-start">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-start">
                     {howItWorksSteps.map(step => (
                         <div key={step.number} className="flex flex-col items-center p-6 bg-card rounded-lg shadow-md">
                             {step.svg} 
