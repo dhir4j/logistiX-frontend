@@ -18,8 +18,8 @@ export function LandingHeader() {
         <Image
           src="/images/brand.png"
           alt="Shed Load Overseas Logo"
-          width={180} 
-          height={45} 
+          width={180}
+          height={45}
           className="object-contain"
           priority
         />
@@ -29,7 +29,7 @@ export function LandingHeader() {
           <Link href="/login">Login</Link>
         </Button>
         <Button asChild>
-          <Link href="/login">Sign Up</Link>
+          <Link href="/signup">Sign Up</Link>
         </Button>
       </nav>
     </header>
@@ -74,7 +74,7 @@ export default function HomePage() {
     );
   }
 
-  if (isAuthenticated) return null; 
+  if (isAuthenticated) return null;
 
   const coreFeatures = [
     {
@@ -119,9 +119,9 @@ export default function HomePage() {
   ];
 
   const howItWorksSteps = [
-    { 
-      title: "Book Your Shipment", 
-      description: "Enter details, choose service, and schedule a pickup in minutes.", 
+    {
+      title: "Book Your Shipment",
+      description: "Enter details, choose service, and schedule a pickup in minutes.",
       number: 1,
       svg: (
         <svg width="300" height="225" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-sm mb-6 object-cover aspect-[4/3]">
@@ -136,9 +136,9 @@ export default function HomePage() {
         </svg>
       )
     },
-    { 
-      title: "Track Your Package", 
-      description: "Monitor your package's journey with our real-time tracking system.", 
+    {
+      title: "Track Your Package",
+      description: "Monitor your package's journey with our real-time tracking system.",
       number: 2,
       svg: (
         <svg width="300" height="225" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-sm mb-6 object-cover aspect-[4/3]">
@@ -152,9 +152,9 @@ export default function HomePage() {
         </svg>
       )
     },
-    { 
-      title: "Secure Delivery", 
-      description: "Receive confirmation upon successful and safe delivery to the recipient.", 
+    {
+      title: "Secure Delivery",
+      description: "Receive confirmation upon successful and safe delivery to the recipient.",
       number: 3,
       svg: (
         <svg width="300" height="225" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-sm mb-6 object-cover aspect-[4/3]">
@@ -163,7 +163,7 @@ export default function HomePage() {
           <path d="M40 40 L50 50 L65 30" stroke="hsl(var(--primary))" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
           <rect x="60" y="50" width="15" height="10" rx="1" fill="hsl(var(--accent))" stroke="hsl(var(--accent-foreground))" strokeWidth="0.5" opacity="0.7"/>
         </svg>
-      ) 
+      )
     }
   ];
 
@@ -188,7 +188,6 @@ export default function HomePage() {
                 </Link>
               </Button>
             </div>
-            {/* SVG Removed from here */}
           </div>
         </section>
 
@@ -218,7 +217,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-        
+
         {/* Service Highlights Section */}
         <section className="py-16 md:py-24 px-6 md:px-10 bg-muted/30">
           <div className="container mx-auto">
