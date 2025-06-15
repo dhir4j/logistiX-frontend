@@ -1,14 +1,13 @@
 
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react'; // Added useState
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-// CompanyLogo import removed as it's not used in this file after header change
 import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2, Globe, CreditCard, Send, Repeat, Truck, Users, Info } from 'lucide-react';
 
 export function LandingHeader() {
@@ -37,16 +36,21 @@ export function LandingHeader() {
 }
 
 export function LandingFooter() {
+  const [currentYear, setCurrentYear] = useState('');
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear().toString());
+  }, []);
+
   return (
     <footer className="py-8 px-6 md:px-10 text-center border-t bg-muted/50">
       <div className="container mx-auto">
-        {/* CompanyLogo component could be re-added here if desired, or keep it simple */}
         <div className="mb-4">
            <Image src="/images/brand.png" alt="Shed Load Overseas Footer Logo" width={150} height={40} className="object-contain mx-auto"/>
            <p className="text-xs text-muted-foreground mt-1">RS SWIFT COURIERS LLP</p>
         </div>
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Shed Load Overseas - RS SWIFT COURIERS LLP. All rights reserved.
+          &copy; {currentYear} Shed Load Overseas - RS SWIFT COURIERS LLP. All rights reserved.
         </p>
         <div className="mt-4 space-x-4 flex flex-wrap justify-center">
           <Link href="/about" className="text-xs text-muted-foreground hover:text-primary">About Us</Link>
@@ -261,8 +265,7 @@ export default function HomePage() {
                 <div className="grid md:grid-cols-3 gap-8 lg:gap-12 items-start">
                     {howItWorksSteps.map(step => (
                         <div key={step.number} className="flex flex-col items-center p-6 bg-card rounded-lg shadow-md">
-                            {/* Removed the separate number circle */}
-                            {step.svg} {/* SVG remains */}
+                            {step.svg} 
                             <h3 className="text-xl font-semibold font-headline mb-2 mt-4">{step.number}. {step.title}</h3>
                             <p className="text-muted-foreground text-sm">{step.description}</p>
                         </div>
