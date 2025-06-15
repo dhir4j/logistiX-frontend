@@ -75,9 +75,9 @@ export default function DashboardPage() {
             <Image
               src="/images/second.png"
               alt="Customer Support Illustration"
-              width={600}
-              height={400}
-              className="object-cover w-full h-full"
+              width={500}
+              height={333}
+              className="object-cover w-full"
             />
           </div>
         </div>
