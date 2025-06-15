@@ -26,8 +26,8 @@
     --secondary: 215 28% 90%; /* Slightly darker gray for secondary elements */
     --secondary-foreground: 222 47% 11%;
 
-    --accent: 280 100% 85%; /* New: Light purple #e6b3ff */
-    --accent-foreground: 280 70% 15%; /* Dark purple for contrast */
+    --accent: 330 100% 80%; /* New Pink #ff99cc */
+    --accent-foreground: 330 70% 30%; /* Dark Magenta for contrast */
 
     --destructive: 0 72% 51%; /* Updated destructive to be more vibrant */
     --destructive-foreground: 0 0% 98%;
@@ -40,16 +40,16 @@
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 206 69% 50%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 280 100% 85%; /* Adjusted accent for sidebar */
-    --sidebar-accent-foreground: 280 70% 15%;
+    --sidebar-accent: 330 100% 80%; /* Adjusted accent for sidebar */
+    --sidebar-accent-foreground: 330 70% 30%;
     --sidebar-border: 215 20% 80%;
     --sidebar-ring: 206 69% 48%; /* Adjusted ring for sidebar */
 
     --chart-1: 206 69% 55%;
-    --chart-2: 280 100% 85%; /* Light purple for charts */
+    --chart-2: 330 100% 80%; /* New Pink for charts */
     --chart-3: 215 28% 70%;
     --chart-4: 206 50% 45%;
-    --chart-5: 35 70% 50%; /* Retained a gold/orange for variety if needed */
+    --chart-5: 35 70% 50%;
   }
 
   .dark {
@@ -74,8 +74,8 @@
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --accent: 280 100% 85%; /* New: Light purple #e6b3ff */
-    --accent-foreground: 280 70% 15%; /* Dark purple for contrast */
+    --accent: 330 100% 80%; /* New Pink #ff99cc */
+    --accent-foreground: 330 70% 30%; /* Dark Magenta for contrast */
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
@@ -87,13 +87,13 @@
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 206 69% 55%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 280 100% 85%; /* Light purple for dark sidebar */
-    --sidebar-accent-foreground: 280 70% 15%;
+    --sidebar-accent: 330 100% 80%; /* New Pink for dark sidebar */
+    --sidebar-accent-foreground: 330 70% 30%;
     --sidebar-border: 217 33% 25%;
     --sidebar-ring: 206 69% 50%;
     
     --chart-1: 206 69% 55%;
-    --chart-2: 280 100% 85%; /* Light purple for charts */
+    --chart-2: 330 100% 80%; /* New Pink for charts */
     --chart-3: 210 40% 80%;
     --chart-4: 206 50% 45%;
     --chart-5: 35 70% 50%;
@@ -107,5 +107,42 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .animated-outline-hover {
+    position: relative;
+    overflow: hidden; /* To contain the pseudo-element */
+  }
+  .animated-outline-hover::before {
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px; /* Control outline thickness */
+    border: 2px solid transparent;
+    border-radius: inherit; /* Use button's border-radius */
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  }
+  .animated-outline-hover:hover::before {
+    opacity: 1;
+    animation: pulse-outline 1.5s infinite ease-in-out;
+    border-color: hsl(var(--primary)); /* Or var(--accent) if preferred */
+  }
+
+  @keyframes pulse-outline {
+    0% {
+      transform: scale(1);
+      opacity: 0.7;
+    }
+    50% {
+      transform: scale(1.05); /* Control pulse size */
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0.7;
+    }
   }
 }
