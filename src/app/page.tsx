@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2, Globe, CreditCard, Send, Repeat, Truck, Users, Info } from 'lucide-react';
+import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2, Globe, CreditCard, Send, Repeat, Truck, Users, Info, ChevronDown } from 'lucide-react';
 
 export function LandingHeader() {
   return (
@@ -185,7 +185,6 @@ export default function HomePage() {
           <div className="container mx-auto max-w-4xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline mb-6">
               <span className="font-extrabold text-primary inline-block animate-fadeInUpSlo">Shed Load Overseas</span>
-              <br />
               <span className="block text-2xl md:text-3xl lg:text-4xl text-muted-foreground font-medium mt-1 sm:mt-2">
                 Your Global Logistics Partner.
               </span>
@@ -202,6 +201,15 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* Scroll Down Icon */}
+        <div className="relative z-10 -mt-10 mb-10 flex justify-center">
+          <Link href="#features" aria-label="Scroll to features section">
+            <div className="p-2 rounded-full hover:bg-primary/10 transition-colors animate-bounceSlo">
+              <ChevronDown className="h-8 w-8 text-primary" />
+            </div>
+          </Link>
+        </div>
 
         {/* Core Features Section */}
         <section id="features" className="py-16 md:py-24 px-6 md:px-10">
