@@ -1,8 +1,17 @@
 
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function PrivacyPolicyPage() {
+  const [lastUpdated, setLastUpdated] = useState('');
+
+  useEffect(() => {
+    setLastUpdated(new Date().toLocaleDateString());
+  }, []);
+
   return (
     <div className="space-y-8">
       <Card className="shadow-lg">
@@ -10,7 +19,7 @@ export default function PrivacyPolicyPage() {
           <CardTitle className="font-headline text-3xl flex items-center gap-2">
             <ShieldCheck className="h-8 w-8 text-primary" /> Privacy Policy
           </CardTitle>
-          <CardDescription>Last updated: {new Date().toLocaleDateString()}</CardDescription>
+          {lastUpdated && <CardDescription>Last updated: {lastUpdated}</CardDescription>}
         </CardHeader>
         <CardContent className="space-y-4 text-muted-foreground">
           <p>Welcome to Shed Load Overseas. We are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about this privacy notice, or our practices with regards to your personal information, please contact us.</p>

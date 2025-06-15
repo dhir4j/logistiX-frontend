@@ -1,8 +1,17 @@
 
+"use client";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function TermsOfServicePage() {
+  const [lastUpdated, setLastUpdated] = useState('');
+
+  useEffect(() => {
+    setLastUpdated(new Date().toLocaleDateString());
+  }, []);
+
   return (
     <div className="space-y-8">
       <Card className="shadow-lg">
@@ -10,7 +19,7 @@ export default function TermsOfServicePage() {
           <CardTitle className="font-headline text-3xl flex items-center gap-2">
             <FileText className="h-8 w-8 text-primary" /> Terms of Service
           </CardTitle>
-          <CardDescription>Last updated: {new Date().toLocaleDateString()}</CardDescription>
+          {lastUpdated && <CardDescription>Last updated: {lastUpdated}</CardDescription>}
         </CardHeader>
         <CardContent className="space-y-4 text-muted-foreground">
           <p>Welcome to Shed Load Overseas! These terms and conditions outline the rules and regulations for the use of Shed Load Overseas's Website, located at this application's domain.</p>
@@ -33,7 +42,7 @@ export default function TermsOfServicePage() {
           <p>The provided login credentials are for demonstration and testing of the application's features. You are responsible for any activity that occurs under these credentials during your session.</p>
           
           <h2 className="text-xl font-semibold text-foreground pt-4">4. Limitation of Liability</h2>
-          <p>In no event shall Shed Load Overseas, nor any of its officers, directors, and employees, be held liable for anything arising out of or in any way connected with your use of this prototype application whether such liability is under contract. Shed Load Overseas, including its officers, directors, and employees shall not be held liable for any indirect, consequential, or special liability arising out of or in any way related to your use of this Website.</p>
+          <p>In no event shall Shed Load Overseas, nor any of its officers, directors, and employees, be held liable for anything arising out of or in any way connected with your use of this prototype application whether such liability is under contract. Shed Load Overseas, including its officers, directors,and employees shall not be held liable for any indirect, consequential, or special liability arising out of or in any way related to your use of this Website.</p>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">5. Service Availability</h2>
           <p>This prototype application is provided "as is" and "as available" without any warranties, express or implied. We do not guarantee that the service will always be available, uninterrupted, or error-free.</p>

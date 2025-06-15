@@ -5,13 +5,37 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PackagePlus, Search, ListOrdered, Calculator, MessageSquare, ArrowRight } from 'lucide-react';
+import { PackagePlus, Search, ListOrdered, Calculator, MessageSquare, ArrowRight, Briefcase, TrendingUp, Megaphone, Settings2, BarChartBig, Gift } from 'lucide-react';
 import Image from 'next/image';
 
 const quickAccessItems = [
   { title: 'Book a New Shipment', href: '/dashboard/book-shipment', icon: PackagePlus, description: 'Start a new shipment process quickly.' },
   { title: 'Track Your Package', href: '/dashboard/track-shipment', icon: Search, description: 'Check the status of your existing shipment.' },
   { title: 'View My Shipments', href: '/dashboard/my-shipments', icon: ListOrdered, description: 'Access your shipment history and details.' },
+];
+
+const additionalInfoCards = [
+  {
+    icon: Settings2,
+    title: "Our Core Services",
+    description: "From express delivery to bulk cargo and international shipping, we offer a wide range of logistics solutions tailored to your needs.",
+    link: "/about",
+    linkLabel: "Learn More"
+  },
+  {
+    icon: BarChartBig,
+    title: "Solutions for Your Business",
+    description: "Empower your e-commerce, supply chain, and enterprise logistics with our reliable and scalable B2B services, including COD and reverse pickups.",
+    link: "/dashboard/contact",
+    linkLabel: "Discuss Your Needs"
+  },
+  {
+    icon: Gift,
+    title: "Latest Updates & Offers",
+    description: "Stay informed about new service areas, special promotions, and operational updates to make the most of Shed Load Overseas.",
+    link: "#", // Placeholder, could link to a dedicated news/offers page
+    linkLabel: "View Announcements"
+  }
 ];
 
 export default function DashboardPage() {
@@ -82,6 +106,31 @@ export default function DashboardPage() {
           </div>
         </div>
       </Card>
+
+      {/* Additional Informational Cards */}
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+        {additionalInfoCards.map((card) => (
+          <Card key={card.title} className="shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col">
+            <CardHeader className="flex-shrink-0">
+              <div className="flex items-center gap-3 mb-2">
+                <card.icon className="h-7 w-7 text-primary" />
+                <CardTitle className="text-xl font-headline font-medium">{card.title}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-grow">
+              <p className="text-sm text-muted-foreground">{card.description}</p>
+            </CardContent>
+            <CardContent className="pt-0 flex-shrink-0"> 
+              <Button asChild variant="link" className="p-0 text-primary hover:text-primary/80">
+                <Link href={card.link}>
+                  {card.linkLabel} <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
     </div>
   );
 }
