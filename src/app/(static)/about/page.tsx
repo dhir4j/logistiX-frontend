@@ -21,7 +21,7 @@ export default function AboutUsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col lg:flex-row items-start">
+            <div className="flex flex-col lg:flex-row lg:items-center items-start">
               <div className="lg:w-3/4 lg:pr-6">
                 <p className="text-lg text-muted-foreground mb-4">
                   To connect the world through efficient and innovative logistics. We strive to simplify shipping, making it accessible and dependable for everyone, everywhere. Our commitment is to deliver not just packages, but also peace of mind.
@@ -30,12 +30,12 @@ export default function AboutUsPage() {
                   We leverage technology and a dedicated team to ensure your shipments are handled with utmost care and precision, from booking to final delivery.
                 </p>
               </div>
-              <div className="lg:w-1/4 mt-6 lg:mt-0 flex items-center justify-center lg:justify-end w-full p-6">
+              <div className="lg:w-1/4 mt-6 lg:mt-0 flex items-center justify-center w-full">
                 <Image
                   src="/images/mission.png"
                   alt="Illustration of a compass symbolizing our mission"
-                  width={173}
-                  height={129}
+                  width={200}
+                  height={150}
                   className="object-contain"
                 />
               </div>
