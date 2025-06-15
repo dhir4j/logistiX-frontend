@@ -1,11 +1,29 @@
+
 import { Package } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function Logo({ collapsed }: { collapsed?: boolean }) {
   return (
-    <Link href="/dashboard" className="flex items-center gap-2 p-2 text-primary hover:text-primary/90">
-      <Package className={`h-8 w-8 ${collapsed ? 'mx-auto' : ''}`} />
-      {!collapsed && <span className="text-xl font-headline font-semibold">Shed Load Overseas</span>}
+    <Link href="/dashboard" className="flex items-center justify-start gap-2 p-2 text-primary hover:text-primary/90">
+      {collapsed ? (
+        <Image
+          src="https://placehold.co/32x32.png"
+          alt="App Placeholder Icon"
+          data-ai-hint="icon placeholder"
+          width={32}
+          height={32}
+          className="mx-auto"
+        />
+      ) : (
+        <Image
+          src="https://placehold.co/200x32.png"
+          alt="App Placeholder Logo"
+          data-ai-hint="logo placeholder"
+          width={200}
+          height={32}
+        />
+      )}
     </Link>
   );
 }
