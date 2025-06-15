@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/sidebar';
 import { LogOut, Menu, UserCircle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'; // Added SheetTitle
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LandingFooter } from '@/app/page'; // Import LandingFooter
 
@@ -155,6 +155,7 @@ function MobileSidebar() {
       <SheetContent side="left" className="p-0 w-72 bg-sidebar text-sidebar-foreground">
         <ScrollArea className="h-full">
           <div className="p-4">
+            <SheetTitle className="sr-only">{siteConfig.name} Menu</SheetTitle>
             <Logo />
           </div>
           <nav className="mt-4 flex flex-col gap-2 px-4">
