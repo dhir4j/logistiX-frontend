@@ -16,7 +16,7 @@ export default function AboutUsPage() {
       <section>
         <Card className="shadow-lg overflow-hidden">
           <div className="md:flex">
-            <div className="md:w-1/2 p-8 flex flex-col justify-center">
+            <div className="md:w-1/2 p-6 flex flex-col justify-center">
               <CardHeader className="p-0 mb-4">
                 <CardTitle className="font-headline text-3xl text-primary flex items-center gap-2">
                   <Briefcase className="h-8 w-8" /> Our Mission
@@ -34,9 +34,9 @@ export default function AboutUsPage() {
             <div className="md:w-1/2">
               <Image
                 src="/images/mission.png"
-                alt="Illustration or photo representing our company mission"
-                width={600}
-                height={450}
+                alt="Illustration representing our company mission, a compass"
+                width={300}
+                height={225}
                 className="object-cover w-full h-full"
               />
             </div>
