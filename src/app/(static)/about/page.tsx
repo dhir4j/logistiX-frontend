@@ -13,8 +13,8 @@ export default function AboutUsPage() {
         </p>
       </section>
 
-      <section className="grid md:grid-cols-2 gap-8 items-stretch">
-        <Card className="shadow-lg">
+      <section className="grid md:grid-cols-3 gap-8 items-stretch">
+        <Card className="shadow-lg md:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="font-headline text-3xl text-primary flex items-center gap-2">
               <Briefcase className="h-8 w-8" /> Our Mission
@@ -43,13 +43,13 @@ export default function AboutUsPage() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-lg bg-muted/30 flex flex-col justify-center">
+        <Card className="shadow-lg bg-muted/30 flex flex-col justify-center md:col-span-1">
           <CardHeader className="pb-2">
             <CardTitle className="font-headline text-2xl">RS SWIFT COURIERS LLP</CardTitle>
           </CardHeader>
           <CardContent>
             <CardDescription className="text-md text-muted-foreground">
-                Shed Load Overseas is a premier service brand proudly operating under the umbrella of RS SWIFT COURIERS LLP. This strategic alignment allows us to combine deep-rooted local expertise with a broad global outlook, ensuring we consistently provide top-tier courier and cargo solutions. RS SWIFT COURIERS LLP is committed to upholding the highest standards of service, reliability, and innovation across all its operations, empowering Shed Load Overseas to deliver excellence.
+                Shed Load Overseas operates under RS SWIFT COURIERS LLP, leveraging its expertise for top-tier global and local courier solutions. RS SWIFT COURIERS LLP champions service, reliability, and innovation, empowering Shed Load Overseas.
             </CardDescription>
           </CardContent>
         </Card>
