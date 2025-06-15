@@ -33,8 +33,8 @@ export default function AboutUsPage() {
             </div>
             <div className="md:w-1/2">
               <Image
-                src="/images/girl.png"
-                alt="Smiling woman working on a laptop in a logistics context"
+                src="/images/mission.png"
+                alt="Illustration or photo representing our company mission"
                 width={600}
                 height={450}
                 className="object-cover w-full h-full"

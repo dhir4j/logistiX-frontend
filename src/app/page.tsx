@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CompanyLogo } from '@/components/shared/logo';
+// CompanyLogo import removed as it's not used in this file after header change
 import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2, Globe, CreditCard, Send, Repeat, Truck, Users, Info } from 'lucide-react';
 
 export function LandingHeader() {
@@ -18,10 +18,10 @@ export function LandingHeader() {
         <Image
           src="/images/brand.png"
           alt="Shed Load Overseas Logo"
-          width={180}
-          height={45}
+          width={180} 
+          height={45} 
           className="object-contain"
-          priority
+          priority 
         />
       </Link>
       <nav className="space-x-2 sm:space-x-4">
@@ -40,7 +40,11 @@ export function LandingFooter() {
   return (
     <footer className="py-8 px-6 md:px-10 text-center border-t bg-muted/50">
       <div className="container mx-auto">
-        <CompanyLogo className="mb-4 justify-center" />
+        {/* CompanyLogo component could be re-added here if desired, or keep it simple */}
+        <div className="mb-4">
+           <Image src="/images/brand.png" alt="Shed Load Overseas Footer Logo" width={150} height={40} className="object-contain mx-auto"/>
+           <p className="text-xs text-muted-foreground mt-1">RS SWIFT COURIERS LLP</p>
+        </div>
         <p className="text-sm text-muted-foreground">
           &copy; {new Date().getFullYear()} Shed Load Overseas - RS SWIFT COURIERS LLP. All rights reserved.
         </p>
@@ -257,11 +261,9 @@ export default function HomePage() {
                 <div className="grid md:grid-cols-3 gap-8 lg:gap-12 items-start">
                     {howItWorksSteps.map(step => (
                         <div key={step.number} className="flex flex-col items-center p-6 bg-card rounded-lg shadow-md">
-                            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground font-bold text-2xl mb-6 shadow-md">
-                                {step.number}
-                            </div>
-                            {step.svg}
-                            <h3 className="text-xl font-semibold font-headline mb-2">{step.title}</h3>
+                            {/* Removed the separate number circle */}
+                            {step.svg} {/* SVG remains */}
+                            <h3 className="text-xl font-semibold font-headline mb-2 mt-4">{step.number}. {step.title}</h3>
                             <p className="text-muted-foreground text-sm">{step.description}</p>
                         </div>
                     ))}
