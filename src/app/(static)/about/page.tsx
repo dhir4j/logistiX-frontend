@@ -13,34 +13,45 @@ export default function AboutUsPage() {
         </p>
       </section>
 
-      <section>
-        <Card className="shadow-lg overflow-hidden">
-          <div className="md:flex">
-            <div className="md:w-1/2 p-6 flex flex-col justify-center">
-              <CardHeader className="p-0 mb-4">
-                <CardTitle className="font-headline text-3xl text-primary flex items-center gap-2">
-                  <Briefcase className="h-8 w-8" /> Our Mission
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
+      <section className="grid md:grid-cols-2 gap-8 items-stretch">
+        <Card className="shadow-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-headline text-3xl text-primary flex items-center gap-2">
+              <Briefcase className="h-8 w-8" /> Our Mission
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col lg:flex-row items-start">
+              <div className="lg:w-3/4 lg:pr-6">
                 <p className="text-lg text-muted-foreground mb-4">
                   To connect the world through efficient and innovative logistics. We strive to simplify shipping, making it accessible and dependable for everyone, everywhere. Our commitment is to deliver not just packages, but also peace of mind.
                 </p>
                 <p className="text-muted-foreground">
                   We leverage technology and a dedicated team to ensure your shipments are handled with utmost care and precision, from booking to final delivery.
                 </p>
-              </CardContent>
+              </div>
+              <div className="lg:w-1/4 mt-6 lg:mt-0 flex items-center justify-center lg:justify-end w-full">
+                <Image
+                  src="/images/mission.png"
+                  alt="Illustration representing our company mission, a compass"
+                  width={150}
+                  height={112}
+                  className="object-contain"
+                />
+              </div>
             </div>
-            <div className="md:w-1/2 p-6 flex items-center justify-center">
-              <Image
-                src="/images/mission.png"
-                alt="Illustration representing our company mission, a compass"
-                width={200}
-                height={150}
-                className="object-contain"
-              />
-            </div>
-          </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg bg-muted/30 flex flex-col justify-center">
+          <CardHeader className="pb-2">
+            <CardTitle className="font-headline text-2xl">RS SWIFT COURIERS LLP</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription className="text-md text-muted-foreground">
+                Shed Load Overseas is a premier service brand under RS SWIFT COURIERS LLP. We combine local expertise with a global outlook to provide top-tier courier and cargo solutions.
+            </CardDescription>
+          </CardContent>
         </Card>
       </section>
 
@@ -60,15 +71,6 @@ export default function AboutUsPage() {
             <p className="text-muted-foreground text-sm">{value.description}</p>
           </Card>
         ))}
-      </section>
-      
-      <section className="text-center">
-         <Card className="shadow-lg p-8 bg-muted/30">
-            <CardTitle className="font-headline text-2xl mb-4">RS SWIFT COURIERS LLP</CardTitle>
-            <CardDescription className="text-md text-muted-foreground">
-                Shed Load Overseas is a premier service brand under RS SWIFT COURIERS LLP. We combine local expertise with a global outlook to provide top-tier courier and cargo solutions.
-            </CardDescription>
-        </Card>
       </section>
     </div>
   );
