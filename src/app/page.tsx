@@ -14,7 +14,9 @@ import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, Shiel
 export function LandingHeader() {
   return (
     <header className="py-4 px-6 md:px-10 flex justify-between items-center sticky top-0 z-50 bg-background/90 backdrop-blur-sm border-b">
-      <CompanyLogo />
+      <Link href="/" className="text-2xl font-headline font-semibold text-primary">
+        Shed Load Overseas
+      </Link>
       <nav className="space-x-2 sm:space-x-4">
         <Button asChild variant="ghost">
           <Link href="/login">Login</Link>
