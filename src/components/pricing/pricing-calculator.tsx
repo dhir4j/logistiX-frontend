@@ -100,10 +100,13 @@ export function PricingCalculator() {
             <IndianRupee className="h-5 w-5 text-primary" />
             <AlertTitle className="font-headline text-xl text-primary">Estimated Charge</AlertTitle>
             <AlertDescription className="text-2xl font-bold text-primary font-headline">
-              ₹{calculatedCharge.toFixed(2)}
+              <span className="inline-flex items-center">
+                <IndianRupee className="h-6 w-6 mr-1 rtl:ml-1 rtl:mr-0" />
+                {calculatedCharge.toFixed(2)}
+              </span>
             </AlertDescription>
              <p className="text-xs text-muted-foreground mt-1">
-              This is an estimated cost. Actual charges may vary. (Base: ₹{BASE_CHARGE}, Rate: ₹{RATE_PER_HALF_KG}/0.5kg)
+              This is an estimated cost. Actual charges may vary. (Base: <span className="inline-flex items-center"><IndianRupee className="h-3 w-3 inline mr-0.5 rtl:ml-0.5 rtl:mr-0" />{BASE_CHARGE}</span>, Rate: <span className="inline-flex items-center"><IndianRupee className="h-3 w-3 inline mr-0.5 rtl:ml-0.5 rtl:mr-0" />{RATE_PER_HALF_KG}</span>/0.5kg)
             </p>
           </Alert>
         </CardFooter>
