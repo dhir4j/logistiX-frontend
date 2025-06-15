@@ -4,10 +4,10 @@ import { Providers } from '@/components/providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'SwiftTrack - RS SWIFT COURIERS LLP',
-  description: 'Courier and shipment management web app',
+  title: 'Shed Load Overseas - RS SWIFT COURIERS LLP',
+  description: 'Courier and shipment management solutions by Shed Load Overseas.',
   icons: {
-    icon: '/favicon.ico', // Assuming a favicon might be added later
+    icon: '/favicon.ico', 
   }
 };
 

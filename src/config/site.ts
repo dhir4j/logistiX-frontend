@@ -51,12 +51,11 @@ export const dashboardNavItems: NavItem[] = [
 ];
 
 export const siteConfig = {
-  name: "SwiftTrack",
-  description: "RS SWIFT COURIERS LLP - Courier and shipment management.",
-  url: "https://swiftrack.example.com", // Replace with actual URL if deployed
-  ogImage: "https://swiftrack.example.com/og.jpg", // Replace with actual OG image
+  name: "Shed Load Overseas",
+  description: "RS SWIFT COURIERS LLP - Courier and shipment management by Shed Load Overseas.",
+  url: "https://shedloadoverseas.example.com", 
+  ogImage: "https://shedloadoverseas.example.com/og.jpg", 
   mainNav: dashboardNavItems,
   links: {
-    // Add external links if any, e.g., twitter: "https://twitter.com/example"
   },
 };

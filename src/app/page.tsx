@@ -7,9 +7,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CompanyLogo } from '@/components/shared/logo';
-import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2 } from 'lucide-react';
+import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2, Globe, CreditCard, Send, Repeat, Truck, Users } from 'lucide-react';
 
 function LandingHeader() {
   return (
@@ -33,7 +33,7 @@ function LandingFooter() {
       <div className="container mx-auto">
         <CompanyLogo className="mb-4 justify-center" />
         <p className="text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} SwiftTrack - RS SWIFT COURIERS LLP. All rights reserved.
+          &copy; {new Date().getFullYear()} Shed Load Overseas - RS SWIFT COURIERS LLP. All rights reserved.
         </p>
         <div className="mt-4 space-x-4">
           <Link href="#" className="text-xs text-muted-foreground hover:text-primary">Privacy Policy</Link>
@@ -65,44 +65,52 @@ export default function HomePage() {
 
   if (isAuthenticated) return null; 
 
-  const features = [
+  const coreFeatures = [
     {
       icon: Zap,
       title: "Easy Booking",
-      description: "Schedule your shipments in just a few clicks with our intuitive platform.",
+      description: "Schedule shipments in clicks with our intuitive platform.",
       dataAiHint: "fast booking"
     },
     {
       icon: SearchCheck,
       title: "Real-Time Tracking",
-      description: "Stay updated with live tracking of your packages from pickup to delivery.",
+      description: "Live tracking from pickup to delivery via Web, SMS, Email & WhatsApp.",
       dataAiHint: "map tracking"
     },
     {
       icon: ShieldCheck,
       title: "Secure & Reliable",
-      description: "Trust us with your valuable shipments. We ensure safety and reliability every step of the way.",
+      description: "Trust us with your valuable shipments. Safety and reliability, every step.",
       dataAiHint: "secure delivery"
     },
     {
       icon: DollarSign,
       title: "Transparent Pricing",
-      description: "No hidden fees. Calculate your shipping costs upfront with our simple pricing calculator.",
+      description: "No hidden fees. Contact us for a detailed rate list.",
       dataAiHint: "price calculator"
     },
     {
-      icon: PackageCheck,
+      icon: Globe,
       title: "Wide Coverage",
-      description: "We deliver across a vast network, ensuring your package reaches its destination efficiently.",
+      description: "Domestic and International services, reaching your destination efficiently.",
       dataAiHint: "global shipping"
     },
     {
-      icon: MessageCircle,
+      icon: Users,
       title: "Dedicated Support",
-      description: "Our friendly customer support team is always ready to assist you with any queries.",
+      description: "Friendly customer support ready to assist with any queries.",
       dataAiHint: "customer support"
     }
   ];
+
+  const serviceHighlights = [
+    { icon: Truck, title: "Comprehensive Services", description: "Courier, Cargo, Express, International, Domestic, and Hyperlocal solutions tailored to your needs." },
+    { icon: CreditCard, title: "Cash on Delivery (COD)", description: "Flexible payment options including Cash on Delivery for your convenience." },
+    { icon: Repeat, title: "Reverse Pickup", description: "Efficient and hassle-free reverse pickup services for returns and exchanges." },
+    { icon: Send, title: "Multi-Channel Notifications", description: "Stay informed with updates via SMS, Email, and WhatsApp (simulated)." }
+  ];
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -112,26 +120,23 @@ export default function HomePage() {
         <section className="py-16 md:py-24 lg:py-32 px-6 md:px-10 bg-gradient-to-br from-primary/10 via-background to-background text-center">
           <div className="container mx-auto max-w-4xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-extrabold text-primary mb-6">
-              Reliable Shipments, Delivered Swiftly.
+              Shed Load Overseas: Your Global Logistics Partner.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-              Experience seamless courier services with SwiftTrack. Book, track, and manage your deliveries with unparalleled ease and confidence.
+              Experience seamless courier and cargo services with Shed Load Overseas. Book, track, and manage your deliveries with unparalleled ease and confidence, worldwide.
             </p>
             <div className="space-y-4 sm:space-y-0 sm:space-x-4">
               <Button size="lg" asChild className="font-semibold text-lg py-3 px-8 w-full sm:w-auto shadow-lg hover:shadow-xl transition-shadow">
                 <Link href="/login">
-                  Get Started Free <ArrowRight className="ml-2 h-5 w-5" />
+                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              {/* <Button size="lg" variant="outline" className="font-semibold text-lg py-3 px-8 w-full sm:w-auto">
-                Learn More
-              </Button> */}
             </div>
             <div className="mt-12">
               <Image 
                 src="https://placehold.co/800x450.png" 
-                alt="SwiftTrack dashboard preview" 
-                data-ai-hint="logistics truck delivery"
+                alt="Shed Load Overseas dashboard preview" 
+                data-ai-hint="logistics truck global"
                 width={800} 
                 height={450}
                 className="rounded-lg shadow-2xl mx-auto"
@@ -141,17 +146,17 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* Core Features Section */}
         <section id="features" className="py-16 md:py-24 px-6 md:px-10">
           <div className="container mx-auto">
             <h2 className="text-3xl md:text-4xl font-headline font-semibold text-center mb-4">
               Everything You Need for Effortless Shipping
             </h2>
             <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-              SwiftTrack provides a comprehensive suite of tools to make your shipping experience smooth and efficient.
+              Shed Load Overseas provides a comprehensive suite of tools to make your shipping experience smooth and efficient.
             </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature) => (
+              {coreFeatures.map((feature) => (
                 <Card key={feature.title} className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out transform hover:-translate-y-1">
                   <CardHeader className="items-center text-center">
                     <div className="p-3 bg-primary/10 rounded-full inline-block mb-4 border border-primary/20">
@@ -167,9 +172,39 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        
+        {/* Service Highlights Section */}
+        <section className="py-16 md:py-24 px-6 md:px-10 bg-muted/30">
+          <div className="container mx-auto">
+            <h2 className="text-3xl md:text-4xl font-headline font-semibold text-center mb-4">
+              Our Specialized Services
+            </h2>
+            <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+              Tailored solutions to meet all your logistical requirements.
+            </p>
+            <div className="grid md:grid-cols-2 gap-8">
+              {serviceHighlights.map((service) => (
+                <Card key={service.title} className="shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out">
+                   <CardHeader className="flex flex-row items-start gap-4">
+                    <div className="p-3 bg-primary/10 rounded-lg inline-block border border-primary/20">
+                      <service.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="font-headline text-xl">{service.title}</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground text-sm">{service.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
 
         {/* How It Works Section */}
-        <section className="py-16 md:py-24 px-6 md:px-10 bg-muted/30">
+        <section className="py-16 md:py-24 px-6 md:px-10">
             <div className="container mx-auto text-center">
                 <h2 className="text-3xl md:text-4xl font-headline font-semibold mb-12">
                     Shipping Made Simple: Just 3 Steps
@@ -204,10 +239,10 @@ export default function HomePage() {
         <section className="py-16 md:py-24 px-6 md:px-10 bg-gradient-to-r from-accent/80 to-primary/80 text-center">
           <div className="container mx-auto max-w-3xl">
             <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary-foreground mb-6">
-              Ready to Revolutionize Your Shipments?
+              Ready to Streamline Your Shipments?
             </h2>
             <p className="text-lg text-background/90 mb-8">
-              Join thousands of satisfied customers who trust SwiftTrack for their critical courier needs. Sign up today and experience the difference.
+              Join businesses worldwide who trust Shed Load Overseas for their critical courier and cargo needs. Sign up today and experience the difference.
             </p>
             <Button size="lg" asChild className="font-semibold text-lg py-3 px-8 bg-background text-primary hover:bg-background/90 shadow-xl hover:shadow-2xl transition-shadow">
               <Link href="/login">

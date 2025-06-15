@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, MessageSquare, MapPin, Info } from 'lucide-react';
+import { Mail, Phone, MessageSquare, MapPin, Info, Package, Globe, CreditCard, Send, Repeat } from 'lucide-react';
 import Image from 'next/image';
 
 export default function ContactPage() {
@@ -32,7 +32,7 @@ export default function ContactPage() {
                 <div>
                   <h4 className="font-semibold">Email Support</h4>
                   <p className="text-muted-foreground">Send us an email for any inquiries.</p>
-                  <a href="mailto:support@rswift.com" className="text-primary hover:underline">support@rswift.com</a>
+                  <a href="mailto:RSSWIFTCOURIERS@GMAIL.COM" className="text-primary hover:underline">RSSWIFTCOURIERS@GMAIL.COM</a>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -40,14 +40,14 @@ export default function ContactPage() {
                 <div>
                   <h4 className="font-semibold">Phone Support</h4>
                   <p className="text-muted-foreground">Call us for immediate assistance.</p>
-                  <a href="tel:+911234567890" className="text-primary hover:underline">+91 123 456 7890</a>
+                  <a href="tel:+919541195406" className="text-primary hover:underline">+91 95411 95406</a>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <MapPin className="h-6 w-6 text-primary mt-1 shrink-0" />
                 <div>
                   <h4 className="font-semibold">Office Address</h4>
-                  <p className="text-muted-foreground">RS SWIFT COURIERS LLP<br />123 Business Park, Example City, ST 12345, India</p>
+                  <p className="text-muted-foreground">RS SWIFT COURIERS LLP<br />18AX MODEL TOWN EXTENSION, LUDHIANA<br />NEAR PUNJAB & SIND BANK</p>
                 </div>
               </div>
             </CardContent>
@@ -57,19 +57,55 @@ export default function ContactPage() {
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="font-headline text-2xl">Live Chat & WhatsApp</CardTitle>
-          <CardDescription>Connect with us instantly for quick support. (Simulated)</CardDescription>
+          <CardTitle className="font-headline text-2xl">Our Core Services</CardTitle>
+          <CardDescription>Comprehensive logistics solutions for your business.</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row gap-4">
-          <Button className="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white">
-            <MessageSquare className="mr-2 h-5 w-5" /> Chat on WhatsApp (Simulated)
-          </Button>
-          <Button variant="outline" className="w-full sm:w-auto border-accent text-accent hover:bg-accent/10">
-            <Info className="mr-2 h-5 w-5" /> Start Live Chat (Simulated)
-          </Button>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="flex items-start gap-3">
+            <Package className="h-5 w-5 text-primary mt-1 shrink-0" />
+            <div>
+              <h4 className="font-semibold">Diverse Service Types</h4>
+              <p className="text-sm text-muted-foreground">Courier, Cargo, Express, International, Domestic, Hyperlocal - We cover it all.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Globe className="h-5 w-5 text-primary mt-1 shrink-0" />
+            <div>
+              <h4 className="font-semibold">Wide Serviceable Area</h4>
+              <p className="text-sm text-muted-foreground">Operating across India and Internationally.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <CreditCard className="h-5 w-5 text-primary mt-1 shrink-0" />
+            <div>
+              <h4 className="font-semibold">Cash on Delivery (COD)</h4>
+              <p className="text-sm text-muted-foreground">Flexible payment options available.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Send className="h-5 w-5 text-primary mt-1 shrink-0" />
+            <div>
+              <h4 className="font-semibold">Tracking & Notifications</h4>
+              <p className="text-sm text-muted-foreground">Stay updated via SMS, Email, and WhatsApp.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Repeat className="h-5 w-5 text-primary mt-1 shrink-0" />
+            <div>
+              <h4 className="font-semibold">Reverse Pickup</h4>
+              <p className="text-sm text-muted-foreground">Convenient return solutions for your needs.</p>
+            </div>
+          </div>
+           <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary mt-1 shrink-0" />
+            <div>
+              <h4 className="font-semibold">Rate List</h4>
+              <p className="text-sm text-muted-foreground">Please contact us for our detailed and competitive rate list.</p>
+            </div>
+          </div>
         </CardContent>
          <CardFooter>
-          <p className="text-xs text-muted-foreground">Note: Chat functionalities are simulated for demo purposes and are not active.</p>
+          <p className="text-xs text-muted-foreground">Note: WhatsApp notifications are simulated for demo purposes and are not active.</p>
         </CardFooter>
       </Card>
     </div>

@@ -12,13 +12,15 @@ interface ShipmentContextType {
 
 export const ShipmentContext = createContext<ShipmentContextType | undefined>(undefined);
 
+const STORAGE_KEY_SHIPMENTS = 'shedloadoverseas_shipments';
+
 export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     try {
-      const storedShipments = localStorage.getItem('swifttrack_shipments');
+      const storedShipments = localStorage.getItem(STORAGE_KEY_SHIPMENTS);
       if (storedShipments) {
         const parsedShipments = JSON.parse(storedShipments).map((s: Shipment) => ({
           ...s,
@@ -29,14 +31,14 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error("Failed to load shipments from localStorage", error);
-      localStorage.removeItem('swifttrack_shipments');
+      localStorage.removeItem(STORAGE_KEY_SHIPMENTS);
     }
     setIsLoading(false);
   }, []);
 
   const updateLocalStorage = (updatedShipments: Shipment[]) => {
     try {
-      localStorage.setItem('swifttrack_shipments', JSON.stringify(updatedShipments));
+      localStorage.setItem(STORAGE_KEY_SHIPMENTS, JSON.stringify(updatedShipments));
     } catch (error) {
       console.error("Failed to save shipments to localStorage", error);
     }

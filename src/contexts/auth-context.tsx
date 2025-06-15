@@ -13,30 +13,30 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const STORAGE_KEY_USER = 'shedloadoverseas_user';
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem('swifttrack_user');
+      const storedUser = localStorage.getItem(STORAGE_KEY_USER);
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       }
     } catch (error) {
       console.error("Failed to load user from localStorage", error);
-      localStorage.removeItem('swifttrack_user');
+      localStorage.removeItem(STORAGE_KEY_USER);
     }
     setIsLoading(false);
   }, []);
 
   const login = (email: string) => {
-    // For demo purposes, firstName and lastName are hardcoded.
-    // In a real app, these would come from your authentication response.
     const userData: User = { id: 'demo-user', email, firstName: 'Demo', lastName: 'User' };
     setUser(userData);
     try {
-      localStorage.setItem('swifttrack_user', JSON.stringify(userData));
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(userData));
     } catch (error) {
       console.error("Failed to save user to localStorage", error);
     }
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     try {
-      localStorage.removeItem('swifttrack_user');
+      localStorage.removeItem(STORAGE_KEY_USER);
     } catch (error) {
       console.error("Failed to remove user from localStorage", error);
     }

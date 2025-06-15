@@ -22,8 +22,8 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <Card className="shadow-lg border-primary/20">
         <CardHeader>
-          <CardTitle className="font-headline text-3xl text-primary">Welcome, {user.email.split('@')[0]}!</CardTitle>
-          <CardDescription className="text-lg">Manage your shipments efficiently with SwiftTrack.</CardDescription>
+          <CardTitle className="font-headline text-3xl text-primary">Welcome, {user.firstName || user.email.split('@')[0]}!</CardTitle>
+          <CardDescription className="text-lg">Manage your shipments efficiently with Shed Load Overseas.</CardDescription>
         </CardHeader>
         <CardContent>
           <p>This is your central hub for all courier activities. You can book new shipments, track existing ones, view your history, calculate pricing, and get in touch with us for support.</p>
