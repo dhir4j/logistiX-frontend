@@ -24,10 +24,10 @@ export function LandingHeader() {
         />
       </Link>
       <nav className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-2">
-        <Button asChild variant="ghost" className="w-full sm:w-auto">
+        <Button asChild variant="ghost" className="w-full sm:w-auto text-base sm:text-sm">
           <Link href="/login">Login</Link>
         </Button>
-        <Button asChild className="w-full sm:w-auto">
+        <Button asChild className="w-full sm:w-auto text-base sm:text-sm">
           <Link href="/signup">Sign Up</Link>
         </Button>
       </nav>
@@ -183,8 +183,12 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="py-16 md:py-24 lg:py-32 px-6 md:px-10 bg-gradient-to-br from-primary/10 via-background to-background text-center">
           <div className="container mx-auto max-w-4xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline font-extrabold text-primary mb-6">
-              Shed Load Overseas: <br /> Your Global Logistics Partner.
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline mb-6">
+              <span className="font-extrabold text-primary inline-block animate-fadeInUpSlo">Shed Load Overseas</span>
+              <br />
+              <span className="block text-2xl md:text-3xl lg:text-4xl text-muted-foreground font-medium mt-1 sm:mt-2">
+                Your Global Logistics Partner.
+              </span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
               Experience seamless courier and cargo services with Shed Load Overseas. Book, track, and manage your deliveries with unparalleled ease and confidence, worldwide.
@@ -202,7 +206,7 @@ export default function HomePage() {
         {/* Core Features Section */}
         <section id="features" className="py-16 md:py-24 px-6 md:px-10">
           <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-headline font-semibold text-center mb-4">
+            <h2 className="text-3xl sm:text-4xl font-headline font-semibold text-center mb-4">
               Everything You Need for Effortless Shipping
             </h2>
             <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
@@ -215,7 +219,7 @@ export default function HomePage() {
                     <div className="p-3 bg-primary/10 rounded-full inline-block mb-4 border border-primary/20">
                       <feature.icon className="h-8 w-8 text-primary" />
                     </div>
-                    <CardTitle className="font-headline text-xl">{feature.title}</CardTitle>
+                    <CardTitle className="font-headline text-xl sm:text-2xl">{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent className="text-center">
                     <p className="text-muted-foreground text-sm">{feature.description}</p>
@@ -229,7 +233,7 @@ export default function HomePage() {
         {/* Service Highlights Section */}
         <section className="py-16 md:py-24 px-6 md:px-10 bg-muted/30">
           <div className="container mx-auto">
-            <h2 className="text-3xl md:text-4xl font-headline font-semibold text-center mb-4">
+            <h2 className="text-3xl sm:text-4xl font-headline font-semibold text-center mb-4">
               Our Specialized Services
             </h2>
             <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
@@ -243,7 +247,7 @@ export default function HomePage() {
                       <service.icon className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <CardTitle className="font-headline text-xl">{service.title}</CardTitle>
+                      <CardTitle className="font-headline text-xl sm:text-2xl">{service.title}</CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -259,7 +263,7 @@ export default function HomePage() {
         {/* How It Works Section */}
         <section className="py-16 md:py-24 px-6 md:px-10">
             <div className="container mx-auto text-center">
-                <h2 className="text-3xl md:text-4xl font-headline font-semibold mb-12">
+                <h2 className="text-3xl sm:text-4xl font-headline font-semibold mb-12">
                     Shipping Made Simple: Just 3 Steps
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-start">
@@ -277,7 +281,7 @@ export default function HomePage() {
         {/* CTA Section */}
         <section className="py-16 md:py-24 px-6 md:px-10 bg-gradient-to-r from-accent/80 to-primary/80 text-center">
           <div className="container mx-auto max-w-3xl">
-            <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary-foreground mb-6">
+            <h2 className="text-3xl sm:text-4xl font-headline font-bold text-primary-foreground mb-6">
               Ready to Streamline Your Shipments?
             </h2>
             <p className="text-lg text-background/90 mb-8">
