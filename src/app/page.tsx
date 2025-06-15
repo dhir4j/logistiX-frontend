@@ -35,11 +35,12 @@ export function LandingFooter() {
         <p className="text-sm text-muted-foreground">
           &copy; {new Date().getFullYear()} Shed Load Overseas - RS SWIFT COURIERS LLP. All rights reserved.
         </p>
-        <div className="mt-4 space-x-4">
+        <div className="mt-4 space-x-4 flex flex-wrap justify-center">
           <Link href="/about" className="text-xs text-muted-foreground hover:text-primary">About Us</Link>
           <Link href="/privacy-policy" className="text-xs text-muted-foreground hover:text-primary">Privacy Policy</Link>
           <Link href="/terms-of-service" className="text-xs text-muted-foreground hover:text-primary">Terms of Service</Link>
           <Link href="/dashboard/contact" className="text-xs text-muted-foreground hover:text-primary">Contact Us</Link>
+          <Link href="/dashboard/contact" className="text-xs text-muted-foreground hover:text-primary">Customer Care</Link>
         </div>
       </div>
     </footer>
@@ -116,9 +117,9 @@ export default function HomePage() {
 
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
+    <div className="flex flex-col flex-1 bg-background text-foreground"> {/* Ensure this takes up space */}
       <LandingHeader />
-      <main className="flex-1">
+      <main className="flex-1"> {/* Main content also flex-1 */}
         {/* Hero Section */}
         <section className="py-16 md:py-24 lg:py-32 px-6 md:px-10 bg-gradient-to-br from-primary/10 via-background to-background text-center">
           <div className="container mx-auto max-w-4xl">
@@ -255,7 +256,7 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-      <LandingFooter />
+      {/* LandingFooter removed from here, it's now global */}
     </div>
   );
 }
