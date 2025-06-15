@@ -74,37 +74,31 @@ export default function HomePage() {
       icon: Zap,
       title: "Easy Booking",
       description: "Schedule shipments in clicks with our intuitive platform.",
-      dataAiHint: "fast booking"
     },
     {
       icon: SearchCheck,
       title: "Real-Time Tracking",
       description: "Live tracking from pickup to delivery via Web, SMS, Email & WhatsApp.",
-      dataAiHint: "map tracking"
     },
     {
       icon: ShieldCheck,
       title: "Secure & Reliable",
       description: "Trust us with your valuable shipments. Safety and reliability, every step.",
-      dataAiHint: "secure delivery"
     },
     {
       icon: DollarSign,
       title: "Transparent Pricing",
       description: "No hidden fees. Contact us for a detailed rate list.",
-      dataAiHint: "price calculator"
     },
     {
       icon: Globe,
       title: "Wide Coverage",
       description: "Domestic and International services, reaching your destination efficiently.",
-      dataAiHint: "global shipping"
     },
     {
       icon: Users,
       title: "Dedicated Support",
       description: "Friendly customer support ready to assist with any queries.",
-      dataAiHint: "customer support"
     }
   ];
 
@@ -117,11 +111,60 @@ export default function HomePage() {
     { icon: Truck, title: "Serviceable Area", description: "Operating across India and Internationally, ensuring your packages reach their destination." }
   ];
 
+  const howItWorksSteps = [
+    { 
+      title: "Book Your Shipment", 
+      description: "Enter details, choose service, and schedule a pickup in minutes.", 
+      number: 1,
+      svg: (
+        <svg width="300" height="225" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-sm mb-6 object-cover aspect-[4/3]">
+          <rect width="100" height="75" rx="8" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="0.5"/>
+          <rect x="25" y="15" width="50" height="45" rx="4" fill="hsl(var(--muted))" stroke="hsl(var(--primary))" strokeWidth="1"/>
+          <line x1="35" y1="25" x2="65" y2="25" stroke="hsl(var(--primary) / 0.7)" strokeWidth="1"/>
+          <line x1="35" y1="32" x2="65" y2="32" stroke="hsl(var(--primary) / 0.7)" strokeWidth="1"/>
+          <line x1="35" y1="39" x2="55" y2="39" stroke="hsl(var(--primary) / 0.7)" strokeWidth="1"/>
+          <circle cx="60" cy="50" r="10" fill="hsl(var(--primary))"/>
+          <line x1="60" y1="45" x2="60" y2="55" stroke="hsl(var(--primary-foreground))" strokeWidth="1.5"/>
+          <line x1="55" y1="50" x2="65" y2="50" stroke="hsl(var(--primary-foreground))" strokeWidth="1.5"/>
+        </svg>
+      )
+    },
+    { 
+      title: "Track Your Package", 
+      description: "Monitor your package's journey with our real-time tracking system.", 
+      number: 2,
+      svg: (
+        <svg width="300" height="225" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-sm mb-6 object-cover aspect-[4/3]">
+          <rect width="100" height="75" rx="8" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="0.5"/>
+          <path d="M15 60 Q 30 40, 50 50 T 85 20" stroke="hsl(var(--muted-foreground) / 0.3)" strokeWidth="8" strokeLinecap="round" fill="none"/>
+          <rect x="45" y="28" width="10" height="8" rx="1" fill="hsl(var(--primary))" stroke="hsl(var(--primary-foreground))" strokeWidth="0.5"/>
+          <circle cx="50" cy="32" r="3" fill="hsl(var(--primary))"/>
+          <path d="M50 35 L 48 40 L 52 40 Z" fill="hsl(var(--primary))" />
+          <circle cx="70" cy="45" r="8" stroke="hsl(var(--accent-foreground))" strokeWidth="1.5" fill="hsl(var(--accent)/0.3)"/>
+          <line x1="76" y1="51" x2="82" y2="57" stroke="hsl(var(--accent-foreground))" strokeWidth="1.5"/>
+        </svg>
+      )
+    },
+    { 
+      title: "Secure Delivery", 
+      description: "Receive confirmation upon successful and safe delivery to the recipient.", 
+      number: 3,
+      svg: (
+        <svg width="300" height="225" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-sm mb-6 object-cover aspect-[4/3]">
+          <rect width="100" height="75" rx="8" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="0.5"/>
+          <path d="M50 15 L80 25 L80 45 C80 60, 50 70, 50 70 C50 70, 20 60, 20 45 L20 25 L50 15 Z" fill="hsl(var(--primary) / 0.1)" stroke="hsl(var(--primary))" strokeWidth="1.5"/>
+          <path d="M40 40 L50 50 L65 30" stroke="hsl(var(--primary))" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+          <rect x="60" y="50" width="15" height="10" rx="1" fill="hsl(var(--accent))" stroke="hsl(var(--accent-foreground))" strokeWidth="0.5" opacity="0.7"/>
+        </svg>
+      ) 
+    }
+  ];
+
 
   return (
-    <div className="flex flex-col flex-1 bg-background text-foreground"> {/* Ensure this takes up space */}
+    <div className="flex flex-col flex-1 bg-background text-foreground">
       <LandingHeader />
-      <main className="flex-1"> {/* Main content also flex-1 */}
+      <main className="flex-1">
         {/* Hero Section */}
         <section className="py-16 md:py-24 lg:py-32 px-6 md:px-10 bg-gradient-to-br from-primary/10 via-background to-background text-center">
           <div className="container mx-auto max-w-4xl">
@@ -139,15 +182,17 @@ export default function HomePage() {
               </Button>
             </div>
             <div className="mt-12">
-              <Image 
-                src="https://placehold.co/800x450.png" 
-                alt="Shed Load Overseas dashboard preview" 
-                data-ai-hint="logistics truck global"
-                width={800} 
-                height={450}
-                className="rounded-lg shadow-2xl mx-auto"
-                priority
-              />
+              <svg width="600" height="338" viewBox="0 0 200 112.5" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-2xl mx-auto">
+                <rect width="200" height="112.5" rx="8" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="0.5"/>
+                <circle cx="70" cy="56" r="30" fill="hsl(var(--primary) / 0.1)" stroke="hsl(var(--primary))" strokeWidth="1.5"/>
+                <path d="M70 26 Q 85 41, 70 56 Q 55 41, 70 26" stroke="hsl(var(--primary))" strokeWidth="0.75" fill="none"/>
+                <path d="M70 86 Q 85 71, 70 56 Q 55 71, 70 86" stroke="hsl(var(--primary))" strokeWidth="0.75" fill="none"/>
+                <path d="M40 56 H 100" stroke="hsl(var(--primary))" strokeWidth="0.75" fill="none" strokeDasharray="2 2"/>
+                <rect x="115" y="46" width="30" height="20" rx="2" fill="hsl(var(--accent))" stroke="hsl(var(--accent-foreground))" strokeWidth="1"/>
+                <line x1="115" y1="56" x2="145" y2="56" stroke="hsl(var(--accent-foreground))" strokeWidth="0.5"/>
+                <line x1="130" y1="46" x2="130" y2="66" stroke="hsl(var(--accent-foreground))" strokeWidth="0.5"/>
+                <path d="M95 56 L 110 56 M 105 52 L 110 56 L 105 60" stroke="hsl(var(--primary))" strokeWidth="1.5" fill="none"/>
+              </svg>
             </div>
           </div>
         </section>
@@ -216,23 +261,12 @@ export default function HomePage() {
                     Shipping Made Simple: Just 3 Steps
                 </h2>
                 <div className="grid md:grid-cols-3 gap-8 lg:gap-12 items-start">
-                    {[
-                        { title: "Book Your Shipment", description: "Enter details, choose service, and schedule a pickup in minutes.", hint: "online booking form", number: 1 },
-                        { title: "Track Your Package", description: "Monitor your package's journey with our real-time tracking system.", hint: "package on map", number: 2 },
-                        { title: "Secure Delivery", description: "Receive confirmation upon successful and safe delivery to the recipient.", hint: "package delivered hand", number: 3 }
-                    ].map(step => (
+                    {howItWorksSteps.map(step => (
                         <div key={step.number} className="flex flex-col items-center p-6 bg-card rounded-lg shadow-md">
                             <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground font-bold text-2xl mb-6 shadow-md">
                                 {step.number}
                             </div>
-                            <Image 
-                                src={`https://placehold.co/400x300.png`} 
-                                data-ai-hint={step.hint}
-                                alt={step.title} 
-                                width={400} 
-                                height={300} 
-                                className="rounded-lg shadow-sm mb-6 object-cover aspect-[4/3]" 
-                            />
+                            {step.svg}
                             <h3 className="text-xl font-semibold font-headline mb-2">{step.title}</h3>
                             <p className="text-muted-foreground text-sm">{step.description}</p>
                         </div>
@@ -258,7 +292,7 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-      <LandingFooter /> {/* Added footer here */}
+      <LandingFooter />
     </div>
   );
 }
