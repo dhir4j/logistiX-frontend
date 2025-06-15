@@ -5,8 +5,8 @@
 
 @layer base {
   :root {
-    --background: 208 33% 95%; /* Light gray #F0F4F7 */
-    --foreground: 222 47% 11%; /* Dark blue/gray */
+    --background: 208 33% 95%; /* Light gray #F0F4F7 - Unchanged */
+    --foreground: 222 47% 11%; /* Dark blue/gray - Unchanged */
 
     --muted: 215 28% 90%;
     --muted-foreground: 215 20% 55%;
@@ -20,41 +20,41 @@
     --border: 215 20% 85%;
     --input: 215 20% 88%;
 
-    --primary: 206 69% 55%; /* #3d97db */
-    --primary-foreground: 210 40% 98%; /* Light text for primary */
+    --primary: 0 63% 51%;      /* New Red from logo (e.g., #D32F2F) */
+    --primary-foreground: 0 0% 98%; /* White/Very Light Gray for contrast with Red */
 
-    --secondary: 215 28% 90%; /* Slightly darker gray for secondary elements */
+    --secondary: 215 28% 90%; /* Slightly darker gray for secondary elements - Unchanged */
     --secondary-foreground: 222 47% 11%;
 
-    --accent: 60 100% 85%; /* New Light Pale Yellow #ffffb3 */
-    --accent-foreground: 60 30% 25%; /* Dark desaturated yellow for contrast */
+    --accent: 200 17% 73%;     /* New Light Silver/Gray from logo (e.g., #B0BEC5) */
+    --accent-foreground: 222 47% 11%; /* Dark blue/gray for contrast with Light Silver/Gray */
 
-    --destructive: 0 72% 51%; /* Updated destructive to be more vibrant */
+    --destructive: 0 72% 51%; /* Standard destructive red - Unchanged */
     --destructive-foreground: 0 0% 98%;
 
-    --ring: 206 69% 50%; /* Slightly darker primary for ring */
+    --ring: 0 63% 48%; /* Ring color based on new primary red */
     --radius: 0.5rem;
 
     /* Sidebar specific variables */
     --sidebar-background: 215 28% 93%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 206 69% 50%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 60 100% 85%; /* Adjusted accent for sidebar */
-    --sidebar-accent-foreground: 60 30% 25%;
+    --sidebar-primary: 0 63% 51%;      /* New Red */
+    --sidebar-primary-foreground: 0 0% 98%; /* White */
+    --sidebar-accent: 200 17% 73%;     /* New Light Silver/Gray */
+    --sidebar-accent-foreground: 222 47% 11%; /* Dark */
     --sidebar-border: 215 20% 80%;
-    --sidebar-ring: 206 69% 48%; /* Adjusted ring for sidebar */
+    --sidebar-ring: 0 63% 48%; /* New Red based ring */
 
-    --chart-1: 206 69% 55%;
-    --chart-2: 60 100% 85%; /* New Light Pale Yellow for charts */
-    --chart-3: 215 28% 70%;
-    --chart-4: 206 50% 45%;
-    --chart-5: 35 70% 50%;
+    --chart-1: 0 63% 51%; /* Primary Red */
+    --chart-2: 200 17% 73%; /* Accent Light Gray */
+    --chart-3: 215 28% 70%; /* Neutral Gray */
+    --chart-4: 0 50% 40%; /* Darker Red variant */
+    --chart-5: 215 20% 50%; /* Darker Neutral Gray */
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
+    --background: 222 47% 11%; /* Unchanged */
+    --foreground: 210 40% 98%; /* Unchanged */
 
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
@@ -68,35 +68,35 @@
     --border: 217 33% 22%;
     --input: 217 33% 22%;
 
-    --primary: 206 69% 55%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 0 63% 51%;      /* New Red */
+    --primary-foreground: 0 0% 98%; /* White */
 
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --accent: 60 100% 85%; /* New Light Pale Yellow #ffffb3 */
-    --accent-foreground: 60 30% 25%; /* Dark desaturated yellow for contrast */
+    --accent: 200 17% 73%;     /* New Light Silver/Gray */
+    --accent-foreground: 222 47% 11%; /* Dark for contrast with light accent */
 
-    --destructive: 0 63% 31%;
+    --destructive: 0 63% 31%; /* Standard destructive red for dark mode - Unchanged */
     --destructive-foreground: 0 0% 98%;
 
-    --ring: 206 69% 50%;
+    --ring: 0 63% 48%; /* Ring color based on new primary red */
 
     /* Sidebar specific variables for dark mode */
     --sidebar-background: 222 40% 15%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 206 69% 55%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 60 100% 85%; /* New Light Pale Yellow for dark sidebar */
-    --sidebar-accent-foreground: 60 30% 25%;
+    --sidebar-primary: 0 63% 51%;      /* New Red */
+    --sidebar-primary-foreground: 0 0% 98%; /* White */
+    --sidebar-accent: 200 17% 73%;     /* New Light Silver/Gray */
+    --sidebar-accent-foreground: 222 47% 11%; /* Dark */
     --sidebar-border: 217 33% 25%;
-    --sidebar-ring: 206 69% 50%;
+    --sidebar-ring: 0 63% 48%; /* New Red based ring */
     
-    --chart-1: 206 69% 55%;
-    --chart-2: 60 100% 85%; /* New Light Pale Yellow for charts */
-    --chart-3: 210 40% 80%;
-    --chart-4: 206 50% 45%;
-    --chart-5: 35 70% 50%;
+    --chart-1: 0 63% 51%; /* Primary Red */
+    --chart-2: 200 17% 73%; /* Accent Light Gray */
+    --chart-3: 210 40% 80%; /* Lighter Gray for dark mode charts */
+    --chart-4: 0 50% 40%; /* Darker Red variant */
+    --chart-5: 215 20% 50%; /* Darker Neutral Gray */
   }
 }
 
