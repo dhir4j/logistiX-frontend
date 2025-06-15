@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { User } from '@/lib/types';
@@ -33,7 +34,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (email: string) => {
-    const userData: User = { id: 'demo-user', email, firstName: 'Demo', lastName: 'User' };
+    const emailParts = email.split('@');
+    const firstNameFromEmail = emailParts[0].charAt(0).toUpperCase() + emailParts[0].slice(1);
+    const userData: User = { 
+      id: 'auth-user-id', // Generic ID
+      email, 
+      firstName: firstNameFromEmail, 
+      lastName: 'User' 
+    };
     setUser(userData);
     try {
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(userData));

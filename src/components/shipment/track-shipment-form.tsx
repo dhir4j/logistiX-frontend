@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Search, ArrowRight, AlertTriangle, Info } from 'lucide-react';
 import { ShipmentStatusIndicator } from './shipment-status-indicator';
 import type { TrackingStep, TrackingStage, Shipment } from '@/lib/types';
-import { useShipments } from '@/hooks/use-shipments'; // To get shipment data
+import { useShipments } from '@/hooks/use-shipments';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const trackSchema = z.object({
@@ -20,7 +21,6 @@ const trackSchema = z.object({
 
 type TrackFormValues = z.infer<typeof trackSchema>;
 
-// Fake tracking data generator
 const generateFakeTrackingHistory = (shipmentStatus: TrackingStage, bookingDate: Date): TrackingStep[] => {
   const history: TrackingStep[] = [];
   const now = new Date();
@@ -28,7 +28,8 @@ const generateFakeTrackingHistory = (shipmentStatus: TrackingStage, bookingDate:
   const addStep = (stage: TrackingStage, activity: string, location: string, daysOffset: number, isCurrent: boolean = false, isCompleted: boolean = true) => {
     const stepDate = new Date(bookingDate);
     stepDate.setDate(bookingDate.getDate() + daysOffset);
-    if (stepDate > now) return; // Don't add future steps unless it's the current one not yet completed
+    if (stepDate > now && !(isCurrent && stage !== "Delivered")) return;
+
 
     history.push({
       stage,
@@ -46,11 +47,11 @@ const generateFakeTrackingHistory = (shipmentStatus: TrackingStage, bookingDate:
 
   if (shipmentStatus === "In Transit" || shipmentStatus === "Out for Delivery" || shipmentStatus === "Delivered") {
     addStep("In Transit", "Package departed from origin facility", getRandomLocation(), 1, shipmentStatus === "In Transit");
-    addStep("In Transit", "Package arrived at sorting hub", getRandomLocation(), 2, shipmentStatus === "In Transit" && history.length < 2);
+    addStep("In Transit", "Package arrived at sorting hub", getRandomLocation(), 2, shipmentStatus === "In Transit" && history.filter(s => s.stage === "In Transit").length < 2);
   }
   
   if (shipmentStatus === "Out for Delivery" || shipmentStatus === "Delivered") {
-     addStep("In Transit", "Package departed from sorting hub", getRandomLocation(), 3, false); // This step is completed if we are at out for delivery
+    addStep("In Transit", "Package departed from sorting hub", getRandomLocation(), 3, false);
     addStep("Out for Delivery", "Package out for delivery", getRandomLocation(), 4, shipmentStatus === "Out for Delivery");
   }
   
@@ -59,11 +60,10 @@ const generateFakeTrackingHistory = (shipmentStatus: TrackingStage, bookingDate:
   }
 
   if (shipmentStatus === "Cancelled") {
-     history.length = 0; // Clear previous history if cancelled
+     history.length = 0;
      addStep("Cancelled", "Shipment has been cancelled", getRandomLocation(), 1, true);
   }
   
-  // Ensure the current status step is marked as current
   const currentStepIndex = history.findIndex(step => step.stage === shipmentStatus && step.status !== "completed");
   if(currentStepIndex !== -1) {
     history.forEach((step, idx) => {
@@ -99,28 +99,28 @@ export function TrackShipmentForm() {
     const shipment = getShipmentById(data.shipmentId);
 
     if (shipment) {
-      const fakeHistory = generateFakeTrackingHistory(shipment.status, shipment.bookingDate);
-      setTrackingResult({ shipment, history: fakeHistory });
+      const shipmentHistory = generateFakeTrackingHistory(shipment.status, shipment.bookingDate);
+      setTrackingResult({ shipment, history: shipmentHistory });
     } else {
-      // Simulate finding other shipments for demo, even if not in local context
+      // Generate a random status for unbooked IDs for user experience.
       const randomStatuses: TrackingStage[] = ["Booked", "In Transit", "Out for Delivery", "Delivered", "Cancelled"];
       const randomStatus = randomStatuses[Math.floor(Math.random() * randomStatuses.length)];
-      const fakeShipment : Shipment = {
+      const placeholderShipment : Shipment = {
         id: data.shipmentId,
-        senderName: "Demo Sender",
-        senderAddress: "123 Demo St",
-        senderPhone: "1234567890",
-        receiverName: "Demo Receiver",
-        receiverAddress: "456 Demo Ave",
-        receiverPhone: "0987654321",
+        senderName: "System Data", // Changed from "Demo Sender"
+        senderAddress: "System Data",
+        senderPhone: "N/A",
+        receiverName: "System Data", // Changed from "Demo Receiver"
+        receiverAddress: "System Data",
+        receiverPhone: "N/A",
         packageWeight: 1, packageWidth:10, packageHeight:10, packageLength:10,
-        pickupDate: new Date(new Date().setDate(new Date().getDate() - 5)), // 5 days ago
+        pickupDate: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 5) -1)), 
         serviceType: "Standard",
-        bookingDate: new Date(new Date().setDate(new Date().getDate() - 5)), // 5 days ago
+        bookingDate: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 5) -1)),
         status: randomStatus,
       };
-      const fakeHistory = generateFakeTrackingHistory(randomStatus, fakeShipment.bookingDate);
-      setTrackingResult({ shipment: fakeShipment, history: fakeHistory });
+      const placeholderHistory = generateFakeTrackingHistory(randomStatus, placeholderShipment.bookingDate);
+      setTrackingResult({ shipment: placeholderShipment, history: placeholderHistory });
     }
   };
 
@@ -155,13 +155,6 @@ export function TrackShipmentForm() {
               </Button>
             </form>
           </Form>
-          <Alert variant="default" className="mt-4 bg-accent/10 border-accent/20 text-accent-foreground">
-            <Info className="h-4 w-4 text-accent" />
-            <AlertTitle className="font-semibold">Demo Information</AlertTitle>
-            <AlertDescription>
-              You can track any ID starting with 'RS' followed by 6 digits (e.g., RS123456). If the ID is not found in your booked shipments, a random status will be generated for demonstration.
-            </AlertDescription>
-          </Alert>
         </CardContent>
       </Card>
 

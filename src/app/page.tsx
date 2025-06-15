@@ -9,9 +9,9 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CompanyLogo } from '@/components/shared/logo';
-import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2, Globe, CreditCard, Send, Repeat, Truck, Users } from 'lucide-react';
+import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2, Globe, CreditCard, Send, Repeat, Truck, Users, Info } from 'lucide-react';
 
-function LandingHeader() {
+export function LandingHeader() {
   return (
     <header className="py-4 px-6 md:px-10 flex justify-between items-center sticky top-0 z-50 bg-background/90 backdrop-blur-sm border-b">
       <CompanyLogo />
@@ -27,7 +27,7 @@ function LandingHeader() {
   );
 }
 
-function LandingFooter() {
+export function LandingFooter() {
   return (
     <footer className="py-8 px-6 md:px-10 text-center border-t bg-muted/50">
       <div className="container mx-auto">
@@ -36,8 +36,9 @@ function LandingFooter() {
           &copy; {new Date().getFullYear()} Shed Load Overseas - RS SWIFT COURIERS LLP. All rights reserved.
         </p>
         <div className="mt-4 space-x-4">
-          <Link href="#" className="text-xs text-muted-foreground hover:text-primary">Privacy Policy</Link>
-          <Link href="#" className="text-xs text-muted-foreground hover:text-primary">Terms of Service</Link>
+          <Link href="/about" className="text-xs text-muted-foreground hover:text-primary">About Us</Link>
+          <Link href="/privacy-policy" className="text-xs text-muted-foreground hover:text-primary">Privacy Policy</Link>
+          <Link href="/terms-of-service" className="text-xs text-muted-foreground hover:text-primary">Terms of Service</Link>
           <Link href="/dashboard/contact" className="text-xs text-muted-foreground hover:text-primary">Contact Us</Link>
         </div>
       </div>
@@ -105,10 +106,12 @@ export default function HomePage() {
   ];
 
   const serviceHighlights = [
-    { icon: Truck, title: "Comprehensive Services", description: "Courier, Cargo, Express, International, Domestic, and Hyperlocal solutions tailored to your needs." },
+    { icon: PackageCheck, title: "Comprehensive Services", description: "Courier, Cargo, Express, International, Domestic, and Hyperlocal solutions tailored to your needs." },
     { icon: CreditCard, title: "Cash on Delivery (COD)", description: "Flexible payment options including Cash on Delivery for your convenience." },
     { icon: Repeat, title: "Reverse Pickup", description: "Efficient and hassle-free reverse pickup services for returns and exchanges." },
-    { icon: Send, title: "Multi-Channel Notifications", description: "Stay informed with updates via SMS, Email, and WhatsApp (simulated)." }
+    { icon: Send, title: "Multi-Channel Notifications", description: "Stay informed with updates via SMS, Email, and WhatsApp." },
+    { icon: Info, title: "Rate List", description: "Contact us for our competitive rate list tailored to your shipping volume and needs." },
+    { icon: Truck, title: "Serviceable Area", description: "Operating across India and Internationally, ensuring your packages reach their destination." }
   ];
 
 

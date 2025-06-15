@@ -104,9 +104,6 @@ export default function ContactPage() {
             </div>
           </div>
         </CardContent>
-         <CardFooter>
-          <p className="text-xs text-muted-foreground">Note: WhatsApp notifications are simulated for demo purposes and are not active.</p>
-        </CardFooter>
       </Card>
     </div>
   );
