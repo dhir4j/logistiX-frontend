@@ -20,14 +20,14 @@
     --border: 215 20% 85%;
     --input: 215 20% 88%;
 
-    --primary: 206 69% 55%; /* New: #3d97db */
+    --primary: 206 69% 55%; /* #3d97db */
     --primary-foreground: 210 40% 98%; /* Light text for primary */
 
     --secondary: 215 28% 90%; /* Slightly darker gray for secondary elements */
     --secondary-foreground: 222 47% 11%;
 
-    --accent: 335 70% 65%; /* New: Pink */
-    --accent-foreground: 335 70% 15%; /* Dark text for accent */
+    --accent: 280 100% 85%; /* New: Light purple #e6b3ff */
+    --accent-foreground: 280 70% 15%; /* Dark purple for contrast */
 
     --destructive: 0 72% 51%; /* Updated destructive to be more vibrant */
     --destructive-foreground: 0 0% 98%;
@@ -40,13 +40,13 @@
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 206 69% 50%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 335 70% 63%; /* Adjusted accent for sidebar */
-    --sidebar-accent-foreground: 335 70% 15%;
+    --sidebar-accent: 280 100% 85%; /* Adjusted accent for sidebar */
+    --sidebar-accent-foreground: 280 70% 15%;
     --sidebar-border: 215 20% 80%;
     --sidebar-ring: 206 69% 48%; /* Adjusted ring for sidebar */
 
     --chart-1: 206 69% 55%;
-    --chart-2: 335 70% 65%; /* Pink for charts */
+    --chart-2: 280 100% 85%; /* Light purple for charts */
     --chart-3: 215 28% 70%;
     --chart-4: 206 50% 45%;
     --chart-5: 35 70% 50%; /* Retained a gold/orange for variety if needed */
@@ -74,8 +74,8 @@
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --accent: 335 70% 65%; /* New: Pink */
-    --accent-foreground: 335 70% 15%; /* Dark text for accent */
+    --accent: 280 100% 85%; /* New: Light purple #e6b3ff */
+    --accent-foreground: 280 70% 15%; /* Dark purple for contrast */
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
@@ -87,13 +87,13 @@
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 206 69% 55%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 335 70% 65%; /* Pink for dark sidebar */
-    --sidebar-accent-foreground: 335 70% 15%;
+    --sidebar-accent: 280 100% 85%; /* Light purple for dark sidebar */
+    --sidebar-accent-foreground: 280 70% 15%;
     --sidebar-border: 217 33% 25%;
     --sidebar-ring: 206 69% 50%;
     
     --chart-1: 206 69% 55%;
-    --chart-2: 335 70% 65%; /* Pink for charts */
+    --chart-2: 280 100% 85%; /* Light purple for charts */
     --chart-3: 210 40% 80%;
     --chart-4: 206 50% 45%;
     --chart-5: 35 70% 50%;
