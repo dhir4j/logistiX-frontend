@@ -31,13 +31,13 @@ export default function AboutUsPage() {
                 </p>
               </CardContent>
             </div>
-            <div className="md:w-1/2">
+            <div className="md:w-1/2 p-6 flex items-center justify-center">
               <Image
                 src="/images/mission.png"
                 alt="Illustration representing our company mission, a compass"
-                width={300}
-                height={225}
-                className="object-cover w-full h-full"
+                width={200}
+                height={150}
+                className="object-contain"
               />
             </div>
           </div>
