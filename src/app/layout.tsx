@@ -3,13 +3,13 @@ import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import { Providers } from '@/components/providers';
 import './globals.css';
-// LandingFooter removed from global layout
+import { LandingFooter } from '@/app/page'; 
 
 export const metadata: Metadata = {
   title: 'Shed Load Overseas - RS SWIFT COURIERS LLP',
   description: 'Courier and shipment management solutions by Shed Load Overseas.',
   icons: {
-    icon: '/favicon.ico', 
+    icon: '/images/favicon.png', 
   }
 };
 
@@ -27,10 +27,10 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background text-foreground flex flex-col min-h-screen">
         <Providers>
-          <div className="flex-1 flex flex-col"> {/* This div ensures children take available space */}
+          <div className="flex-1 flex flex-col">
             {children}
           </div>
-          {/* LandingFooter removed from here */}
+          <LandingFooter />
         </Providers>
         <Toaster />
       </body>

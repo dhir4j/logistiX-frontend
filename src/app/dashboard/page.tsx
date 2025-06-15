@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from '@/hooks/use-auth';
@@ -39,7 +40,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">{item.description}</p>
-              <Button asChild variant="outline" className="w-full border-primary text-primary hover:bg-primary/10">
+              <Button asChild variant="outline" className="w-full border-primary text-primary hover:bg-primary/10 animated-outline-hover">
                 <Link href={item.href}>
                   Go to {item.title.split(' ')[0]} <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -72,9 +73,8 @@ export default function DashboardPage() {
           </div>
           <div className="hidden md:block">
             <Image
-              src="https://placehold.co/600x400.png"
+              src="/images/second.png"
               alt="Customer Support Illustration"
-              data-ai-hint="customer support logistics"
               width={600}
               height={400}
               className="object-cover w-full h-full"
