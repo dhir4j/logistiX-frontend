@@ -26,11 +26,11 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
+  // SidebarTrigger, // SidebarTrigger is not used directly here, but good to keep if needed later
   SidebarInset,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { LogOut, UserCircle, Settings, LifeBuoy, ChevronDown, Menu } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -92,7 +92,7 @@ function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" side="left" variant="sidebar" defaultOpen={true}>
+    <Sidebar collapsible="icon" side="left" variant="sidebar">
       <SidebarHeader>
         <Logo collapsed={state === 'collapsed'} />
       </SidebarHeader>
@@ -208,7 +208,7 @@ export default function DashboardLayout({
 
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex flex-1 flex-col">
