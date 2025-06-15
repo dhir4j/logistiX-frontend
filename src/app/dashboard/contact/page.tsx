@@ -11,9 +11,8 @@ export default function ContactPage() {
         <div className="md:flex">
           <div className="md:w-1/2">
              <Image
-                src="https://placehold.co/600x400.png"
-                alt="Contact Us Illustration"
-                data-ai-hint="contact support"
+                src="/images/girl.png"
+                alt="Customer support representative"
                 width={600}
                 height={400}
                 className="object-cover w-full h-full"
