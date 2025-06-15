@@ -1,5 +1,7 @@
+
 "use client";
 
+import * as React from 'react';
 import type { TrackingStep, TrackingStage } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Circle, Loader2, Truck, PackageCheck, PackageSearch, AlertTriangle } from 'lucide-react';
