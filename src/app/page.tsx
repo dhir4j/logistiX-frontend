@@ -256,7 +256,7 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-      {/* LandingFooter removed from here, it's now global */}
+      <LandingFooter /> {/* Added footer here */}
     </div>
   );
 }

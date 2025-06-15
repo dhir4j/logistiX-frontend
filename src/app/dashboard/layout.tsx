@@ -8,7 +8,7 @@ import { dashboardNavItems, siteConfig } from '@/config/site';
 import { Logo } from '@/components/shared/logo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // AvatarImage removed
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,10 +29,11 @@ import {
   SidebarInset,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { LogOut, Menu, UserCircle } from 'lucide-react'; // UserCircle added
+import { LogOut, Menu, UserCircle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { LandingFooter } from '@/app/page'; // Import LandingFooter
 
 function UserNav() {
   const { user, logout } = useAuth();
@@ -50,7 +51,6 @@ function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 border-2 border-primary">
-            {/* AvatarImage removed */}
             <AvatarFallback>
               <UserCircle className="h-7 w-7" />
             </AvatarFallback>
@@ -207,10 +207,10 @@ export default function DashboardLayout({
 
 
   return (
-    <SidebarProvider> {/* Removed defaultOpen prop, managed by cookie/state */}
+    <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col"> {/* This column needs to be flex-1 and flex-col for footer */}
           <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
              <div className="flex items-center gap-2">
                <MobileSidebar />
@@ -218,11 +218,12 @@ export default function DashboardLayout({
              </div>
             <UserNav />
           </header>
-          <SidebarInset>
-            <main className="flex-1 p-4 md:p-6 lg:p-8">
+          <SidebarInset className="flex-1"> {/* Make SidebarInset flex-1 to take available space */}
+            <main className="flex-1 p-4 md:p-6 lg:p-8"> {/* Ensure main content area is also flex-1 */}
               {children}
             </main>
           </SidebarInset>
+          <LandingFooter /> {/* Add footer here */}
         </div>
       </div>
     </SidebarProvider>
