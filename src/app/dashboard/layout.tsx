@@ -31,9 +31,9 @@ import {
 } from '@/components/ui/sidebar';
 import { LogOut, Menu, UserCircle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'; // Added SheetTitle
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LandingFooter } from '@/app/page'; // Import LandingFooter
+import { LandingFooter } from '@/app/page'; 
 
 function UserNav() {
   const { user, logout } = useAuth();
@@ -63,9 +63,6 @@ function UserNav() {
             <p className="text-sm font-medium leading-none">{user.firstName} {user.lastName}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
-            </p>
-            <p className="text-xs leading-none text-muted-foreground mt-1">
-              RS SWIFT COURIERS LLP
             </p>
           </div>
         </DropdownMenuLabel>
@@ -211,7 +208,7 @@ export default function DashboardLayout({
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
-        <div className="flex flex-1 flex-col"> {/* This column needs to be flex-1 and flex-col for footer */}
+        <div className="flex flex-1 flex-col"> 
           <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
              <div className="flex items-center gap-2">
                <MobileSidebar />
@@ -219,12 +216,12 @@ export default function DashboardLayout({
              </div>
             <UserNav />
           </header>
-          <SidebarInset className="flex-1"> {/* Make SidebarInset flex-1 to take available space */}
-            <main className="flex-1 p-4 md:p-6 lg:p-8"> {/* Ensure main content area is also flex-1 */}
+          <SidebarInset className="flex-1"> 
+            <main className="flex-1 p-4 md:p-6 lg:p-8"> 
               {children}
             </main>
           </SidebarInset>
-          <LandingFooter /> {/* Add footer here */}
+          <LandingFooter /> 
         </div>
       </div>
     </SidebarProvider>

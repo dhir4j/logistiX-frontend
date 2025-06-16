@@ -47,10 +47,9 @@ export function LandingFooter() {
       <div className="container mx-auto">
         <div className="mb-4">
            <Image src="/images/brand.png" alt="Shed Load Overseas Footer Logo" width={150} height={40} className="object-contain mx-auto"/>
-           <p className="text-xs text-muted-foreground mt-1">RS SWIFT COURIERS LLP</p>
         </div>
         <p className="text-sm text-muted-foreground">
-          &copy; {currentYear} Shed Load Overseas - RS SWIFT COURIERS LLP. All rights reserved.
+          &copy; {currentYear} Shed Load Overseas. All rights reserved.
         </p>
         <div className="mt-4 space-x-4 flex flex-wrap justify-center">
           <Link href="/about" className="text-xs text-muted-foreground hover:text-primary">About Us</Link>

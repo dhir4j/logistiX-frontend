@@ -11,7 +11,8 @@ export default function ContactPage() {
         <div className="md:flex">
           <div className="md:w-1/2 h-64 md:h-auto"> {/* Added h-64 for mobile, md:h-auto for larger screens */}
              <Image
-                src="/images/girl.png"
+                src="/images/mission.png"
+                data-ai-hint="customer support"
                 alt="Customer support representative"
                 width={600}
                 height={400}
@@ -46,7 +47,7 @@ export default function ContactPage() {
                 <MapPin className="h-6 w-6 text-primary mt-1 shrink-0" />
                 <div>
                   <h4 className="font-semibold">Office Address</h4>
-                  <p className="text-muted-foreground">RS SWIFT COURIERS LLP<br />18AX MODEL TOWN EXTENSION, LUDHIANA<br />NEAR PUNJAB & SIND BANK</p>
+                  <p className="text-muted-foreground">18AX MODEL TOWN EXTENSION, LUDHIANA<br />NEAR PUNJAB & SIND BANK</p>
                 </div>
               </div>
             </CardContent>

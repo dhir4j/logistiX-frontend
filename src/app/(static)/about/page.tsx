@@ -13,8 +13,8 @@ export default function AboutUsPage() {
         </p>
       </section>
 
-      <section className="grid md:grid-cols-3 gap-8 items-stretch">
-        <Card className="shadow-lg md:col-span-2">
+      <section className="grid md:grid-cols-1 gap-8 items-stretch"> {/* Changed from md:grid-cols-3 and removed RS Swift Card */}
+        <Card className="shadow-lg"> {/* Changed from md:col-span-2 */}
           <CardHeader className="pb-2">
             <CardTitle className="font-headline text-2xl sm:text-3xl text-primary flex items-center gap-2">
               <Briefcase className="h-8 w-8" /> Our Mission
@@ -40,17 +40,6 @@ export default function AboutUsPage() {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-lg bg-muted/30 flex flex-col justify-center md:col-span-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="font-headline text-xl sm:text-2xl">RS SWIFT COURIERS LLP</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CardDescription className="text-md text-muted-foreground">
-                Shed Load Overseas operates under RS SWIFT COURIERS LLP, leveraging its expertise for top-tier global and local courier solutions. RS SWIFT COURIERS LLP champions service, reliability, and innovation, empowering Shed Load Overseas.
-            </CardDescription>
           </CardContent>
         </Card>
       </section>

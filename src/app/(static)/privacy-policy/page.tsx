@@ -46,7 +46,7 @@ export default function PrivacyPolicyPage() {
           <p>We may update this privacy notice from time to time. The updated version will be indicated by an updated "Last updated" date and the updated version will be effective as soon as it is accessible. We encourage you to review this privacy notice frequently to be informed of how we are protecting your information.</p>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">8. Contact Us</h2>
-          <p>If you have questions or comments about this notice, you may email us at RSSWIFTCOURIERS@GMAIL.COM or by post to RS SWIFT COURIERS LLP, 18AX MODEL TOWN EXTENSION, LUDHIANA, NEAR PUNJAB & SIND BANK.</p>
+          <p>If you have questions or comments about this notice, you may email us at RSSWIFTCOURIERS@GMAIL.COM or by post to 18AX MODEL TOWN EXTENSION, LUDHIANA, NEAR PUNJAB & SIND BANK.</p>
         </CardContent>
       </Card>
     </div>

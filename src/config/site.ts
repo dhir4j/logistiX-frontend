@@ -1,3 +1,4 @@
+
 import { Home, PackagePlus, Search, ListOrdered, Calculator, MessageSquare, LogOut, UserCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -52,7 +53,7 @@ export const dashboardNavItems: NavItem[] = [
 
 export const siteConfig = {
   name: "Shed Load Overseas",
-  description: "RS SWIFT COURIERS LLP - Courier and shipment management by Shed Load Overseas.",
+  description: "Courier and shipment management solutions by Shed Load Overseas.",
   url: "https://shedloadoverseas.example.com", 
   ogImage: "https://shedloadoverseas.example.com/og.jpg", 
   mainNav: dashboardNavItems,
