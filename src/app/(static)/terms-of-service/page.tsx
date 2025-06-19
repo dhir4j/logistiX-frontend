@@ -38,22 +38,38 @@ export default function TermsOfServicePage() {
             <li>Redistribute content from Shed Load Overseas</li>
           </ul>
 
-          <h2 className="text-xl font-semibold text-foreground pt-4">3. User Account</h2>
+          <h2 className="text-xl font-semibold text-foreground pt-4">3. Prohibited Items</h2>
+          <p>Users are prohibited from shipping certain items through Shed Load Overseas. This includes, but is not limited to:</p>
+          <ul className="list-disc list-inside ml-4">
+            <li>Illegal substances, narcotics, and psychotropic drugs.</li>
+            <li>Explosives, firearms, ammunition, and other weaponry.</li>
+            <li>Hazardous materials, toxic substances, and radioactive materials.</li>
+            <li>Perishable goods that require special handling or temperature control not explicitly supported by our services.</li>
+            <li>Live animals (except as permitted under specific service agreements and regulations).</li>
+            <li>Valuables such as gold, silver, precious stones, currency, and negotiable instruments.</li>
+            <li>Certain types of medicines, especially those requiring prescriptions or specific temperature controls, or those restricted by import/export laws of the origin or destination country. Please verify with our customer service before attempting to ship any medical items.</li>
+            <li>Items that are obscene, pornographic, or offensive.</li>
+            <li>Any item that is prohibited by law or regulation in the origin or destination country.</li>
+          </ul>
+          <p>Shed Load Overseas reserves the right to refuse, hold, or return any shipment that is found to contain prohibited items. Users may be liable for any damages or costs incurred due to the shipment of prohibited items.</p>
+
+
+          <h2 className="text-xl font-semibold text-foreground pt-4">4. User Account</h2>
           <p>The provided login credentials are for demonstration and testing of the application's features. You are responsible for any activity that occurs under these credentials during your session.</p>
           
-          <h2 className="text-xl font-semibold text-foreground pt-4">4. Limitation of Liability</h2>
+          <h2 className="text-xl font-semibold text-foreground pt-4">5. Limitation of Liability</h2>
           <p>In no event shall Shed Load Overseas, nor any of its officers, directors, and employees, be held liable for anything arising out of or in any way connected with your use of this prototype application whether such liability is under contract. Shed Load Overseas, including its officers, directors,and employees shall not be held liable for any indirect, consequential, or special liability arising out of or in any way related to your use of this Website.</p>
 
-          <h2 className="text-xl font-semibold text-foreground pt-4">5. Service Availability</h2>
+          <h2 className="text-xl font-semibold text-foreground pt-4">6. Service Availability</h2>
           <p>This prototype application is provided "as is" and "as available" without any warranties, express or implied. We do not guarantee that the service will always be available, uninterrupted, or error-free.</p>
           
-          <h2 className="text-xl font-semibold text-foreground pt-4">6. Governing Law</h2>
+          <h2 className="text-xl font-semibold text-foreground pt-4">7. Governing Law</h2>
           <p>Any claim relating to Shed Load Overseas's website shall be governed by the laws of India without regard to its conflict of law provisions.</p>
           
-          <h2 className="text-xl font-semibold text-foreground pt-4">7. Changes to Terms</h2>
+          <h2 className="text-xl font-semibold text-foreground pt-4">8. Changes to Terms</h2>
           <p>Shed Load Overseas reserves the right to revise these terms at any time as it sees fit, and by using this Website you are expected to review these terms on a regular basis.</p>
 
-          <h2 className="text-xl font-semibold text-foreground pt-4">8. Contact Information</h2>
+          <h2 className="text-xl font-semibold text-foreground pt-4">9. Contact Information</h2>
           <p>If you have any queries regarding any of our terms, please contact us at RSSWIFTCOURIERS@GMAIL.COM.</p>
         </CardContent>
       </Card>
