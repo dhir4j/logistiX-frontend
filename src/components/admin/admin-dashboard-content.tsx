@@ -3,10 +3,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart, Package, DollarSign, Users, Truck, CheckCircle, Clock } from "lucide-react";
-import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { Package, DollarSign, Users, Truck, CheckCircle, Clock } from "lucide-react";
+import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, Legend } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const shipmentsData = [
   { month: "Jan", shipments: Math.floor(Math.random() * 500) + 100, revenue: Math.floor(Math.random() * 20000) + 5000 },
@@ -17,16 +18,16 @@ const shipmentsData = [
   { month: "Jun", shipments: Math.floor(Math.random() * 500) + 100, revenue: Math.floor(Math.random() * 20000) + 5000 },
 ];
 
-const chartConfig = {
-  shipments: {
-    label: "Shipments",
-    color: "hsl(var(--chart-1))",
-  },
-  revenue: {
-    label: "Revenue (₹)",
-    color: "hsl(var(--chart-2))",
-  },
-};
+// const chartConfig = { // This was defined but not used by ChartContainer, Recharts directly uses var(--color-...)
+//   shipments: {
+//     label: "Shipments",
+//     color: "hsl(var(--chart-1))",
+//   },
+//   revenue: {
+//     label: "Revenue (₹)",
+//     color: "hsl(var(--chart-2))",
+//   },
+// };
 
 const recentShipments = [
   { id: "RS738291", customer: "Amit Patel", status: "Delivered", date: "2024-07-28", value: 2500 },
@@ -103,21 +104,23 @@ export function AdminDashboardContent() {
             <CardDescription>Monthly performance for the last 6 months.</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] sm:h-[350px] p-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsBarChart data={shipmentsData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" tickLine={false} axisLine={false} fontSize={12} />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="dashed" />}
-                />
-                <Legend />
-                <Bar yAxisId="left" dataKey="shipments" fill="var(--color-shipments)" radius={[4, 4, 0, 0]} />
-                <Bar yAxisId="right" dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
-              </RechartsBarChart>
-            </ResponsiveContainer>
+            <ChartContainer config={{}} className="w-full h-full"> {/* Pass empty config if not using its features, or define one */}
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsBarChart data={shipmentsData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" tickLine={false} axisLine={false} fontSize={12} />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dashed" />}
+                  />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="shipments" fill="var(--color-shipments, hsl(var(--chart-1)))" radius={[4, 4, 0, 0]} name="Shipments" />
+                  <Bar yAxisId="right" dataKey="revenue" fill="var(--color-revenue, hsl(var(--chart-2)))" radius={[4, 4, 0, 0]} name="Revenue (₹)" />
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
 
