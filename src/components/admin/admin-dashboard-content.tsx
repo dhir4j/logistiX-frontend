@@ -4,10 +4,11 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Package, DollarSign, Users, Truck, CheckCircle, Clock } from "lucide-react";
 import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Legend as RechartsLegend, Tooltip as RechartsTooltip } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'; // Added ChartTooltip here
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { AdminOrdersTable } from './admin-orders-table'; // Import the new table
+import { AdminOrdersTable } from './admin-orders-table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const shipmentsData = [
   { month: "Jan", shipments: Math.floor(Math.random() * 500) + 100, revenue: Math.floor(Math.random() * 20000) + 5000 },
@@ -158,3 +159,4 @@ export function AdminDashboardContent() {
     </div>
   );
 }
+
