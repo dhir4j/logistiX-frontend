@@ -1,4 +1,5 @@
 
+// Matches API structure for Address
 export interface AddressDetail {
   street: string;
   city: string;
@@ -7,75 +8,128 @@ export interface AddressDetail {
   country: string;
 }
 
+// Matches API structure for User
 export interface User {
-  id: string;
+  id: number; // Assuming integer ID from PostgreSQL
   email: string;
   firstName: string;
   lastName: string;
+  isAdmin: boolean;
+  // created_at could be added if needed by frontend
 }
 
 export type ServiceType = "Standard" | "Express";
-
-export interface Shipment {
-  id: string;
-  senderName: string;
-  senderAddress: AddressDetail;
-  senderPhone: string;
-  receiverName: string;
-  receiverAddress: AddressDetail;
-  receiverPhone: string;
-  packageWeight: number;
-  packageWidth: number;
-  packageHeight: number;
-  packageLength: number;
-  pickupDate: Date;
-  serviceType: ServiceType;
-  bookingDate: Date;
-  status: TrackingStage;
-  // Added to allow admin to add notes or for other future use
-  adminNotes?: string; 
-  lastUpdatedAt?: Date;
-}
-
 export type TrackingStage = "Booked" | "In Transit" | "Out for Delivery" | "Delivered" | "Cancelled";
 
+// Matches API structure for Tracking History entries
 export interface TrackingStep {
   stage: TrackingStage;
-  date: string;
+  date: string; // ISO8601 Timestamp string from API
   location: string;
   activity: string;
-  status: "completed" | "current" | "pending";
+  status?: "completed" | "current" | "pending"; // Frontend-only enrichment for UI
 }
 
-export interface InvoiceItem {
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
+// Matches API structure for Shipment
+export interface Shipment {
+  id: number; // Assuming integer ID from PostgreSQL
+  userId?: number; // user_id from DB
+  shipmentIdStr: string; // Custom string ID like RS123456
+
+  senderName: string;
+  senderAddressStreet: string;
+  senderAddressCity: string;
+  senderAddressState: string;
+  senderAddressPincode: string;
+  senderAddressCountry: string;
+  senderPhone: string;
+
+  receiverName: string;
+  receiverAddressStreet: string;
+  receiverAddressCity: string;
+  receiverAddressState: string;
+  receiverAddressPincode: string;
+  receiverAddressCountry: string;
+  receiverPhone: string;
+
+  packageWeightKg: number;
+  packageWidthCm: number;
+  packageHeightCm: number;
+  packageLengthCm: number;
+
+  pickupDate: string; // YYYY-MM-DD string for API, was Date object
+  serviceType: ServiceType;
+  bookingDate: string; // ISO8601 Timestamp string from API, was Date object
+  status: TrackingStage;
+
+  priceWithoutTax: number;
+  taxAmount18Percent: number;
+  totalWithTax18Percent: number;
+
+  trackingHistory: TrackingStep[];
+  lastUpdatedAt?: string; // ISO8601 Timestamp string from API
+  
+  // For Admin Orders Table, might not come from API directly but can be derived
+  customerName?: string; 
+  orderNumber?: string; 
+  description?: string; 
 }
 
-export interface Invoice {
-  id: string; // Invoice ID, e.g., INV-RS123456
-  shipmentId: string;
-  invoiceDate: Date;
-  dueDate: Date; // For simulation, can be same as invoiceDate
+// API response for login
+export interface LoginResponse {
+  accessToken: string;
+  user: User;
+}
+
+// API response for creating shipment
+export interface CreateShipmentResponse {
+    shipmentIdStr: string;
+    message: string;
+    data: Shipment;
+}
+
+// API response for admin listing shipments
+export interface AdminShipmentsResponse {
+    shipments: Shipment[];
+    totalPages: number;
+    currentPage: number;
+    totalCount: number;
+}
+
+// API response for updating shipment status
+export interface UpdateShipmentStatusResponse {
+    message: string;
+    updatedShipment: Shipment;
+}
+
+// Redefining Invoice for frontend display purposes, derived from Shipment data
+export interface DisplayInvoice {
+  id: string; // Use shipmentIdStr as the unique ID for display
+  shipmentIdStr: string;
+  invoiceDate: Date; // Parsed from shipment.bookingDate
+  dueDate: Date; // Can be same as invoiceDate or calculated
+
   senderDetails: {
     name: string;
-    address: AddressDetail;
+    address: AddressDetail; // Reconstruct AddressDetail from shipment fields
     phone: string;
   };
   receiverDetails: {
     name: string;
-    address: AddressDetail;
+    address: AddressDetail; // Reconstruct AddressDetail from shipment fields
     phone: string;
   };
-  items: InvoiceItem[];
-  subtotal: number;
-  taxRate: number; // e.g., 0.18 for 18%
-  taxAmount: number;
-  grandTotal: number;
-  status: "Paid" | "Pending"; // For simulation, will default to "Paid"
+  items: Array<{
+    description: string;
+    quantity: number;
+    unitPrice: number; // shipment.priceWithoutTax
+    total: number; // shipment.priceWithoutTax
+  }>;
+  subtotal: number; // shipment.priceWithoutTax
+  taxRate: number; // Always 0.18
+  taxAmount: number; // shipment.taxAmount18Percent
+  grandTotal: number; // shipment.totalWithTax18Percent
+  status: "Paid" | "Pending"; // Can be hardcoded to "Paid" as per current logic
   serviceType: ServiceType;
   packageWeight: number;
 }
-

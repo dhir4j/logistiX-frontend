@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,38 +10,71 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useAdminAuth } from '@/hooks/use-admin-auth';
+import { useAuth } from '@/hooks/use-auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Shield, KeyRound } from 'lucide-react';
 import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
 
 const adminLoginSchema = z.object({
-  username: z.string().min(1, { message: "Username is required." }),
+  email: z.string().email({ message: "Email is required." }),
   password: z.string().min(1, { message: "Password is required." }),
 });
 
 type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
 
 export function AdminLoginForm() {
-  const [error, setError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const router = useRouter();
-  const { adminLogin } = useAdminAuth();
+  const { loginUser, user, isAuthenticated, isLoading } = useAuth();
+  const { toast } = useToast();
 
   const form = useForm<AdminLoginFormValues>({
     resolver: zodResolver(adminLoginSchema),
     defaultValues: {
-      username: '',
-      password: '',
+      email: '', // Example: 'admin@example.com'
+      password: '', // Example: 'adminpassword'
     },
   });
 
-  const onSubmit = (data: AdminLoginFormValues) => {
-    setError(null);
-    if (data.username === 'admin' && data.password === 'admin') {
-      adminLogin(data.username);
+  // Redirect if already logged in as admin
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user?.isAdmin) {
       router.replace('/admin/dashboard');
-    } else {
-      setError('Invalid username or password.');
+    }
+  }, [user, isAuthenticated, isLoading, router]);
+
+
+  const onSubmit = async (data: AdminLoginFormValues) => {
+    setApiError(null);
+    form.clearErrors();
+    try {
+      const loggedInUser = await loginUser(data.email, data.password);
+      if (loggedInUser.isAdmin) {
+        toast({
+          title: "Admin Login Successful",
+          description: `Welcome, ${loggedInUser.firstName}!`,
+        });
+        router.replace('/admin/dashboard');
+      } else {
+        // Logged in successfully but not an admin
+        setApiError('Access denied. User is not an administrator.');
+        toast({
+            title: "Login Failed",
+            description: "You do not have admin privileges.",
+            variant: "destructive",
+        });
+        // Optionally, log them out if they shouldn't stay logged in as a regular user here
+        // logoutUser(); 
+      }
+    } catch (error: any) {
+      const errorMessage = error?.data?.error || error?.message || "An unexpected error occurred.";
+      setApiError(errorMessage);
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 
@@ -55,24 +88,25 @@ export function AdminLoginForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {error && (
+            {apiError && (
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Login Failed</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{apiError}</AlertDescription>
               </Alert>
             )}
             <FormField
               control={form.control}
-              name="username"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base">Username</FormLabel>
+                  <FormLabel className="text-base">Email</FormLabel>
                   <div className="relative">
                     <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <FormControl>
                       <Input 
-                        placeholder="admin" 
+                        type="email"
+                        placeholder="admin@example.com" 
                         {...field} 
                         className="pl-10 text-base" 
                       />
@@ -110,7 +144,7 @@ export function AdminLoginForm() {
         </Form>
       </CardContent>
       <CardFooter>
-        <p className="text-xs text-muted-foreground text-center w-full">Enter credentials to access the admin dashboard.</p>
+        <p className="text-xs text-muted-foreground text-center w-full">Enter admin credentials to access the dashboard.</p>
       </CardFooter>
     </Card>
   );

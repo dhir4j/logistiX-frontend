@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,11 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Search, ArrowRight, AlertTriangle, Info } from 'lucide-react';
+import { Search, ArrowRight, AlertTriangle, Info, Loader2 } from 'lucide-react';
 import { ShipmentStatusIndicator } from './shipment-status-indicator';
 import type { TrackingStep, TrackingStage, Shipment } from '@/lib/types';
-import { useShipments } from '@/hooks/use-shipments';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import apiClient from '@/lib/api-client'; // Use apiClient directly
+import { useToast } from '@/hooks/use-toast';
 
 const trackSchema = z.object({
   shipmentId: z.string().min(3, "Shipment ID is required").regex(/^RS\d{6}$/, "Invalid Shipment ID format (e.g., RS123456)"),
@@ -21,107 +22,114 @@ const trackSchema = z.object({
 
 type TrackFormValues = z.infer<typeof trackSchema>;
 
-const generateFakeTrackingHistory = (shipmentStatus: TrackingStage, bookingDate: Date): TrackingStep[] => {
-  const history: TrackingStep[] = [];
-  const now = new Date();
+// Function to enrich tracking history with frontend status for UI
+const enrichTrackingHistory = (history: TrackingStep[], currentApiStatus: TrackingStage): TrackingStep[] => {
+  if (!history || history.length === 0) return [];
 
-  const addStep = (stage: TrackingStage, activity: string, location: string, daysOffset: number, isCurrent: boolean = false, isCompleted: boolean = true) => {
-    const stepDate = new Date(bookingDate);
-    stepDate.setDate(bookingDate.getDate() + daysOffset);
-    if (stepDate > now && !(isCurrent && stage !== "Delivered")) return;
+  const stageOrder: TrackingStage[] = ["Booked", "In Transit", "Out for Delivery", "Delivered"];
+  let currentStageReached = false;
 
+  const enriched = history.map(step => ({ ...step })).sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    history.push({
-      stage,
-      date: stepDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-      activity,
-      location,
-      status: isCurrent ? "current" : (isCompleted ? "completed" : "pending"),
-    });
-  };
-  
-  const locations = ["Mumbai, MH", "Nagpur, MH", "Hyderabad, TS", "Bengaluru, KA", "Chennai, TN", "Delhi, DL"];
-  const getRandomLocation = () => locations[Math.floor(Math.random() * locations.length)];
-
-  addStep("Booked", "Shipment booked and confirmed", getRandomLocation(), 0, shipmentStatus === "Booked");
-
-  if (shipmentStatus === "In Transit" || shipmentStatus === "Out for Delivery" || shipmentStatus === "Delivered") {
-    addStep("In Transit", "Package departed from origin facility", getRandomLocation(), 1, shipmentStatus === "In Transit");
-    addStep("In Transit", "Package arrived at sorting hub", getRandomLocation(), 2, shipmentStatus === "In Transit" && history.filter(s => s.stage === "In Transit").length < 2);
+  for (let i = enriched.length - 1; i >= 0; i--) {
+    if (enriched[i].stage === currentApiStatus && !currentStageReached) {
+      enriched[i].status = "current";
+      currentStageReached = true;
+    } else if (currentStageReached) {
+      enriched[i].status = "completed";
+    } else {
+      // If currentApiStatus is, e.g., Delivered, all previous should be completed.
+      // If currentApiStatus is "In Transit", and we haven't found it yet, steps might be pending or completed.
+      // This logic might need refinement based on how API populates history vs current status.
+      // For now, assume API history is chronological and reflects actual events.
+      // A simpler approach: mark last item matching currentApiStatus as 'current', all before as 'completed'.
+      const currentStageIndexInOrder = stageOrder.indexOf(currentApiStatus);
+      const stepStageIndexInOrder = stageOrder.indexOf(enriched[i].stage);
+      if (stepStageIndexInOrder < currentStageIndexInOrder) {
+        enriched[i].status = "completed";
+      } else {
+         enriched[i].status = "pending"; // Default for future steps if not current
+      }
+    }
   }
-  
-  if (shipmentStatus === "Out for Delivery" || shipmentStatus === "Delivered") {
-    addStep("In Transit", "Package departed from sorting hub", getRandomLocation(), 3, false);
-    addStep("Out for Delivery", "Package out for delivery", getRandomLocation(), 4, shipmentStatus === "Out for Delivery");
-  }
-  
-  if (shipmentStatus === "Delivered") {
-    addStep("Delivered", "Package delivered successfully", getRandomLocation(), 5, shipmentStatus === "Delivered");
-  }
-
-  if (shipmentStatus === "Cancelled") {
-     history.length = 0;
-     addStep("Cancelled", "Shipment has been cancelled", getRandomLocation(), 1, true);
-  }
-  
-  const currentStepIndex = history.findIndex(step => step.stage === shipmentStatus && step.status !== "completed");
-  if(currentStepIndex !== -1) {
-    history.forEach((step, idx) => {
-      if (idx < currentStepIndex) step.status = "completed";
-      else if (idx === currentStepIndex) step.status = "current";
-      else step.status = "pending";
-    });
-  } else if (shipmentStatus === "Delivered" && history.length > 0) {
-     history.forEach(step => step.status = "completed");
+   // Ensure the very last item that matches the overall status is 'current'
+  const lastMatchingCurrent = enriched.slice().reverse().find(s => s.stage === currentApiStatus);
+  if(lastMatchingCurrent) {
+      enriched.forEach(s => {
+          if (s.date === lastMatchingCurrent.date && s.activity === lastMatchingCurrent.activity) {
+              s.status = "current";
+          } else if (new Date(s.date) < new Date(lastMatchingCurrent.date)) {
+              s.status = "completed";
+          } else if (s.status !== "current") { // Don't overwrite if already set by other logic
+            s.status = "pending";
+          }
+      });
   }
 
 
-  return history.sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  if (currentApiStatus === "Delivered") {
+    return enriched.map(s => ({ ...s, status: "completed" }));
+  }
+  if (currentApiStatus === "Cancelled") {
+     return enriched.filter(s => s.stage === "Cancelled").map(s => ({...s, status: "current"}));
+  }
+
+
+  return enriched;
 };
 
 
 export function TrackShipmentForm() {
-  const [trackingResult, setTrackingResult] = useState<{ shipment: Shipment, history: TrackingStep[] } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const { getShipmentById } = useShipments();
+  const [trackingResult, setTrackingResult] = useState<Shipment | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const form = useForm<TrackFormValues>({
     resolver: zodResolver(trackSchema),
     defaultValues: {
-      shipmentId: '',
+      shipmentId: searchParams.get('id') || '',
     },
   });
 
-  const onSubmit = (data: TrackFormValues) => {
-    setError(null);
+  const fetchShipmentDetails = async (shipmentId: string) => {
+    setIsLoading(true);
+    setApiError(null);
     setTrackingResult(null);
-    
-    const shipment = getShipmentById(data.shipmentId);
-
-    if (shipment) {
-      const shipmentHistory = generateFakeTrackingHistory(shipment.status, shipment.bookingDate);
-      setTrackingResult({ shipment, history: shipmentHistory });
-    } else {
-      // Generate a random status for unbooked IDs for user experience.
-      const randomStatuses: TrackingStage[] = ["Booked", "In Transit", "Out for Delivery", "Delivered", "Cancelled"];
-      const randomStatus = randomStatuses[Math.floor(Math.random() * randomStatuses.length)];
-      const placeholderShipment : Shipment = {
-        id: data.shipmentId,
-        senderName: "System Data", // Changed from "Demo Sender"
-        senderAddress: "System Data",
-        senderPhone: "N/A",
-        receiverName: "System Data", // Changed from "Demo Receiver"
-        receiverAddress: "System Data",
-        receiverPhone: "N/A",
-        packageWeight: 1, packageWidth:10, packageHeight:10, packageLength:10,
-        pickupDate: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 5) -1)), 
-        serviceType: "Standard",
-        bookingDate: new Date(new Date().setDate(new Date().getDate() - Math.floor(Math.random() * 5) -1)),
-        status: randomStatus,
-      };
-      const placeholderHistory = generateFakeTrackingHistory(randomStatus, placeholderShipment.bookingDate);
-      setTrackingResult({ shipment: placeholderShipment, history: placeholderHistory });
+    try {
+      const shipment = await apiClient<Shipment>(`/api/shipments/${shipmentId}`);
+      // Enrich history client-side for UI display purposes
+      const enrichedHistory = enrichTrackingHistory(shipment.trackingHistory, shipment.status);
+      setTrackingResult({...shipment, trackingHistory: enrichedHistory});
+    } catch (error: any) {
+      const errorMessage = error?.data?.error || error?.message || "Failed to track shipment.";
+      setApiError(errorMessage);
+      toast({
+        title: "Tracking Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
+  
+  // Auto-fetch if ID is in URL
+  useEffect(() => {
+    const shipmentIdFromUrl = searchParams.get('id');
+    if (shipmentIdFromUrl && trackSchema.safeParse({shipmentId: shipmentIdFromUrl}).success) {
+      form.setValue('shipmentId', shipmentIdFromUrl); // Ensure form field is also updated
+      fetchShipmentDetails(shipmentIdFromUrl);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]); // form not included to avoid re-triggering on setValue
+
+  const onSubmit = (data: TrackFormValues) => {
+    // Update URL query param without full page reload
+    router.push(`/dashboard/track-shipment?id=${data.shipmentId}`, { scroll: false });
+    fetchShipmentDetails(data.shipmentId);
   };
 
   return (
@@ -149,29 +157,29 @@ export function TrackShipmentForm() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full sm:w-auto text-lg py-3 px-6 bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Tracking...' : 'Track'}
-                <ArrowRight className="ml-2 h-5 w-5" />
+              <Button type="submit" className="w-full sm:w-auto text-lg py-3 px-6 bg-primary hover:bg-primary/90" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Track'}
+                {!isLoading && <ArrowRight className="ml-2 h-5 w-5" />}
               </Button>
             </form>
           </Form>
         </CardContent>
       </Card>
 
-      {error && (
+      {apiError && !isLoading && (
         <Alert variant="destructive" className="max-w-2xl mx-auto">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{apiError}</AlertDescription>
         </Alert>
       )}
 
-      {trackingResult && (
+      {trackingResult && !isLoading && (
         <div className="mt-8 max-w-2xl mx-auto">
           <ShipmentStatusIndicator
-            shipmentId={trackingResult.shipment.id}
-            currentStatus={trackingResult.shipment.status}
-            trackingHistory={trackingResult.history}
+            shipmentId={trackingResult.shipmentIdStr}
+            currentStatus={trackingResult.status}
+            trackingHistory={trackingResult.trackingHistory}
           />
         </div>
       )}

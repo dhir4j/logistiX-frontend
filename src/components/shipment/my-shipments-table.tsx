@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useShipments } from '@/hooks/use-shipments';
 import type { Shipment, TrackingStage } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,12 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import { PackageSearch, Filter, CalendarDays, ListFilter, Search, ListOrdered } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { PackageSearch, Filter, CalendarDays, ListFilter, Search, ListOrdered, Loader2, Eye } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Badge } from '@/components/ui/badge';
 import { cn } from "@/lib/utils";
+import Link from 'next/link';
 
 const statusColors: Record<TrackingStage, string> = {
   Booked: "bg-blue-100 text-blue-700 border-blue-300",
@@ -25,27 +26,44 @@ const statusColors: Record<TrackingStage, string> = {
 };
 
 export function MyShipmentsTable() {
-  const { shipments, isLoading } = useShipments();
+  const { shipments, isLoading, fetchUserShipments } = useShipments();
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState<string>('');
+
+  useEffect(() => {
+    fetchUserShipments();
+  }, [fetchUserShipments]);
 
   const filteredShipments = useMemo(() => {
     return shipments
       .filter(shipment => {
         const statusMatch = filterStatus === 'all' || shipment.status === filterStatus;
-        const dateMatch = !filterDate || format(shipment.bookingDate, 'yyyy-MM-dd') === format(filterDate, 'yyyy-MM-dd');
+        // API returns bookingDate as ISO string, parse it for comparison
+        const bookingDateObj = shipment.bookingDate ? parseISO(shipment.bookingDate) : null;
+        const dateMatch = !filterDate || (bookingDateObj && format(bookingDateObj, 'yyyy-MM-dd') === format(filterDate, 'yyyy-MM-dd'));
+        
+        const searchLower = searchTerm.toLowerCase();
         const searchMatch = searchTerm === '' || 
-                            shipment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            shipment.senderName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            shipment.receiverName.toLowerCase().includes(searchTerm.toLowerCase());
+                            shipment.shipmentIdStr.toLowerCase().includes(searchLower) ||
+                            shipment.senderName.toLowerCase().includes(searchLower) ||
+                            shipment.receiverName.toLowerCase().includes(searchLower);
         return statusMatch && dateMatch && searchMatch;
       })
-      .sort((a, b) => b.bookingDate.getTime() - a.bookingDate.getTime());
+      .sort((a, b) => {
+        const dateA = a.bookingDate ? parseISO(a.bookingDate).getTime() : 0;
+        const dateB = b.bookingDate ? parseISO(b.bookingDate).getTime() : 0;
+        return dateB - dateA;
+      });
   }, [shipments, filterStatus, filterDate, searchTerm]);
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-64"><PackageSearch className="h-12 w-12 animate-pulse text-primary" /></div>;
+  if (isLoading && shipments.length === 0) { // Show loader only on initial load
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-2">Loading shipments...</p>
+      </div>
+    );
   }
 
   return (
@@ -77,11 +95,9 @@ export function MyShipmentsTable() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Booked">Booked</SelectItem>
-                  <SelectItem value="In Transit">In Transit</SelectItem>
-                  <SelectItem value="Out for Delivery">Out for Delivery</SelectItem>
-                  <SelectItem value="Delivered">Delivered</SelectItem>
-                  <SelectItem value="Cancelled">Cancelled</SelectItem>
+                  {(Object.keys(statusColors) as TrackingStage[]).map(status => (
+                     <SelectItem key={status} value={status}>{status}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -117,7 +133,13 @@ export function MyShipmentsTable() {
           </div>
         </div>
 
-        {filteredShipments.length === 0 ? (
+        {isLoading && shipments.length > 0 && ( // Show subtle loading indicator when refetching
+             <div className="text-center py-4 text-muted-foreground flex items-center justify-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" /> Refreshing data...
+            </div>
+        )}
+
+        {!isLoading && filteredShipments.length === 0 ? (
           <div className="text-center py-12">
             <PackageSearch className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
             <p className="text-xl font-semibold text-muted-foreground">No Shipments Found</p>
@@ -134,13 +156,14 @@ export function MyShipmentsTable() {
                   <TableHead>To</TableHead>
                   <TableHead>Service</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredShipments.map((shipment) => (
                   <TableRow key={shipment.id}>
-                    <TableCell className="font-medium text-primary">{shipment.id}</TableCell>
-                    <TableCell>{format(shipment.bookingDate, 'dd MMM yyyy')}</TableCell>
+                    <TableCell className="font-medium text-primary">{shipment.shipmentIdStr}</TableCell>
+                    <TableCell>{shipment.bookingDate ? format(parseISO(shipment.bookingDate), 'dd MMM yyyy') : 'N/A'}</TableCell>
                     <TableCell>{shipment.senderName}</TableCell>
                     <TableCell>{shipment.receiverName}</TableCell>
                     <TableCell>{shipment.serviceType}</TableCell>
@@ -148,6 +171,13 @@ export function MyShipmentsTable() {
                       <Badge variant="outline" className={cn("text-xs", statusColors[shipment.status])}>
                         {shipment.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/dashboard/track-shipment?id=${shipment.shipmentIdStr}`}>
+                          <Eye className="mr-1 h-4 w-4" /> Track
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

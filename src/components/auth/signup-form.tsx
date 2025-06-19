@@ -14,6 +14,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Mail, Lock, User, CheckCircle } from 'lucide-react';
 import { CompanyLogo } from '@/components/shared/logo';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth'; // Assuming useAuth provides signup
+import { useToast } from '@/hooks/use-toast';
 
 const signupSchema = z.object({
   firstName: z.string().min(1, { message: "First name is required." }),
@@ -23,15 +25,17 @@ const signupSchema = z.object({
   confirmPassword: z.string().min(6, { message: "Please confirm your password." }),
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords do not match.",
-  path: ["confirmPassword"], // Set error on confirmPassword field
+  path: ["confirmPassword"],
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function SignupForm() {
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const router = useRouter();
+  const { signupUser } = useAuth();
+  const { toast } = useToast();
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -44,18 +48,31 @@ export function SignupForm() {
     },
   });
 
-  const onSubmit = (data: SignupFormValues) => {
-    setError(null);
-    setSuccess(null);
+  const onSubmit = async (data: SignupFormValues) => {
+    setApiError(null);
+    setSuccessMessage(null);
+    form.clearErrors();
 
-    // In a real app, you'd send this data to your backend for user creation.
-    // For this prototype, we'll just simulate success.
-    console.log("Signup data:", data);
-    setSuccess("Account created successfully! Redirecting to login...");
-
-    setTimeout(() => {
-      router.replace('/login');
-    }, 2000); // Redirect after 2 seconds
+    try {
+      await signupUser(data.firstName, data.lastName, data.email, data.password);
+      setSuccessMessage("Account created successfully! Redirecting to login...");
+      toast({
+        title: "Signup Successful",
+        description: "Your account has been created. Please log in.",
+        variant: "default",
+      });
+      setTimeout(() => {
+        router.replace('/login');
+      }, 2000);
+    } catch (error: any) {
+        const errorMessage = error?.data?.error || error?.message || "An unexpected error occurred during signup.";
+        setApiError(errorMessage);
+        toast({
+            title: "Signup Failed",
+            description: errorMessage,
+            variant: "destructive",
+        });
+    }
   };
 
   return (
@@ -68,18 +85,18 @@ export function SignupForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
+            {apiError && (
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Signup Failed</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{apiError}</AlertDescription>
               </Alert>
             )}
-            {success && (
+            {successMessage && (
               <Alert variant="default" className="bg-green-50 border-green-300 text-green-700">
                 <CheckCircle className="h-4 w-4 text-green-500" />
                 <AlertTitle>Success</AlertTitle>
-                <AlertDescription>{success}</AlertDescription>
+                <AlertDescription>{successMessage}</AlertDescription>
               </Alert>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -165,7 +182,7 @@ export function SignupForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting || !!success}>
+            <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting || !!successMessage}>
               {form.formState.isSubmitting ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>

@@ -2,13 +2,13 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation'; // usePathname imported
 import { useAuth } from '@/hooks/use-auth';
 import { dashboardNavItems, siteConfig } from '@/config/site';
 import { Logo } from '@/components/shared/logo';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // AvatarImage removed
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,18 +29,17 @@ import {
   SidebarInset,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { LogOut, Menu, UserCircle } from 'lucide-react';
-import { usePathname } from 'next/navigation';
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
+import { LogOut, Menu, UserCircle, Loader2 } from 'lucide-react'; // Loader2 imported
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'; // SheetTitle imported
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LandingFooter } from '@/app/page'; 
 
 function UserNav() {
-  const { user, logout } = useAuth();
+  const { user, logoutUser } = useAuth(); // Renamed to logoutUser
   const router = useRouter();
 
   const handleLogout = () => {
-    logout();
+    logoutUser(); // Use renamed function
     router.replace('/login');
   };
 
@@ -51,6 +50,7 @@ function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 border-2 border-primary">
+            {/* AvatarImage removed as per API providing no image URL */}
             <AvatarFallback>
               <UserCircle className="h-7 w-7" />
             </AvatarFallback>
@@ -78,12 +78,12 @@ function UserNav() {
 
 function AppSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logoutUser } = useAuth(); // Renamed
   const router = useRouter();
   const { state } = useSidebar();
 
   const handleLogout = () => {
-    logout();
+    logoutUser(); // Use renamed function
     router.replace('/login');
   };
 
@@ -127,12 +127,12 @@ function AppSidebar() {
 
 function MobileSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logoutUser } = useAuth(); // Renamed
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
 
   const handleLogout = () => {
-    logout();
+    logoutUser(); // Use renamed function
     router.replace('/login');
     setOpen(false);
   };
@@ -152,7 +152,7 @@ function MobileSidebar() {
       <SheetContent side="left" className="p-0 w-72 bg-sidebar text-sidebar-foreground">
         <ScrollArea className="h-full">
           <div className="p-4">
-            <SheetTitle className="sr-only">{siteConfig.name} Menu</SheetTitle>
+            <SheetTitle className="sr-only">{siteConfig.name} Menu</SheetTitle> {/* Use SheetTitle */}
             <Logo />
           </div>
           <nav className="mt-4 flex flex-col gap-2 px-4">
@@ -185,9 +185,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user, reloadUserFromStorage } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Attempt to reload user from storage on mount, in case of direct navigation
+    // or if the context hasn't picked up localStorage yet.
+    reloadUserFromStorage();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -196,8 +203,13 @@ export default function DashboardLayout({
   }, [isAuthenticated, isLoading, router]);
 
 
-  if (isLoading || !isAuthenticated) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  if (isLoading || !isAuthenticated) { // Added !isAuthenticated check
+    return (
+      <div className="flex h-screen items-center justify-center bg-background text-foreground">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <span className="ml-3 text-lg">Loading Dashboard...</span>
+      </div>
+    );
   }
   
   const currentPage = dashboardNavItems.find(item => item.href === pathname || (item.href !== '/dashboard' && pathname.startsWith(item.href)));

@@ -1,11 +1,11 @@
 
-"use client";
+"use client"; // invoiceId here is shipmentIdStr
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useInvoices } from '@/hooks/use-invoices';
-import type { Invoice, AddressDetail } from '@/lib/types';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useInvoices } from '@/hooks/use-invoices'; // This hook now provides DisplayInvoice
+import type { DisplayInvoice, AddressDetail } from '@/lib/types';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
@@ -13,7 +13,7 @@ import { Printer, Download, ArrowLeft, IndianRupee, Loader2, AlertTriangle } fro
 import { format } from 'date-fns';
 import Image from 'next/image';
 import { siteConfig } from '@/config/site';
-import { useToast } from '@/hooks/use-toast';
+// Toast for download coming soon is removed by prior request.
 
 const formatAddress = (address: AddressDetail) => {
   return (
@@ -28,18 +28,20 @@ const formatAddress = (address: AddressDetail) => {
 export default function InvoiceDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { getInvoiceById, isLoading: invoicesLoading } = useInvoices();
-  const { toast } = useToast();
-  const [invoice, setInvoice] = useState<Invoice | null | undefined>(undefined); // undefined for loading, null for not found
+  const { getDisplayInvoiceById, isLoading: invoicesLoading } = useInvoices();
+  const [invoice, setInvoice] = useState<DisplayInvoice | null | undefined>(undefined);
 
-  const invoiceId = params.invoiceId as string;
+  const shipmentIdStr = params.invoiceId as string; // The route param is shipmentIdStr
 
   useEffect(() => {
-    if (invoiceId && !invoicesLoading) {
-      const foundInvoice = getInvoiceById(invoiceId);
-      setInvoice(foundInvoice);
+    if (shipmentIdStr) {
+      const fetchInvoice = async () => {
+        const foundInvoice = await getDisplayInvoiceById(shipmentIdStr);
+        setInvoice(foundInvoice);
+      };
+      fetchInvoice();
     }
-  }, [invoiceId, getInvoiceById, invoicesLoading]);
+  }, [shipmentIdStr, getDisplayInvoiceById]);
 
   const handlePrint = () => {
     window.print();
@@ -63,7 +65,7 @@ export default function InvoiceDetailPage() {
       <div className="flex flex-col justify-center items-center min-h-[calc(100vh-200px)] text-center">
         <AlertTriangle className="h-16 w-16 text-destructive mb-4" />
         <h1 className="text-2xl font-bold mb-2">Invoice Not Found</h1>
-        <p className="text-muted-foreground mb-6">The invoice you are looking for does not exist or could not be loaded.</p>
+        <p className="text-muted-foreground mb-6">The invoice for shipment ID {shipmentIdStr} does not exist or could not be loaded.</p>
         <Button onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
         </Button>
@@ -81,10 +83,10 @@ export default function InvoiceDetailPage() {
               <h1 className="text-3xl font-headline font-bold text-primary print:text-2xl">INVOICE</h1>
             </div>
             <div className="text-left sm:text-right mt-4 sm:mt-0">
-              <p className="font-semibold text-lg">Invoice #: {invoice.id}</p>
+              <p className="font-semibold text-lg">Invoice #: {invoice.id}</p> {/* DisplayInvoice.id is shipmentIdStr */}
               <p className="text-sm text-muted-foreground">Date: {format(invoice.invoiceDate, 'dd MMM, yyyy')}</p>
               <p className="text-sm text-muted-foreground">Due Date: {format(invoice.dueDate, 'dd MMM, yyyy')}</p>
-              <p className="text-sm text-muted-foreground">Shipment ID: {invoice.shipmentId}</p>
+              <p className="text-sm text-muted-foreground">Shipment ID: {invoice.shipmentIdStr}</p>
             </div>
           </div>
         </CardHeader>

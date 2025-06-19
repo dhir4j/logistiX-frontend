@@ -5,13 +5,14 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PackagePlus, Search, ListOrdered, Calculator, MessageSquare, ArrowRight, Briefcase, TrendingUp, Megaphone, Settings2, BarChartBig, Gift } from 'lucide-react';
+import { PackagePlus, Search, ListOrdered, Calculator, MessageSquare, ArrowRight, Settings2, BarChartBig, Gift, Receipt } from 'lucide-react'; // Receipt added
 import Image from 'next/image';
 
 const quickAccessItems = [
   { title: 'Book a New Shipment', href: '/dashboard/book-shipment', icon: PackagePlus, description: 'Start a new shipment process quickly.' },
   { title: 'Track Your Package', href: '/dashboard/track-shipment', icon: Search, description: 'Check the status of your existing shipment.' },
   { title: 'View My Shipments', href: '/dashboard/my-shipments', icon: ListOrdered, description: 'Access your shipment history and details.' },
+  { title: 'View My Invoices', href: '/dashboard/my-invoices', icon: Receipt, description: 'Access your invoice history.' },
 ];
 
 const additionalInfoCards = [
@@ -33,7 +34,7 @@ const additionalInfoCards = [
     icon: Gift,
     title: "Latest Updates & Offers",
     description: "Stay informed about new service areas, special promotions, and operational updates to make the most of Shed Load Overseas.",
-    link: "#", // Placeholder, could link to a dedicated news/offers page
+    link: "#", 
     linkLabel: "View Announcements"
   }
 ];
@@ -41,7 +42,7 @@ const additionalInfoCards = [
 export default function DashboardPage() {
   const { user } = useAuth();
 
-  if (!user) return null;
+  if (!user) return null; // Should be handled by layout, but good practice
 
   return (
     <div className="space-y-8">
@@ -51,11 +52,11 @@ export default function DashboardPage() {
           <CardDescription className="text-lg">Manage your shipments efficiently with Shed Load Overseas.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>This is your central hub for all courier activities. You can book new shipments, track existing ones, view your history, calculate pricing, and get in touch with us for support.</p>
+          <p>This is your central hub for all courier activities. You can book new shipments, track existing ones, view your history and invoices, calculate pricing, and get in touch with us for support.</p>
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"> {/* Changed to lg:grid-cols-4 */}
         {quickAccessItems.map((item) => (
           <Card key={item.href} className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -75,8 +76,8 @@ export default function DashboardPage() {
       </div>
 
       <Card className="shadow-lg overflow-hidden">
-        <div className="grid md:grid-cols-3 items-center"> {/* Changed to md:grid-cols-3 */}
-          <div className="p-6 md:p-8 md:col-span-2"> {/* Text content spans 2 columns */}
+        <div className="grid md:grid-cols-3 items-center"> 
+          <div className="p-6 md:p-8 md:col-span-2"> 
             <h3 className="font-headline text-xl sm:text-2xl font-semibold mb-3 text-primary">Need Assistance?</h3>
             <p className="text-muted-foreground mb-4">
               Our support team is ready to help you with any queries or issues you might have.
@@ -95,7 +96,7 @@ export default function DashboardPage() {
               </Button>
             </div>
           </div>
-          <div className="hidden md:block p-4 md:col-span-1"> {/* Image content spans 1 column */}
+          <div className="hidden md:block p-4 md:col-span-1"> 
             <Image
               src="/images/second.png"
               alt="Customer Support Illustration"
@@ -107,7 +108,6 @@ export default function DashboardPage() {
         </div>
       </Card>
 
-      {/* Additional Informational Cards */}
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
         {additionalInfoCards.map((card) => (
           <Card key={card.title} className="shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col">
@@ -130,7 +130,6 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
-
     </div>
   );
 }

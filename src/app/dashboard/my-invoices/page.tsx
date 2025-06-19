@@ -1,44 +1,53 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useInvoices } from '@/hooks/use-invoices';
-import type { Invoice } from '@/lib/types';
+import type { DisplayInvoice } from '@/lib/types'; // Use DisplayInvoice
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { Receipt, Search, Eye, IndianRupee, PackageSearch } from 'lucide-react';
+import { Receipt, Search, Eye, IndianRupee, PackageSearch, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-const statusColors: Record<Invoice['status'], string> = {
+const statusColors: Record<DisplayInvoice['status'], string> = {
   Paid: "bg-green-100 text-green-700 border-green-300",
   Pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
 };
 
 
 export default function MyInvoicesPage() {
-  const { invoices, isLoading } = useInvoices();
+  const { displayInvoices, isLoading, fetchUserShipmentsForInvoices } = useInvoices();
   const [searchTerm, setSearchTerm] = useState<string>('');
 
+  useEffect(() => {
+    fetchUserShipmentsForInvoices();
+  }, [fetchUserShipmentsForInvoices]);
+
   const filteredInvoices = useMemo(() => {
-    return invoices
+    return displayInvoices
       .filter(invoice => {
         const searchMatch = searchTerm === '' || 
-                            invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            invoice.shipmentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) || // id is shipmentIdStr
+                            invoice.shipmentIdStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             invoice.senderDetails.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             invoice.receiverDetails.name.toLowerCase().includes(searchTerm.toLowerCase());
         return searchMatch;
       })
       .sort((a, b) => b.invoiceDate.getTime() - a.invoiceDate.getTime());
-  }, [invoices, searchTerm]);
+  }, [displayInvoices, searchTerm]);
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-64"><Receipt className="h-12 w-12 animate-pulse text-primary" /></div>;
+  if (isLoading && displayInvoices.length === 0) {
+    return (
+        <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="ml-2">Loading invoices...</p>
+        </div>
+    );
   }
 
   return (
@@ -47,7 +56,7 @@ export default function MyInvoicesPage() {
         <CardTitle className="font-headline text-2xl sm:text-3xl flex items-center gap-2">
           <Receipt className="h-8 w-8 text-primary" /> My Invoices
         </CardTitle>
-        <CardDescription>View and manage your invoice history.</CardDescription>
+        <CardDescription>View your shipment invoice history.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="mb-6 p-4 border rounded-lg bg-muted/50">
@@ -61,8 +70,14 @@ export default function MyInvoicesPage() {
             />
           </div>
         </div>
+        
+        {isLoading && displayInvoices.length > 0 && (
+             <div className="text-center py-4 text-muted-foreground flex items-center justify-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" /> Refreshing data...
+            </div>
+        )}
 
-        {filteredInvoices.length === 0 ? (
+        {!isLoading && filteredInvoices.length === 0 ? (
           <div className="text-center py-12">
             <PackageSearch className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
             <p className="text-xl font-semibold text-muted-foreground">No Invoices Found</p>
@@ -85,7 +100,7 @@ export default function MyInvoicesPage() {
                 {filteredInvoices.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium text-primary">{invoice.id}</TableCell>
-                    <TableCell>{invoice.shipmentId}</TableCell>
+                    <TableCell>{invoice.shipmentIdStr}</TableCell>
                     <TableCell>{format(invoice.invoiceDate, 'dd MMM yyyy')}</TableCell>
                     <TableCell className="flex items-center">
                       <IndianRupee className="h-4 w-4 mr-1 text-muted-foreground" />
@@ -98,7 +113,7 @@ export default function MyInvoicesPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button asChild variant="outline" size="sm">
-                        <Link href={`/dashboard/invoice/${invoice.id}`}>
+                        <Link href={`/dashboard/invoice/${invoice.shipmentIdStr}`}>
                           <Eye className="mr-1 h-4 w-4" /> View
                         </Link>
                       </Button>
