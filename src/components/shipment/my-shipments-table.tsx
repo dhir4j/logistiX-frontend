@@ -45,9 +45,9 @@ export function MyShipmentsTable() {
         
         const searchLower = searchTerm.toLowerCase();
         const searchMatch = searchTerm === '' || 
-                            shipment.shipmentIdStr.toLowerCase().includes(searchLower) ||
-                            shipment.senderName.toLowerCase().includes(searchLower) ||
-                            shipment.receiverName.toLowerCase().includes(searchLower);
+                            (shipment.shipmentIdStr && shipment.shipmentIdStr.toLowerCase().includes(searchLower)) ||
+                            (shipment.senderName && shipment.senderName.toLowerCase().includes(searchLower)) ||
+                            (shipment.receiverName && shipment.receiverName.toLowerCase().includes(searchLower));
         return statusMatch && dateMatch && searchMatch;
       })
       .sort((a, b) => {
@@ -162,7 +162,7 @@ export function MyShipmentsTable() {
               <TableBody>
                 {filteredShipments.map((shipment) => (
                   <TableRow key={shipment.id}>
-                    <TableCell className="font-medium text-primary">{shipment.shipmentIdStr}</TableCell>
+                    <TableCell className="font-medium text-primary">{shipment.shipmentIdStr || 'N/A'}</TableCell>
                     <TableCell>{shipment.bookingDate ? format(parseISO(shipment.bookingDate), 'dd MMM yyyy') : 'N/A'}</TableCell>
                     <TableCell>{shipment.senderName}</TableCell>
                     <TableCell>{shipment.receiverName}</TableCell>
@@ -173,8 +173,8 @@ export function MyShipmentsTable() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/dashboard/track-shipment?id=${shipment.shipmentIdStr}`}>
+                      <Button asChild variant="outline" size="sm" disabled={!shipment.shipmentIdStr}>
+                        <Link href={shipment.shipmentIdStr ? `/dashboard/track-shipment?id=${shipment.shipmentIdStr}` : '#'}>
                           <Eye className="mr-1 h-4 w-4" /> Track
                         </Link>
                       </Button>

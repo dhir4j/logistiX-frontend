@@ -32,10 +32,10 @@ export default function MyInvoicesPage() {
     return displayInvoices
       .filter(invoice => {
         const searchMatch = searchTerm === '' || 
-                            invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) || // id is shipmentIdStr
-                            invoice.shipmentIdStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            invoice.senderDetails.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            invoice.receiverDetails.name.toLowerCase().includes(searchTerm.toLowerCase());
+                            (invoice.id && invoice.id.toLowerCase().includes(searchTerm.toLowerCase())) || // id is shipmentIdStr
+                            (invoice.shipmentIdStr && invoice.shipmentIdStr.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                            (invoice.senderDetails?.name && invoice.senderDetails.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                            (invoice.receiverDetails?.name && invoice.receiverDetails.name.toLowerCase().includes(searchTerm.toLowerCase()));
         return searchMatch;
       })
       .sort((a, b) => b.invoiceDate.getTime() - a.invoiceDate.getTime());
@@ -98,9 +98,9 @@ export default function MyInvoicesPage() {
               </TableHeader>
               <TableBody>
                 {filteredInvoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell className="font-medium text-primary">{invoice.id}</TableCell>
-                    <TableCell>{invoice.shipmentIdStr}</TableCell>
+                  <TableRow key={invoice.id || invoice.shipmentIdStr}>
+                    <TableCell className="font-medium text-primary">{invoice.id || 'N/A'}</TableCell>
+                    <TableCell>{invoice.shipmentIdStr || 'N/A'}</TableCell>
                     <TableCell>{format(invoice.invoiceDate, 'dd MMM yyyy')}</TableCell>
                     <TableCell className="flex items-center">
                       <IndianRupee className="h-4 w-4 mr-1 text-muted-foreground" />
@@ -112,8 +112,8 @@ export default function MyInvoicesPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/dashboard/invoice/${invoice.shipmentIdStr}`}>
+                      <Button asChild variant="outline" size="sm" disabled={!invoice.shipmentIdStr}>
+                        <Link href={invoice.shipmentIdStr ? `/dashboard/invoice/${invoice.shipmentIdStr}` : '#'}>
                           <Eye className="mr-1 h-4 w-4" /> View
                         </Link>
                       </Button>
