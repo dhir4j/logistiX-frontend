@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { Shipment, TrackingStage, AdminShipmentsResponse, UpdateShipmentStatusResponse } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +14,8 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import apiClient from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth'; // To check if admin is authenticated
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 const statusColors: Record<TrackingStage, string> = {
   Booked: "bg-blue-100 text-blue-700 border-blue-300",
@@ -23,6 +24,45 @@ const statusColors: Record<TrackingStage, string> = {
   Delivered: "bg-green-100 text-green-700 border-green-300",
   Cancelled: "bg-red-100 text-red-700 border-red-300",
 };
+
+// Helper to map API snake_case to frontend camelCase
+const mapApiShipmentToFrontend = (apiShipment: any): Shipment => ({
+  id: apiShipment.id,
+  userId: apiShipment.user_id,
+  shipmentIdStr: apiShipment.shipment_id_str,
+  senderName: apiShipment.sender_name,
+  senderAddressStreet: apiShipment.sender_address_street,
+  senderAddressCity: apiShipment.sender_address_city,
+  senderAddressState: apiShipment.sender_address_state,
+  senderAddressPincode: apiShipment.sender_address_pincode,
+  senderAddressCountry: apiShipment.sender_address_country,
+  senderPhone: apiShipment.sender_phone,
+  receiverName: apiShipment.receiver_name,
+  receiverAddressStreet: apiShipment.receiver_address_street,
+  receiverAddressCity: apiShipment.receiver_address_city,
+  receiverAddressState: apiShipment.receiver_address_state,
+  receiverAddressPincode: apiShipment.receiver_address_pincode,
+  receiverAddressCountry: apiShipment.receiver_address_country,
+  receiverPhone: apiShipment.receiver_phone,
+  packageWeightKg: parseFloat(apiShipment.package_weight_kg),
+  packageWidthCm: parseFloat(apiShipment.package_width_cm),
+  packageHeightCm: parseFloat(apiShipment.package_height_cm),
+  packageLengthCm: parseFloat(apiShipment.package_length_cm),
+  pickupDate: apiShipment.pickup_date,
+  serviceType: apiShipment.service_type,
+  bookingDate: apiShipment.booking_date,
+  status: apiShipment.status,
+  priceWithoutTax: parseFloat(apiShipment.price_without_tax),
+  taxAmount18Percent: parseFloat(apiShipment.tax_amount_18_percent),
+  totalWithTax18Percent: parseFloat(apiShipment.total_with_tax_18_percent),
+  trackingHistory: apiShipment.tracking_history || [],
+  lastUpdatedAt: apiShipment.last_updated_at,
+  // Fields for admin table if not directly on base Shipment model
+  customerName: apiShipment.sender_name, // Assuming sender is customer
+  orderNumber: apiShipment.shipment_id_str,
+  description: `${apiShipment.service_type} (${apiShipment.package_weight_kg}kg) to ${apiShipment.receiver_address_city || 'N/A'}`,
+});
+
 
 export function AdminOrdersTable() {
   const [allShipments, setAllShipments] = useState<Shipment[]>([]);
@@ -35,7 +75,27 @@ export function AdminOrdersTable() {
   const itemsPerPage = 10;
 
   const { toast } = useToast();
-  const { token, user, isAuthenticated } = useAuth();
+  const { token, user, isAuthenticated, logoutUser } = useAuth();
+  const router = useRouter();
+
+  const handleApiError = useCallback((error: any, operation: string) => {
+    console.error(`API error during ${operation}:`, error);
+    if (error.status === 422) {
+      toast({
+        title: "Authentication Error",
+        description: "Your session is invalid. Please log in again.",
+        variant: "destructive",
+      });
+      logoutUser();
+      router.replace('/login'); // Or admin login if separate
+    } else {
+      toast({
+        title: `Error ${operation}`,
+        description: error?.data?.error || error.message || "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    }
+  }, [toast, logoutUser, router]);
 
   const fetchAdminShipments = useCallback(async (page = 1, search = searchTerm, status = statusFilter) => {
     if (!isAuthenticated || !user?.isAdmin || !token) {
@@ -51,25 +111,23 @@ export function AdminOrdersTable() {
       if (status !== 'all') queryParams += `&status=${encodeURIComponent(status)}`;
       
       const response = await apiClient<AdminShipmentsResponse>(`/api/admin/shipments${queryParams}`);
-      setAllShipments(response.shipments);
+      setAllShipments(response.shipments.map(mapApiShipmentToFrontend));
       setTotalPages(response.totalPages);
       setCurrentPage(response.currentPage);
       setTotalCount(response.totalCount);
     } catch (error: any) {
-      console.error("Failed to fetch admin shipments", error);
-      toast({ title: "Error", description: error?.data?.error || error.message || "Could not fetch shipments.", variant: "destructive" });
+      handleApiError(error, 'fetching admin shipments');
       setAllShipments([]);
       setTotalCount(0);
       setTotalPages(1);
     } finally {
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, user?.isAdmin, isAuthenticated, itemsPerPage]); // searchTerm and statusFilter changes trigger refetch via handler
+  }, [token, user?.isAdmin, isAuthenticated, itemsPerPage, searchTerm, statusFilter, handleApiError]); 
 
   useEffect(() => {
     fetchAdminShipments(1, searchTerm, statusFilter);
-  }, [fetchAdminShipments, searchTerm, statusFilter]); // Initial fetch and on filter/search change
+  }, [fetchAdminShipments, searchTerm, statusFilter]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -79,9 +137,6 @@ export function AdminOrdersTable() {
 
 
   const handleStatusUpdate = async (shipmentIdStr: string, newStatus: TrackingStage, currentShipment: Shipment) => {
-    // For "In Transit", "Out for Delivery", we need location and activity.
-    // For "Delivered" or "Cancelled", perhaps defaults or less info needed.
-    // This is a simplified version. A modal could gather more details.
     let location = currentShipment.receiverAddressCity || "Destination City";
     let activity = `Status updated to ${newStatus}`;
 
@@ -93,14 +148,12 @@ export function AdminOrdersTable() {
     try {
       await apiClient<UpdateShipmentStatusResponse>(`/api/admin/shipments/${shipmentIdStr}/status`, {
         method: 'PUT',
-        body: JSON.stringify({ status: newStatus, location, activity }),
+        body: JSON.stringify({ status: newStatus, location, activity }), // API expects snake_case
       });
       toast({ title: "Success", description: `Shipment ${shipmentIdStr} status updated to ${newStatus}.` });
-      // Refresh data for the current page
       fetchAdminShipments(currentPage, searchTerm, statusFilter);
     } catch (error: any) {
-      console.error(`Failed to update status for ${shipmentIdStr}`, error);
-      toast({ title: "Error", description: error?.data?.error || error.message || "Could not update status.", variant: "destructive" });
+      handleApiError(error, `updating status for ${shipmentIdStr}`);
     }
   };
 
@@ -168,8 +221,6 @@ export function AdminOrdersTable() {
                 value={searchTerm}
                 onChange={(e) => {
                     setSearchTerm(e.target.value);
-                    // Debounce or fetch on button click could be added here
-                    // For simplicity, auto-refetches due to useEffect dependency on searchTerm
                 }}
                 className="w-full pl-10"
               />
@@ -278,7 +329,7 @@ export function AdminOrdersTable() {
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || isLoading}
                 >
                   Previous
                 </Button>
@@ -289,7 +340,7 @@ export function AdminOrdersTable() {
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || isLoading}
                 >
                   Next
                 </Button>
