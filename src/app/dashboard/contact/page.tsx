@@ -11,7 +11,7 @@ export default function ContactPage() {
         <div className="md:flex">
           <div className="md:w-1/2 h-64 md:h-auto"> {/* Added h-64 for mobile, md:h-auto for larger screens */}
              <Image
-                src="/images/mission.png"
+                src="https://placehold.co/600x400.png"
                 data-ai-hint="customer support"
                 alt="Customer support representative"
                 width={600}
