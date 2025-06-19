@@ -15,10 +15,11 @@ import { useAuth } from '@/hooks/use-auth';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Mail, Lock } from 'lucide-react';
 import { CompanyLogo } from '@/components/shared/logo';
+import Link from 'next/link';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  password: z.string().min(3, { message: "Password must be at least 3 characters." }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -38,7 +39,7 @@ export function LoginForm() {
 
   const onSubmit = (data: LoginFormValues) => {
     setError(null);
-    if (data.email === 'demo@rswift.com' && data.password === '123456') {
+    if (data.email === 'demo@gmail.com' && data.password === 'demo') {
       login(data.email);
       router.replace('/dashboard');
     } else {
@@ -74,7 +75,7 @@ export function LoginForm() {
                     <FormControl>
                       <Input 
                         type="email" 
-                        placeholder="you@example.com" 
+                        placeholder="demo@gmail.com" 
                         {...field} 
                         className="pl-10 text-base" 
                         aria-label="Email or Username"
@@ -96,7 +97,7 @@ export function LoginForm() {
                       <FormControl>
                         <Input 
                           type="password" 
-                          placeholder="••••••••" 
+                          placeholder="demo" 
                           {...field} 
                           className="pl-10 text-base"
                           aria-label="Password"
@@ -113,9 +114,18 @@ export function LoginForm() {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex-col items-center text-sm">
+      <CardFooter className="flex-col items-center text-sm space-y-2 pt-4">
         <p className="text-muted-foreground">
-          Use <code className="font-semibold text-foreground">demo@rswift.com</code> and password <code className="font-semibold text-foreground">123456</code>
+          Don&apos;t have an account?{' '}
+          <Link href="/signup" className="font-semibold text-primary hover:underline">
+            Sign Up
+          </Link>
+        </p>
+        <p className="text-muted-foreground">
+          Are you an Admin?{' '}
+          <Link href="/admin/login" className="font-semibold text-primary hover:underline">
+            Admin Login
+          </Link>
         </p>
       </CardFooter>
     </Card>
