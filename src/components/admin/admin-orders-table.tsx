@@ -14,8 +14,9 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import apiClient from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth'; // For user info, not token
+import { useAuth } from '@/hooks/use-auth'; 
 import { useRouter } from 'next/navigation';
+import { mapApiShipmentToFrontend } from '@/contexts/shipment-context'; // Import the mapper
 
 const statusColors: Record<TrackingStage, string> = {
   Booked: "bg-blue-100 text-blue-700 border-blue-300",
@@ -25,46 +26,8 @@ const statusColors: Record<TrackingStage, string> = {
   Cancelled: "bg-red-100 text-red-700 border-red-300",
 };
 
-// Helper to map API snake_case to frontend camelCase
-const mapApiShipmentToFrontend = (apiShipment: any): Shipment => ({
-  id: apiShipment.id,
-  userId: apiShipment.user_id,
-  shipmentIdStr: apiShipment.shipment_id_str,
-  senderName: apiShipment.sender_name,
-  senderAddressStreet: apiShipment.sender_address_street,
-  senderAddressCity: apiShipment.sender_address_city,
-  senderAddressState: apiShipment.sender_address_state,
-  senderAddressPincode: apiShipment.sender_address_pincode,
-  senderAddressCountry: apiShipment.sender_address_country,
-  senderPhone: apiShipment.sender_phone,
-  receiverName: apiShipment.receiver_name,
-  receiverAddressStreet: apiShipment.receiver_address_street,
-  receiverAddressCity: apiShipment.receiver_address_city,
-  receiverAddressState: apiShipment.receiver_address_state,
-  receiverAddressPincode: apiShipment.receiver_address_pincode,
-  receiverAddressCountry: apiShipment.receiver_address_country,
-  receiverPhone: apiShipment.receiver_phone,
-  packageWeightKg: parseFloat(apiShipment.package_weight_kg),
-  packageWidthCm: parseFloat(apiShipment.package_width_cm),
-  packageHeightCm: parseFloat(apiShipment.package_height_cm),
-  packageLengthCm: parseFloat(apiShipment.package_length_cm),
-  pickupDate: apiShipment.pickup_date,
-  serviceType: apiShipment.service_type,
-  bookingDate: apiShipment.booking_date,
-  status: apiShipment.status,
-  priceWithoutTax: parseFloat(apiShipment.price_without_tax),
-  taxAmount18Percent: parseFloat(apiShipment.tax_amount_18_percent),
-  totalWithTax18Percent: parseFloat(apiShipment.total_with_tax_18_percent),
-  trackingHistory: apiShipment.tracking_history || [],
-  lastUpdatedAt: apiShipment.last_updated_at,
-  customerName: apiShipment.sender_name, 
-  orderNumber: apiShipment.shipment_id_str,
-  description: `${apiShipment.service_type} (${apiShipment.package_weight_kg}kg) to ${apiShipment.receiver_address_city || 'N/A'}`,
-});
-
-
 export function AdminOrdersTable() {
-  const [allShipments, setAllShipments] = useState<Shipment[]>([]);
+  const [allShipments, setAllShipments] = useState<Shipment[]>([]); // Stores mapped (camelCase) shipments
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<TrackingStage | 'all'>('all');
@@ -74,28 +37,34 @@ export function AdminOrdersTable() {
   const itemsPerPage = 10;
 
   const { toast } = useToast();
-  const { user, isAuthenticated, logoutUser } = useAuth(); // user for isAdmin check
+  const { user, isAuthenticated, logoutUser } = useAuth();
   const router = useRouter();
 
   const handleApiError = useCallback((error: any, operation: string) => {
     console.error(`API error during ${operation}:`, error);
-    // Removed 422 specific logout as per new requirements.
-    // Generic error display
-    toast({
-      title: `Error ${operation}`,
-      description: error?.data?.error || error.message || "An unexpected error occurred.",
-      variant: "destructive",
-    });
+    const errorMessage = error?.data?.error || error.message || "An unexpected error occurred.";
+    if (error.status === 422) {
+        toast({
+            title: "Authentication Issue",
+            description: "Your session may have expired or is invalid. Please log in again.",
+            variant: "destructive",
+        });
+        logoutUser();
+        router.replace('/login');
+    } else {
+        toast({
+          title: `Error ${operation}`,
+          description: errorMessage,
+          variant: "destructive",
+        });
+    }
   }, [toast, logoutUser, router]);
 
   const fetchAdminShipments = useCallback(async (page = 1, search = searchTerm, status = statusFilter) => {
-    // Check if user is authenticated and an admin - for UI gating, actual API call is open
     if (!isAuthenticated || !user?.isAdmin) {
         setAllShipments([]);
         setTotalCount(0);
         setTotalPages(1);
-        // Optionally, redirect or show message if not admin, though layout should handle this.
-        // For now, just clear data if somehow accessed without admin rights in context.
         return;
     }
     setIsLoading(true);
@@ -104,8 +73,9 @@ export function AdminOrdersTable() {
       if (search) queryParams += `&q=${encodeURIComponent(search)}`;
       if (status !== 'all') queryParams += `&status=${encodeURIComponent(status)}`;
       
-      // API call does not require token anymore
+      // API returns AdminShipmentsResponse with snake_case shipments
       const response = await apiClient<AdminShipmentsResponse>(`/api/admin/shipments${queryParams}`);
+      // Map snake_case shipments to frontend camelCase (or hybrid)
       setAllShipments(response.shipments.map(mapApiShipmentToFrontend));
       setTotalPages(response.totalPages);
       setCurrentPage(response.currentPage);
@@ -121,16 +91,14 @@ export function AdminOrdersTable() {
   }, [user?.isAdmin, isAuthenticated, itemsPerPage, searchTerm, statusFilter, handleApiError]); 
 
   useEffect(() => {
-    // Fetch only if authenticated as admin
     if (isAuthenticated && user?.isAdmin) {
       fetchAdminShipments(1, searchTerm, statusFilter);
     } else {
-      // Clear data if not admin authenticated
       setAllShipments([]);
       setTotalCount(0);
       setTotalPages(1);
     }
-  }, [fetchAdminShipments, searchTerm, statusFilter, isAuthenticated, user?.isAdmin]);
+  }, [fetchAdminShipments, searchTerm, statusFilter, isAuthenticated, user?.isAdmin]); // Removed direct call to fetchAdminShipments from here
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -139,29 +107,37 @@ export function AdminOrdersTable() {
   };
 
 
-  const handleStatusUpdate = async (shipmentIdStr: string, newStatus: TrackingStage, currentShipment: Shipment) => {
+  const handleStatusUpdate = async (shipment_id_str_to_update: string, newStatus: TrackingStage, currentShipment: Shipment) => {
     if (!isAuthenticated || !user?.isAdmin) {
         toast({ title: "Access Denied", description: "You are not authorized to perform this action.", variant: "destructive"});
         return;
     }
-    let location = currentShipment.receiverAddressCity || "Destination City";
+    // Use receiver_address_city from the mapped (currentShipment) object
+    let location = currentShipment.receiver_address_city || "Destination City";
     let activity = `Status updated to ${newStatus}`;
 
     if (newStatus === "In Transit") activity = `Shipment is now In Transit`;
     if (newStatus === "Out for Delivery") activity = `Shipment is Out for Delivery in ${location}`;
-    if (newStatus === "Delivered") activity = `Shipment has been Delivered to ${currentShipment.receiverName}`;
+    // Use receiver_name from the mapped (currentShipment) object
+    if (newStatus === "Delivered") activity = `Shipment has been Delivered to ${currentShipment.receiver_name}`;
     if (newStatus === "Cancelled") activity = `Shipment has been Cancelled`;
 
     try {
-      // API call does not require token
-      await apiClient<UpdateShipmentStatusResponse>(`/api/admin/shipments/${shipmentIdStr}/status`, {
+      // API request body uses snake_case
+      const response = await apiClient<UpdateShipmentStatusResponse>(`/api/admin/shipments/${shipment_id_str_to_update}/status`, {
         method: 'PUT',
         body: JSON.stringify({ status: newStatus, location, activity }),
       });
-      toast({ title: "Success", description: `Shipment ${shipmentIdStr} status updated to ${newStatus}.` });
-      fetchAdminShipments(currentPage, searchTerm, statusFilter);
+      toast({ title: "Success", description: `Shipment ${shipment_id_str_to_update} status updated to ${newStatus}.` });
+      
+      // Update local state instead of full refetch
+      const updatedShipmentMapped = mapApiShipmentToFrontend(response.updatedShipment); // Map the returned snake_case object
+      setAllShipments(prevShipments => 
+        prevShipments.map(s => s.shipment_id_str === shipment_id_str_to_update ? updatedShipmentMapped : s)
+      );
+
     } catch (error: any) {
-      handleApiError(error, `updating status for ${shipmentIdStr}`);
+      handleApiError(error, `updating status for ${shipment_id_str_to_update}`);
     }
   };
 
@@ -171,8 +147,8 @@ export function AdminOrdersTable() {
         return;
     }
     const headers = [
-      "Order Number", 
-      "Customer Name", 
+      "Order Number (shipment_id_str)", 
+      "Customer Name (sender_name)", 
       "Description", 
       "Price (w/o Tax)", 
       "Tax (18%)", 
@@ -180,17 +156,18 @@ export function AdminOrdersTable() {
       "Status",
       "Booking Date"
     ];
+    // Use snake_case fields from the mapped shipments for CSV export, as they come directly from API
     const rows = allShipments.map(order => {
-        const description = `${order.serviceType} (${order.packageWeightKg}kg) to ${order.receiverAddressCity || 'N/A'}`;
+        const description = `${order.service_type} (${order.package_weight_kg}kg) to ${order.receiver_address_city || 'N/A'}`;
         return [
-            `"${order.shipmentIdStr}"`,
-            `"${order.senderName}"`,
+            `"${order.shipment_id_str}"`,
+            `"${order.sender_name}"`,
             `"${description}"`,
-            order.priceWithoutTax.toFixed(2),
-            order.taxAmount18Percent.toFixed(2),
-            order.totalWithTax18Percent.toFixed(2),
+            order.price_without_tax.toFixed(2),
+            order.tax_amount_18_percent.toFixed(2),
+            order.total_with_tax_18_percent.toFixed(2),
             `"${order.status}"`,
-            `"${order.bookingDate ? format(parseISO(order.bookingDate), 'yyyy-MM-dd HH:mm') : 'N/A'}"`
+            `"${order.booking_date ? format(parseISO(order.booking_date), 'yyyy-MM-dd HH:mm') : 'N/A'}"`
         ];
     });
 
@@ -207,7 +184,6 @@ export function AdminOrdersTable() {
     document.body.removeChild(link);
   }, [allShipments, toast]);
 
-  // If not authenticated as admin, don't render the sensitive table content
   if (!isAuthenticated || !user?.isAdmin) {
     return (
         <Card className="shadow-xl mt-8">
@@ -244,6 +220,8 @@ export function AdminOrdersTable() {
                 value={searchTerm}
                 onChange={(e) => {
                     setSearchTerm(e.target.value);
+                    // Debounce or trigger search on button click if preferred
+                    // fetchAdminShipments(1, e.target.value, statusFilter);
                 }}
                 className="w-full pl-10"
               />
@@ -251,6 +229,7 @@ export function AdminOrdersTable() {
             <div className="flex-grow md:flex-grow-0">
                 <Select value={statusFilter} onValueChange={(value) => {
                     setStatusFilter(value as TrackingStage | 'all');
+                    // fetchAdminShipments(1, searchTerm, value as TrackingStage | 'all');
                 }}>
                     <SelectTrigger className="w-full md:w-[180px]">
                         <Filter className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -264,11 +243,22 @@ export function AdminOrdersTable() {
                     </SelectContent>
                 </Select>
             </div>
+             <Button onClick={() => fetchAdminShipments(1, searchTerm, statusFilter)} disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Search className="mr-2 h-4 w-4"/>}
+                Apply Filters
+            </Button>
         </div>
 
-        {isLoading && (
+        {isLoading && allShipments.length === 0 && ( // Initial loading state
           <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /> <p className="ml-2">Loading orders...</p></div>
         )}
+        
+        {isLoading && allShipments.length > 0 && ( // Refreshing state
+             <div className="text-center py-4 text-muted-foreground flex items-center justify-center gap-2">
+                <Loader2 className="h-5 w-5 animate-spin" /> Refreshing data...
+            </div>
+        )}
+
 
         {!isLoading && allShipments.length === 0 ? (
           <div className="text-center py-12">
@@ -294,29 +284,31 @@ export function AdminOrdersTable() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {allShipments.map((order) => {
-                        const description = `${order.serviceType} (${order.packageWeightKg}kg) to ${order.receiverAddressCity || 'N/A'}`;
+                    {allShipments.map((order) => { // order is a mapped (camelCase) Shipment
+                        // Use snake_case fields from the mapped order object for display
+                        const description = `${order.service_type} (${order.package_weight_kg}kg) to ${order.receiver_address_city || 'N/A'}`;
                         return (
-                            <TableRow key={order.id}>
-                                <TableCell className="font-medium text-primary">{order.shipmentIdStr}</TableCell>
-                                <TableCell>{order.senderName}</TableCell>
+                            // Use order.shipment_id_str for key
+                            <TableRow key={order.shipment_id_str}>
+                                <TableCell className="font-medium text-primary">{order.shipment_id_str || 'Unknown ID'}</TableCell>
+                                <TableCell>{order.sender_name}</TableCell>
                                 <TableCell>{description}</TableCell>
                                 <TableCell className="text-right">
                                     <span className="inline-flex items-center justify-end">
                                         <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
-                                        {order.priceWithoutTax.toFixed(2)}
+                                        {order.price_without_tax.toFixed(2)}
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <span className="inline-flex items-center justify-end">
                                         <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
-                                        {order.taxAmount18Percent.toFixed(2)}
+                                        {order.tax_amount_18_percent.toFixed(2)}
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-right font-semibold">
                                     <span className="inline-flex items-center justify-end">
                                         <IndianRupee className="h-4 w-4 mr-0.5" />
-                                        {order.totalWithTax18Percent.toFixed(2)}
+                                        {order.total_with_tax_18_percent.toFixed(2)}
                                     </span>
                                 </TableCell>
                                 <TableCell>
@@ -324,11 +316,12 @@ export function AdminOrdersTable() {
                                     {order.status}
                                 </Badge>
                                 </TableCell>
-                                <TableCell>{order.bookingDate ? format(parseISO(order.bookingDate), 'dd MMM yyyy, HH:mm') : 'N/A'}</TableCell>
+                                <TableCell>{order.booking_date ? format(parseISO(order.booking_date), 'dd MMM yyyy, HH:mm') : 'N/A'}</TableCell>
                                 <TableCell className="text-center min-w-[180px]">
                                 <Select
                                     value={order.status}
-                                    onValueChange={(newStatus) => handleStatusUpdate(order.shipmentIdStr, newStatus as TrackingStage, order)}
+                                    // Pass order.shipment_id_str for status update
+                                    onValueChange={(newStatus) => handleStatusUpdate(order.shipment_id_str, newStatus as TrackingStage, order)}
                                 >
                                     <SelectTrigger className="h-9 text-xs">
                                     <SelectValue placeholder="Update Status" />

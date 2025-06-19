@@ -7,94 +7,65 @@ import apiClient from '@/lib/api-client';
 import { useAuth } from '@/hooks/use-auth';
 import { parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { mapApiShipmentToFrontend } from './shipment-context'; // Import the mapper
 
 interface InvoiceContextType {
   displayInvoices: DisplayInvoice[]; 
   isLoading: boolean;
   fetchUserShipmentsForInvoices: () => Promise<void>;
-  getDisplayInvoiceById: (shipmentIdStr: string) => Promise<DisplayInvoice | undefined>;
+  getDisplayInvoiceByShipmentId: (shipment_id_str: string) => Promise<DisplayInvoice | undefined>; // Param is snake_case
 }
 
 export const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
 
-// Helper function to map API snake_case to frontend camelCase for Shipment
-const mapApiShipmentToFrontend = (apiShipment: any): Shipment => ({
-  id: apiShipment.id,
-  userId: apiShipment.user_id,
-  shipmentIdStr: apiShipment.shipment_id_str,
-  senderName: apiShipment.sender_name,
-  senderAddressStreet: apiShipment.sender_address_street,
-  senderAddressCity: apiShipment.sender_address_city,
-  senderAddressState: apiShipment.sender_address_state,
-  senderAddressPincode: apiShipment.sender_address_pincode,
-  senderAddressCountry: apiShipment.sender_address_country,
-  senderPhone: apiShipment.sender_phone,
-  receiverName: apiShipment.receiver_name,
-  receiverAddressStreet: apiShipment.receiver_address_street,
-  receiverAddressCity: apiShipment.receiver_address_city,
-  receiverAddressState: apiShipment.receiver_address_state,
-  receiverAddressPincode: apiShipment.receiver_address_pincode,
-  receiverAddressCountry: apiShipment.receiver_address_country,
-  receiverPhone: apiShipment.receiver_phone,
-  packageWeightKg: parseFloat(apiShipment.package_weight_kg),
-  packageWidthCm: parseFloat(apiShipment.package_width_cm),
-  packageHeightCm: parseFloat(apiShipment.package_height_cm),
-  packageLengthCm: parseFloat(apiShipment.package_length_cm),
-  pickupDate: apiShipment.pickup_date,
-  serviceType: apiShipment.service_type,
-  bookingDate: apiShipment.booking_date,
-  status: apiShipment.status,
-  priceWithoutTax: parseFloat(apiShipment.price_without_tax),
-  taxAmount18Percent: parseFloat(apiShipment.tax_amount_18_percent),
-  totalWithTax18Percent: parseFloat(apiShipment.total_with_tax_18_percent),
-  trackingHistory: apiShipment.tracking_history || [],
-  lastUpdatedAt: apiShipment.last_updated_at,
-});
-
-const transformShipmentToDisplayInvoice = (shipment: Shipment): DisplayInvoice => {
+const transformShipmentToDisplayInvoice = (mappedShipment: Shipment): DisplayInvoice => {
+  // mappedShipment is already in camelCase (or with snake_case fallbacks) due to mapApiShipmentToFrontend
   const senderAddr: AddressDetail = {
-    street: shipment.senderAddressStreet,
-    city: shipment.senderAddressCity,
-    state: shipment.senderAddressState,
-    pincode: shipment.senderAddressPincode,
-    country: shipment.senderAddressCountry,
+    street: mappedShipment.senderAddressStreet || mappedShipment.sender_address_street,
+    city: mappedShipment.senderAddressCity || mappedShipment.sender_address_city,
+    state: mappedShipment.senderAddressState || mappedShipment.sender_address_state,
+    pincode: mappedShipment.senderAddressPincode || mappedShipment.sender_address_pincode,
+    country: mappedShipment.senderAddressCountry || mappedShipment.sender_address_country,
   };
   const receiverAddr: AddressDetail = {
-    street: shipment.receiverAddressStreet,
-    city: shipment.receiverAddressCity,
-    state: shipment.receiverAddressState,
-    pincode: shipment.receiverAddressPincode,
-    country: shipment.receiverAddressCountry,
+    street: mappedShipment.receiverAddressStreet || mappedShipment.receiver_address_street,
+    city: mappedShipment.receiverAddressCity || mappedShipment.receiver_address_city,
+    state: mappedShipment.receiverAddressState || mappedShipment.receiver_address_state,
+    pincode: mappedShipment.receiverAddressPincode || mappedShipment.receiver_address_pincode,
+    country: mappedShipment.receiverAddressCountry || mappedShipment.receiver_address_country,
   };
 
+  const bookingDate = mappedShipment.bookingDate || mappedShipment.booking_date;
+  const shipmentId = mappedShipment.shipmentIdStr || mappedShipment.shipment_id_str; // Use mapped shipmentIdStr
+
   return {
-    id: shipment.shipmentIdStr, 
-    shipmentIdStr: shipment.shipmentIdStr,
-    invoiceDate: shipment.bookingDate ? parseISO(shipment.bookingDate) : new Date(),
-    dueDate: shipment.bookingDate ? parseISO(shipment.bookingDate) : new Date(), 
+    id: shipmentId, 
+    shipmentIdStr: shipmentId,
+    invoiceDate: bookingDate ? parseISO(bookingDate) : new Date(),
+    dueDate: bookingDate ? parseISO(bookingDate) : new Date(), 
     senderDetails: {
-      name: shipment.senderName,
+      name: mappedShipment.senderName || mappedShipment.sender_name,
       address: senderAddr,
-      phone: shipment.senderPhone,
+      phone: mappedShipment.senderPhone || mappedShipment.sender_phone,
     },
     receiverDetails: {
-      name: shipment.receiverName,
+      name: mappedShipment.receiverName || mappedShipment.receiver_name,
       address: receiverAddr,
-      phone: shipment.receiverPhone,
+      phone: mappedShipment.receiverPhone || mappedShipment.receiver_phone,
     },
     items: [{
-      description: `${shipment.serviceType} Shipping (${shipment.packageWeightKg}kg) for ${shipment.shipmentIdStr}`,
+      description: `${mappedShipment.serviceType || mappedShipment.service_type} Shipping (${mappedShipment.packageWeightKg || mappedShipment.package_weight_kg}kg) for ${shipmentId}`,
       quantity: 1,
-      unitPrice: shipment.priceWithoutTax,
-      total: shipment.priceWithoutTax,
+      unitPrice: mappedShipment.priceWithoutTax || mappedShipment.price_without_tax,
+      total: mappedShipment.priceWithoutTax || mappedShipment.price_without_tax,
     }],
-    subtotal: shipment.priceWithoutTax,
+    subtotal: mappedShipment.priceWithoutTax || mappedShipment.price_without_tax,
     taxRate: 0.18, 
-    taxAmount: shipment.taxAmount18Percent,
-    grandTotal: shipment.totalWithTax18Percent,
-    status: "Paid", // Assuming all booked shipments are "Paid" for invoice display purposes
-    serviceType: shipment.serviceType,
-    packageWeight: shipment.packageWeightKg,
+    taxAmount: mappedShipment.taxAmount18Percent || mappedShipment.tax_amount_18_percent,
+    grandTotal: mappedShipment.totalWithTax18Percent || mappedShipment.total_with_tax_18_percent,
+    status: "Paid", 
+    serviceType: mappedShipment.serviceType || mappedShipment.service_type,
+    packageWeight: mappedShipment.packageWeightKg || mappedShipment.package_weight_kg,
   };
 };
 
@@ -102,30 +73,41 @@ const transformShipmentToDisplayInvoice = (shipment: Shipment): DisplayInvoice =
 export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
   const [displayInvoices, setDisplayInvoices] = useState<DisplayInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, isAuthenticated, logoutUser } = useAuth(); // Removed token
+  const { user, isAuthenticated, logoutUser } = useAuth();
   const { toast } = useToast();
 
   const handleApiError = useCallback((error: any, operation: string) => {
     console.error(`API error during ${operation}:`, error);
-    // No automatic logout for 422.
-    toast({
-      title: `Error ${operation}`,
-      description: error?.data?.error || error.message || "An unexpected error occurred.",
-      variant: "destructive",
-    });
+    const errorMessage = error?.data?.error || error.message || "An unexpected error occurred.";
+    if (error.status === 422) {
+        toast({
+            title: "Authentication Issue",
+            description: "Your session may have expired. Please log in again.",
+            variant: "destructive",
+        });
+        logoutUser();
+    } else {
+        toast({
+            title: `Error ${operation}`,
+            description: errorMessage,
+            variant: "destructive",
+        });
+    }
   }, [toast, logoutUser]);
 
   const fetchUserShipmentsForInvoices = useCallback(async () => {
-    // if (!isAuthenticated || !token) { // Check isAuthenticated
-    if (!isAuthenticated || !user) { // Check if user object exists
+    if (!isAuthenticated || !user) { 
       setDisplayInvoices([]);
       return;
     }
     setIsLoading(true);
     try {
+      // API returns array of snake_case shipments
       const shipmentsDataFromApi = await apiClient<any[]>('/api/shipments'); 
-      const shipmentsData: Shipment[] = shipmentsDataFromApi.map(mapApiShipmentToFrontend);
-      const transformedInvoices = shipmentsData.map(transformShipmentToDisplayInvoice);
+      // Map to frontend camelCase (or hybrid) Shipment objects
+      const mappedShipmentsData: Shipment[] = shipmentsDataFromApi.map(mapApiShipmentToFrontend);
+      // Transform these mapped shipments into DisplayInvoice objects
+      const transformedInvoices = mappedShipmentsData.map(transformShipmentToDisplayInvoice);
       setDisplayInvoices(transformedInvoices);
     } catch (error: any) {
       handleApiError(error, 'fetching shipments for invoices');
@@ -133,27 +115,36 @@ export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, user, handleApiError]); // Removed token from deps
+  }, [isAuthenticated, user, handleApiError]);
 
-  const getDisplayInvoiceById = useCallback(async (shipmentIdStr: string): Promise<DisplayInvoice | undefined> => {
-    // if (!isAuthenticated || !token) return undefined; // Check isAuthenticated
-    if (!isAuthenticated) return undefined; // Endpoint is open, but conceptually tied to user context
+  const getDisplayInvoiceByShipmentId = useCallback(async (shipment_id_str: string): Promise<DisplayInvoice | undefined> => {
+    if (!isAuthenticated) {
+        toast({ title: "Not Authenticated", description: "Please log in to view invoice details.", variant: "destructive" });
+        return undefined;
+    }
+    if (!shipment_id_str || shipment_id_str === 'UNKNOWN_ID' || shipment_id_str === 'undefined') {
+        console.error("getDisplayInvoiceByShipmentId called with invalid ID:", shipment_id_str);
+        toast({ title: "Invalid ID", description: "Cannot fetch invoice with an invalid ID.", variant: "destructive" });
+        return undefined;
+    }
     setIsLoading(true);
     try {
-      const shipmentFromApi = await apiClient<any>(`/api/shipments/${shipmentIdStr}`);
-      const shipment: Shipment = mapApiShipmentToFrontend(shipmentFromApi);
-      return transformShipmentToDisplayInvoice(shipment);
+      // API returns snake_case shipment
+      const shipmentFromApi = await apiClient<any>(`/api/shipments/${shipment_id_str}`);
+      // Map to frontend camelCase (or hybrid) Shipment object
+      const mappedShipment: Shipment = mapApiShipmentToFrontend(shipmentFromApi);
+      return transformShipmentToDisplayInvoice(mappedShipment);
     } catch (error: any) {
-      handleApiError(error, `fetching shipment ${shipmentIdStr} for invoice`);
+      handleApiError(error, `fetching shipment ${shipment_id_str} for invoice`);
       return undefined;
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, handleApiError]); // Removed token from deps
+  }, [isAuthenticated, handleApiError, toast]);
 
 
   return (
-    <InvoiceContext.Provider value={{ displayInvoices, isLoading, fetchUserShipmentsForInvoices, getDisplayInvoiceById }}>
+    <InvoiceContext.Provider value={{ displayInvoices, isLoading, fetchUserShipmentsForInvoices, getDisplayInvoiceByShipmentId: getDisplayInvoiceByShipmentId }}>
       {children}
     </InvoiceContext.Provider>
   );

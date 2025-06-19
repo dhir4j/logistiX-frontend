@@ -36,28 +36,28 @@ export function MyShipmentsTable() {
   }, [fetchUserShipments]);
 
   const filteredShipments = useMemo(() => {
-    return shipments
+    return shipments // shipments from context are already mapped (camelCase)
       .filter(shipment => {
         const statusMatch = filterStatus === 'all' || shipment.status === filterStatus;
-        // API returns bookingDate as ISO string, parse it for comparison
-        const bookingDateObj = shipment.bookingDate ? parseISO(shipment.bookingDate) : null;
+        const bookingDateObj = shipment.booking_date ? parseISO(shipment.booking_date) : null; // Use booking_date from API
         const dateMatch = !filterDate || (bookingDateObj && format(bookingDateObj, 'yyyy-MM-dd') === format(filterDate, 'yyyy-MM-dd'));
         
         const searchLower = searchTerm.toLowerCase();
+        // Use shipment.shipment_id_str for searching ID
         const searchMatch = searchTerm === '' || 
-                            (shipment.shipmentIdStr && shipment.shipmentIdStr.toLowerCase().includes(searchLower)) ||
-                            (shipment.senderName && shipment.senderName.toLowerCase().includes(searchLower)) ||
-                            (shipment.receiverName && shipment.receiverName.toLowerCase().includes(searchLower));
+                            (shipment.shipment_id_str && shipment.shipment_id_str.toLowerCase().includes(searchLower)) ||
+                            (shipment.sender_name && shipment.sender_name.toLowerCase().includes(searchLower)) || // Search sender_name
+                            (shipment.receiver_name && shipment.receiver_name.toLowerCase().includes(searchLower)); // Search receiver_name
         return statusMatch && dateMatch && searchMatch;
       })
       .sort((a, b) => {
-        const dateA = a.bookingDate ? parseISO(a.bookingDate).getTime() : 0;
-        const dateB = b.bookingDate ? parseISO(b.bookingDate).getTime() : 0;
+        const dateA = a.booking_date ? parseISO(a.booking_date).getTime() : 0; // Use booking_date
+        const dateB = b.booking_date ? parseISO(b.booking_date).getTime() : 0; // Use booking_date
         return dateB - dateA;
       });
   }, [shipments, filterStatus, filterDate, searchTerm]);
 
-  if (isLoading && shipments.length === 0) { // Show loader only on initial load
+  if (isLoading && shipments.length === 0) { 
     return (
       <div className="flex justify-center items-center h-64">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -133,7 +133,7 @@ export function MyShipmentsTable() {
           </div>
         </div>
 
-        {isLoading && shipments.length > 0 && ( // Show subtle loading indicator when refetching
+        {isLoading && shipments.length > 0 && ( 
              <div className="text-center py-4 text-muted-foreground flex items-center justify-center gap-2">
                 <Loader2 className="h-5 w-5 animate-spin" /> Refreshing data...
             </div>
@@ -161,20 +161,27 @@ export function MyShipmentsTable() {
               </TableHeader>
               <TableBody>
                 {filteredShipments.map((shipment) => (
-                  <TableRow key={shipment.id}>
-                    <TableCell className="font-medium text-primary">{shipment.shipmentIdStr || 'N/A'}</TableCell>
-                    <TableCell>{shipment.bookingDate ? format(parseISO(shipment.bookingDate), 'dd MMM yyyy') : 'N/A'}</TableCell>
-                    <TableCell>{shipment.senderName}</TableCell>
-                    <TableCell>{shipment.receiverName}</TableCell>
-                    <TableCell>{shipment.serviceType}</TableCell>
+                  // Use shipment.shipment_id_str for key as it's guaranteed unique from API
+                  <TableRow key={shipment.shipment_id_str}> 
+                    {/* Display shipment.shipment_id_str */}
+                    <TableCell className="font-medium text-primary">{shipment.shipment_id_str || 'Unknown ID'}</TableCell>
+                    {/* Use booking_date from API for formatting */}
+                    <TableCell>{shipment.booking_date ? format(parseISO(shipment.booking_date), 'dd MMM yyyy') : 'N/A'}</TableCell>
+                    {/* Use sender_name from API */}
+                    <TableCell>{shipment.sender_name}</TableCell>
+                    {/* Use receiver_name from API */}
+                    <TableCell>{shipment.receiver_name}</TableCell>
+                    {/* service_type is fine as is if mapped correctly */}
+                    <TableCell>{shipment.service_type}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={cn("text-xs", statusColors[shipment.status])}>
                         {shipment.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button asChild variant="outline" size="sm" disabled={!shipment.shipmentIdStr}>
-                        <Link href={shipment.shipmentIdStr ? `/dashboard/track-shipment?id=${shipment.shipmentIdStr}` : '#'}>
+                      {/* Use shipment.shipment_id_str for constructing the link */}
+                      <Button asChild variant="outline" size="sm" disabled={!shipment.shipment_id_str || shipment.shipment_id_str === 'Unknown ID'}>
+                        <Link href={shipment.shipment_id_str && shipment.shipment_id_str !== 'Unknown ID' ? `/dashboard/track-shipment?id=${shipment.shipment_id_str}` : '#'}>
                           <Eye className="mr-1 h-4 w-4" /> Track
                         </Link>
                       </Button>
@@ -190,7 +197,6 @@ export function MyShipmentsTable() {
   );
 }
 
-// Helper Label component for form elements, if not using shadcn/FormLabel
 const Label = React.forwardRef<
   HTMLLabelElement,
   React.LabelHTMLAttributes<HTMLLabelElement>

@@ -12,10 +12,9 @@ export interface AddressDetail {
 export interface User {
   id: number; 
   email: string;
-  firstName: string; // API sends as firstName
-  lastName: string;  // API sends as lastName
-  isAdmin: boolean;  // API sends as isAdmin
-  // created_at could be added if needed by frontend
+  firstName: string; 
+  lastName: string;  
+  isAdmin: boolean;  
 }
 
 export type ServiceType = "Standard" | "Express";
@@ -31,98 +30,107 @@ export interface TrackingStep {
 }
 
 // This interface represents the structure of shipment data as returned by your API.
-// API fields are expected to be snake_case and are mapped to camelCase in contexts/components.
+// API fields are expected to be snake_case.
+// Frontend components will often use a camelCase version, handled by mapping functions.
 export interface Shipment {
+  // Fields expected directly from API (snake_case)
   id: number; 
-  userId?: number; // from user_id
-  shipmentIdStr: string; // from shipment_id_str
+  user_id?: number;
+  shipment_id_str: string; // CRITICAL: This is the key identifier from the API
 
-  senderName: string; // from sender_name
-  senderAddressStreet: string; // from sender_address_street
-  senderAddressCity: string; // from sender_address_city
-  senderAddressState: string; // from sender_address_state
-  senderAddressPincode: string; // from sender_address_pincode
-  senderAddressCountry: string; // from sender_address_country
-  senderPhone: string; // from sender_phone
+  sender_name: string;
+  sender_address_street: string;
+  sender_address_city: string;
+  sender_address_state: string;
+  sender_address_pincode: string;
+  sender_address_country: string;
+  sender_phone: string;
 
-  receiverName: string; // from receiver_name
-  receiverAddressStreet: string; // from receiver_address_street
-  receiverAddressCity: string; // from receiver_address_city
-  receiverAddressState: string; // from receiver_address_state
-  receiverAddressPincode: string; // from receiver_address_pincode
-  receiverAddressCountry: string; // from receiver_address_country
-  receiverPhone: string; // from receiver_phone
+  receiver_name: string;
+  receiver_address_street: string;
+  receiver_address_city: string;
+  receiver_address_state: string;
+  receiver_address_pincode: string;
+  receiver_address_country: string;
+  receiver_phone: string;
 
-  packageWeightKg: number; // from package_weight_kg
-  packageWidthCm: number; // from package_width_cm
-  packageHeightCm: number; // from package_height_cm
-  packageLengthCm: number; // from package_length_cm
+  package_weight_kg: number;
+  package_width_cm: number;
+  package_height_cm: number;
+  package_length_cm: number;
 
-  pickupDate: string; // from pickup_date (YYYY-MM-DD string)
-  serviceType: ServiceType; // from service_type
-  bookingDate: string; // from booking_date (ISO8601 Timestamp string from API)
+  pickup_date: string; // YYYY-MM-DD string
+  service_type: ServiceType;
+  booking_date: string; // ISO8601 Timestamp string from API
   status: TrackingStage;
 
-  priceWithoutTax: number; // from price_without_tax
-  taxAmount18Percent: number; // from tax_amount_18_percent
-  totalWithTax18Percent: number; // from total_with_tax_18_percent
+  price_without_tax: number;
+  tax_amount_18_percent: number;
+  total_with_tax_18_percent: number;
 
-  trackingHistory: TrackingStep[]; // from tracking_history
-  lastUpdatedAt?: string; // from last_updated_at (ISO8601 Timestamp string from API)
+  tracking_history: TrackingStep[];
+  last_updated_at?: string; // ISO8601 Timestamp string from API
   
-  // Raw snake_case fields as potentially received from API before mapping
-  user_id?: number;
-  shipment_id_str?: string;
-  sender_name?: string;
-  sender_address_street?: string;
-  sender_address_city?: string;
-  sender_address_state?: string;
-  sender_address_pincode?: string;
-  sender_address_country?: string;
-  sender_phone?: string;
-  receiver_name?: string;
-  receiver_address_street?: string;
-  receiver_address_city?: string;
-  receiver_address_state?: string;
-  receiver_address_pincode?: string;
-  receiver_address_country?: string;
-  receiver_phone?: string;
-  package_weight_kg?: number;
-  package_width_cm?: number;
-  package_height_cm?: number;
-  package_length_cm?: number;
-  pickup_date?: string;
-  service_type?: ServiceType;
-  booking_date?: string;
-  price_without_tax?: number;
-  tax_amount_18_percent?: number;
-  total_with_tax_18_percent?: number;
-  tracking_history?: TrackingStep[];
-  last_updated_at?: string;
+  // Frontend camelCase representation (populated by mapping)
+  // These are primarily for convenience in frontend components if preferred.
+  // The direct snake_case fields above are what the API provides.
+  userId?: number;
+  shipmentIdStr: string; // This will hold the value of shipment_id_str
 
-  // Admin table helper fields (populated client-side if needed)
-  customerName?: string;
-  orderNumber?: string;
-  description?: string;
+  senderName: string;
+  senderAddressStreet: string;
+  senderAddressCity: string;
+  senderAddressState: string;
+  senderAddressPincode: string;
+  senderAddressCountry: string;
+  senderPhone: string;
+
+  receiverName: string;
+  receiverAddressStreet: string;
+  receiverAddressCity: string;
+  receiverAddressState: string;
+  receiverAddressPincode: string;
+  receiverAddressCountry: string;
+  receiverPhone: string;
+
+  packageWeightKg: number;
+  packageWidthCm: number;
+  packageHeightCm: number;
+  packageLengthCm: number;
+
+  pickupDate: string; // YYYY-MM-DD string
+  serviceType: ServiceType;
+  bookingDate: string; // ISO8601 Timestamp string
+  // status is already camelCase (TrackingStage)
+
+  priceWithoutTax: number;
+  taxAmount18Percent: number;
+  totalWithTax18Percent: number;
+  
+  // trackingHistory is already an array of TrackingStep
+
+  // Admin table helper fields (populated client-side if needed, or derived from above)
+  customerName?: string; // Typically sender_name
+  orderNumber?: string;  // Typically shipment_id_str
+  description?: string;  // Derived
 }
 
 
 // API response for login - NO TOKEN
 export interface LoginResponse {
-  // No accessToken
-  user: User; // User object now includes isAdmin
+  user: User; 
 }
 
 // API response for creating shipment
 export interface CreateShipmentResponse {
-    shipmentIdStr: string; 
+    shipment_id_str: string; 
     message: string;
-    data: Shipment; // Full shipment object as created on backend
+    data: Shipment; // Full shipment object as created on backend (snake_case)
 }
 
 // API response for admin listing shipments
 export interface AdminShipmentsResponse {
-    shipments: Shipment[]; // Array of full shipment objects
+    shipments: Shipment[]; // Array of full shipment objects (snake_case)
     totalPages: number;
     currentPage: number;
     totalCount: number;
@@ -131,13 +139,13 @@ export interface AdminShipmentsResponse {
 // API response for updating shipment status
 export interface UpdateShipmentStatusResponse {
     message: string;
-    updatedShipment: Shipment; // Full updated shipment object
+    updatedShipment: Shipment; // Full updated shipment object (snake_case)
 }
 
 // For frontend display, derived from Shipment data
 export interface DisplayInvoice {
-  id: string; 
-  shipmentIdStr: string;
+  id: string; // Will be shipment_id_str
+  shipmentIdStr: string; // Explicitly shipment_id_str
   invoiceDate: Date; 
   dueDate: Date; 
 

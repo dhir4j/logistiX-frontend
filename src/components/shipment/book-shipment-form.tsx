@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react'; // Added useEffect
+import { useState, useEffect } from 'react'; 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,12 +17,12 @@ import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
 import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus, IndianRupee, ScanLine } from 'lucide-react';
 import { useShipments } from '@/hooks/use-shipments';
-import type { ServiceType, CreateShipmentResponse } from '@/lib/types';
+import type { ServiceType, CreateShipmentResponse, Shipment } from '@/lib/types'; // Added Shipment type
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth'; // Added useAuth
+import { useAuth } from '@/hooks/use-auth'; 
 
-// Consistent with types.ts for API call, but form will use camelCase
+// Form schema uses camelCase for frontend ease, will be mapped to snake_case for API.
 const shipmentFormSchema = z.object({
   senderName: z.string().min(2, "Sender name is required"),
   senderAddressStreet: z.string().min(5, "Street address is required (min 5 chars)"),
@@ -51,7 +51,6 @@ const shipmentFormSchema = z.object({
 
 type ShipmentFormValues = z.infer<typeof shipmentFormSchema>;
 
-// Dummy calculation, actual calculation is on backend. This is just for display.
 const calculateFrontendDisplayCharge = (data: ShipmentFormValues): number => {
     const RATE_PER_HALF_KG = 45; 
     const BASE_CHARGE = 20; 
@@ -59,6 +58,7 @@ const calculateFrontendDisplayCharge = (data: ShipmentFormValues): number => {
     const TAX_RATE = 0.18;
 
     const weightKg = typeof data.packageWeightKg === 'number' && !isNaN(data.packageWeightKg) ? data.packageWeightKg : 0;
+    if (weightKg <= 0) return BASE_CHARGE * (1 + TAX_RATE); // Return base taxable amount if weight is invalid
 
     const weightInHalfKgs = Math.ceil(weightKg / 0.5);
     let charge = BASE_CHARGE + (weightInHalfKgs * RATE_PER_HALF_KG);
@@ -68,27 +68,29 @@ const calculateFrontendDisplayCharge = (data: ShipmentFormValues): number => {
     }
     
     if (isNaN(charge)) {
-        charge = BASE_CHARGE; // Default to base charge if calculation intermediate fails
+        charge = BASE_CHARGE; 
     }
 
     const taxAmount = charge * TAX_RATE;
     const totalCharge = charge + taxAmount;
 
-    return isNaN(totalCharge) ? 0 : totalCharge; // Ensure a number is always returned
+    return isNaN(totalCharge) ? BASE_CHARGE * (1 + TAX_RATE) : totalCharge;
 };
 
 
 export function BookShipmentForm() {
+  // submissionStatus will store the API response which is CreateShipmentResponse
+  // CreateShipmentResponse contains shipment_id_str and snake_case data object
   const [submissionStatus, setSubmissionStatus] = useState<CreateShipmentResponse | null>(null);
   const [paymentStep, setPaymentStep] = useState<{ show: boolean; amount: number; formData: ShipmentFormValues | null }>({ show: false, amount: 0, formData: null });
   const { addShipment, isLoading: isShipmentContextLoading } = useShipments();
   const { toast } = useToast();
-  const { user } = useAuth(); // Get user from auth context
+  const { user } = useAuth(); 
 
   const form = useForm<ShipmentFormValues>({
     resolver: zodResolver(shipmentFormSchema),
     defaultValues: {
-      senderName: '', // Will be set by useEffect
+      senderName: '', 
       senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
       senderPhone: '',
       receiverName: '',
@@ -99,11 +101,10 @@ export function BookShipmentForm() {
       packageHeightCm: 10,
       packageLengthCm: 10,
       serviceType: "Standard",
-      pickupDate: new Date(new Date().setDate(new Date().getDate() + 1)) // Default to tomorrow
+      pickupDate: new Date(new Date().setDate(new Date().getDate() + 1)) 
     },
   });
 
-  // Auto-fill sender name
   useEffect(() => {
     if (user && user.firstName && user.lastName) {
       form.setValue('senderName', `${user.firstName} ${user.lastName}`);
@@ -120,40 +121,41 @@ export function BookShipmentForm() {
     if (!paymentStep.formData) return;
 
     const data = paymentStep.formData;
-    
     const formattedPickupDate = format(data.pickupDate, "yyyy-MM-dd");
 
+    // Prepare data with snake_case keys for the API
     const apiShipmentData = {
-        senderName: data.senderName,
-        senderAddressStreet: data.senderAddressStreet,
-        senderAddressCity: data.senderAddressCity,
-        senderAddressState: data.senderAddressState,
-        senderAddressPincode: data.senderAddressPincode,
-        senderAddressCountry: data.senderAddressCountry,
-        senderPhone: data.senderPhone,
-        receiverName: data.receiverName,
-        receiverAddressStreet: data.receiverAddressStreet,
-        receiverAddressCity: data.receiverAddressCity,
-        receiverAddressState: data.receiverAddressState,
-        receiverAddressPincode: data.receiverAddressPincode,
-        receiverAddressCountry: data.receiverAddressCountry,
-        receiverPhone: data.receiverPhone,
-        packageWeightKg: data.packageWeightKg,
-        packageWidthCm: data.packageWidthCm,
-        packageHeightCm: data.packageHeightCm,
-        packageLengthCm: data.packageLengthCm,
-        pickupDate: formattedPickupDate,
-        serviceType: data.serviceType as ServiceType,
+        sender_name: data.senderName,
+        sender_address_street: data.senderAddressStreet,
+        sender_address_city: data.senderAddressCity,
+        sender_address_state: data.senderAddressState,
+        sender_address_pincode: data.senderAddressPincode,
+        sender_address_country: data.senderAddressCountry,
+        sender_phone: data.senderPhone,
+        receiver_name: data.receiverName,
+        receiver_address_street: data.receiverAddressStreet,
+        receiver_address_city: data.receiverAddressCity,
+        receiver_address_state: data.receiverAddressState,
+        receiver_address_pincode: data.receiverAddressPincode,
+        receiver_address_country: data.receiverAddressCountry,
+        receiver_phone: data.receiverPhone,
+        package_weight_kg: data.packageWeightKg,
+        package_width_cm: data.packageWidthCm,
+        package_height_cm: data.packageHeightCm,
+        package_length_cm: data.packageLengthCm,
+        pickup_date: formattedPickupDate,
+        service_type: data.serviceType as ServiceType,
     };
 
     try {
-        const response = await addShipment(apiShipmentData);
-        setSubmissionStatus(response);
+        // addShipment expects snake_case data and returns CreateShipmentResponse
+        const response = await addShipment(apiShipmentData); 
+        setSubmissionStatus(response); // response contains shipment_id_str and snake_case data
         toast({
             title: "Shipment Booked!",
-            description: `Your shipment ID is ${response.shipmentIdStr}.`,
+            description: `Your shipment ID is ${response.shipment_id_str}.`, // Use shipment_id_str
         });
-        form.reset({ // Reset form with potentially new default senderName if user changed
+        form.reset({ 
             senderName: (user && user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : '',
             senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
             senderPhone: '',
@@ -180,20 +182,26 @@ export function BookShipmentForm() {
   };
 
   if (submissionStatus) {
+    // submissionStatus.data is a snake_case shipment object
+    const totalPaid = submissionStatus.data?.total_with_tax_18_percent;
     return (
       <Alert className="border-green-500 bg-green-50 text-green-700">
         <CheckCircle className="h-5 w-5 text-green-500" />
         <AlertTitle className="font-headline text-green-700">Shipment Confirmed!</AlertTitle>
         <AlertDescription>
           <p>{submissionStatus.message}</p>
-          <p>Shipment ID: <strong>{submissionStatus.shipmentIdStr}</strong></p>
-          <p>Total Paid: <IndianRupee className="inline h-4 w-4" /> {(typeof submissionStatus.data.totalWithTax18Percent === 'number' ? submissionStatus.data.totalWithTax18Percent.toFixed(2) : 'N/A')}</p>
+          {/* Use submissionStatus.shipment_id_str */}
+          <p>Shipment ID: <strong>{submissionStatus.shipment_id_str}</strong></p>
+          <p>Total Paid: <IndianRupee className="inline h-4 w-4" /> 
+            {(typeof totalPaid === 'number' ? totalPaid.toFixed(2) : 'N/A')}
+          </p>
           <div className="mt-4 space-y-2 sm:space-y-0 sm:flex sm:space-x-2">
             <Button onClick={() => setSubmissionStatus(null)} className="w-full sm:w-auto" variant="outline">
               Book Another Shipment
             </Button>
-            <Button asChild className="w-full sm:w-auto" variant="default">
-              <a href={`/dashboard/invoice/${submissionStatus.shipmentIdStr}`} target="_blank" rel="noopener noreferrer">View Invoice</a>
+            {/* Link to invoice using shipment_id_str */}
+            <Button asChild className="w-full sm:w-auto" variant="default" disabled={!submissionStatus.shipment_id_str}>
+              <a href={submissionStatus.shipment_id_str ? `/dashboard/invoice/${submissionStatus.shipment_id_str}`: '#'} target="_blank" rel="noopener noreferrer">View Invoice</a>
             </Button>
           </div>
         </AlertDescription>
@@ -215,7 +223,6 @@ export function BookShipmentForm() {
             <p className="text-muted-foreground">Amount to Pay (Display Only):</p>
             <p className="text-3xl font-bold text-primary flex items-center justify-center">
               <IndianRupee className="h-7 w-7 mr-1" />
-              {/* Ensure paymentStep.amount is a number before calling toFixed */}
               {typeof paymentStep.amount === 'number' ? paymentStep.amount.toFixed(2) : '0.00'}
             </p>
           </div>
@@ -411,4 +418,3 @@ export function BookShipmentForm() {
     </Card>
   );
 }
-

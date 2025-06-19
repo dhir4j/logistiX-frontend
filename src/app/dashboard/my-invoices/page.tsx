@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useInvoices } from '@/hooks/use-invoices';
-import type { DisplayInvoice } from '@/lib/types'; // Use DisplayInvoice
+import type { DisplayInvoice } from '@/lib/types'; 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,11 +31,12 @@ export default function MyInvoicesPage() {
   const filteredInvoices = useMemo(() => {
     return displayInvoices
       .filter(invoice => {
+        const searchLower = searchTerm.toLowerCase();
+        // invoice.id and invoice.shipmentIdStr are now shipment_id_str
         const searchMatch = searchTerm === '' || 
-                            (invoice.id && invoice.id.toLowerCase().includes(searchTerm.toLowerCase())) || // id is shipmentIdStr
-                            (invoice.shipmentIdStr && invoice.shipmentIdStr.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                            (invoice.senderDetails?.name && invoice.senderDetails.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                            (invoice.receiverDetails?.name && invoice.receiverDetails.name.toLowerCase().includes(searchTerm.toLowerCase()));
+                            (invoice.shipmentIdStr && invoice.shipmentIdStr.toLowerCase().includes(searchLower)) ||
+                            (invoice.senderDetails?.name && invoice.senderDetails.name.toLowerCase().includes(searchLower)) ||
+                            (invoice.receiverDetails?.name && invoice.receiverDetails.name.toLowerCase().includes(searchLower));
         return searchMatch;
       })
       .sort((a, b) => b.invoiceDate.getTime() - a.invoiceDate.getTime());
@@ -63,7 +64,7 @@ export default function MyInvoicesPage() {
           <div className="relative">
              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder="Search by Invoice ID, Shipment ID, Sender, Receiver..."
+              placeholder="Search by Invoice ID (Shipment ID), Sender, Receiver..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10"
@@ -88,8 +89,7 @@ export default function MyInvoicesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice ID</TableHead>
-                  <TableHead>Shipment ID</TableHead>
+                  <TableHead>Invoice ID (Shipment ID)</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
@@ -98,9 +98,9 @@ export default function MyInvoicesPage() {
               </TableHeader>
               <TableBody>
                 {filteredInvoices.map((invoice) => (
-                  <TableRow key={invoice.id || invoice.shipmentIdStr}>
-                    <TableCell className="font-medium text-primary">{invoice.id || 'N/A'}</TableCell>
-                    <TableCell>{invoice.shipmentIdStr || 'N/A'}</TableCell>
+                  // invoice.id is shipment_id_str
+                  <TableRow key={invoice.id}> 
+                    <TableCell className="font-medium text-primary">{invoice.id || 'Unknown ID'}</TableCell>
                     <TableCell>{format(invoice.invoiceDate, 'dd MMM yyyy')}</TableCell>
                     <TableCell className="flex items-center">
                       <IndianRupee className="h-4 w-4 mr-1 text-muted-foreground" />
@@ -112,8 +112,9 @@ export default function MyInvoicesPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button asChild variant="outline" size="sm" disabled={!invoice.shipmentIdStr}>
-                        <Link href={invoice.shipmentIdStr ? `/dashboard/invoice/${invoice.shipmentIdStr}` : '#'}>
+                      {/* Use invoice.shipmentIdStr (which is shipment_id_str) for the link */}
+                      <Button asChild variant="outline" size="sm" disabled={!invoice.shipmentIdStr || invoice.shipmentIdStr === 'Unknown ID'}>
+                        <Link href={invoice.shipmentIdStr && invoice.shipmentIdStr !== 'Unknown ID' ? `/dashboard/invoice/${invoice.shipmentIdStr}` : '#'}>
                           <Eye className="mr-1 h-4 w-4" /> View
                         </Link>
                       </Button>
