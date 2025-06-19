@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useInvoices } from '@/hooks/use-invoices';
-import type { Invoice } from '@/lib/types';
+import type { Invoice, AddressDetail } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -14,6 +14,16 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { siteConfig } from '@/config/site';
 import { useToast } from '@/hooks/use-toast';
+
+const formatAddress = (address: AddressDetail) => {
+  return (
+    <>
+      {address.street}<br />
+      {address.city}, {address.state} - {address.pincode}<br />
+      {address.country}
+    </>
+  );
+};
 
 export default function InvoiceDetailPage() {
   const params = useParams();
@@ -36,7 +46,7 @@ export default function InvoiceDetailPage() {
   };
 
   const handleDownloadPdf = () => {
-    window.print(); // Changed from toast message to print dialog
+    window.print(); 
   };
 
   if (invoicesLoading || invoice === undefined) {
@@ -91,7 +101,9 @@ export default function InvoiceDetailPage() {
             <div>
               <h3 className="font-semibold mb-1 text-primary">Billed To:</h3>
               <p className="font-bold">{invoice.senderDetails.name}</p>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{invoice.senderDetails.address}</p>
+              <div className="text-sm text-muted-foreground">
+                {formatAddress(invoice.senderDetails.address)}
+              </div>
               <p className="text-sm text-muted-foreground">Phone: {invoice.senderDetails.phone}</p>
             </div>
           </div>
@@ -101,7 +113,9 @@ export default function InvoiceDetailPage() {
           <div>
              <h3 className="font-semibold mb-1 text-primary">Ship To:</h3>
               <p className="font-bold">{invoice.receiverDetails.name}</p>
-              <p className="text-sm text-muted-foreground whitespace-pre-line">{invoice.receiverDetails.address}</p>
+              <div className="text-sm text-muted-foreground">
+                {formatAddress(invoice.receiverDetails.address)}
+              </div>
               <p className="text-sm text-muted-foreground">Phone: {invoice.receiverDetails.phone}</p>
           </div>
           

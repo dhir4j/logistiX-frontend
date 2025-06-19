@@ -1,3 +1,12 @@
+
+export interface AddressDetail {
+  street: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -10,10 +19,10 @@ export type ServiceType = "Standard" | "Express";
 export interface Shipment {
   id: string;
   senderName: string;
-  senderAddress: string;
+  senderAddress: AddressDetail;
   senderPhone: string;
   receiverName: string;
-  receiverAddress: string;
+  receiverAddress: AddressDetail;
   receiverPhone: string;
   packageWeight: number;
   packageWidth: number;
@@ -49,12 +58,12 @@ export interface Invoice {
   dueDate: Date; // For simulation, can be same as invoiceDate
   senderDetails: {
     name: string;
-    address: string;
+    address: AddressDetail;
     phone: string;
   };
   receiverDetails: {
     name: string;
-    address: string;
+    address: AddressDetail;
     phone: string;
   };
   items: InvoiceItem[];

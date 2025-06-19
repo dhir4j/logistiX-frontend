@@ -5,9 +5,9 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,18 +15,26 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus } from 'lucide-react';
+import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus, IndianRupee, ScanLine } from 'lucide-react';
 import { useShipments } from '@/hooks/use-shipments';
 import { useInvoices } from '@/hooks/use-invoices';
-import type { Shipment, ServiceType, Invoice, InvoiceItem } from '@/lib/types';
+import type { Shipment, ServiceType, Invoice, InvoiceItem, AddressDetail } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+const addressSchema = z.object({
+  street: z.string().min(5, "Street address is required (min 5 chars)"),
+  city: z.string().min(2, "City is required"),
+  state: z.string().min(2, "State is required"),
+  pincode: z.string().regex(/^\d{5,6}$/, "Pincode must be 5 or 6 digits"),
+  country: z.string().min(2, "Country is required"),
+});
 
 const shipmentSchema = z.object({
   senderName: z.string().min(2, "Sender name is required"),
-  senderAddress: z.string().min(10, "Sender address is required"),
+  senderAddress: addressSchema,
   senderPhone: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number"),
   receiverName: z.string().min(2, "Receiver name is required"),
-  receiverAddress: z.string().min(10, "Receiver address is required"),
+  receiverAddress: addressSchema,
   receiverPhone: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone number"),
   packageWeight: z.coerce.number().min(0.1, "Weight must be at least 0.1kg"),
   packageWidth: z.coerce.number().min(1, "Width must be at least 1cm"),
@@ -45,6 +53,7 @@ const TAX_RATE = 0.05; // 5% tax
 
 export function BookShipmentForm() {
   const [submissionStatus, setSubmissionStatus] = useState<{ id: string; message: string, invoiceId: string } | null>(null);
+  const [paymentStep, setPaymentStep] = useState<{ show: boolean; amount: number; formData: ShipmentFormValues | null }>({ show: false, amount: 0, formData: null });
   const { addShipment } = useShipments();
   const { addInvoice } = useInvoices();
 
@@ -52,10 +61,10 @@ export function BookShipmentForm() {
     resolver: zodResolver(shipmentSchema),
     defaultValues: {
       senderName: '',
-      senderAddress: '',
+      senderAddress: { street: '', city: '', state: '', pincode: '', country: 'India' },
       senderPhone: '',
       receiverName: '',
-      receiverAddress: '',
+      receiverAddress: { street: '', city: '', state: '', pincode: '', country: 'India' },
       receiverPhone: '',
       packageWeight: 0.5,
       packageWidth: 10,
@@ -65,31 +74,55 @@ export function BookShipmentForm() {
     },
   });
 
+  const calculateCharge = (data: ShipmentFormValues) => {
+    const weightInHalfKgs = Math.ceil(data.packageWeight / 0.5);
+    let charge = BASE_CHARGE + (weightInHalfKgs * RATE_PER_HALF_KG);
+    if (data.serviceType === "Express") {
+      charge += EXPRESS_FEE;
+    }
+    const taxAmount = charge * TAX_RATE;
+    return charge + taxAmount;
+  };
+
   const onSubmit = (data: ShipmentFormValues) => {
+    const totalCharge = calculateCharge(data);
+    setPaymentStep({ show: true, amount: totalCharge, formData: data });
+  };
+
+  const handleConfirmPaymentAndBook = () => {
+    if (!paymentStep.formData) return;
+
+    const data = paymentStep.formData;
     const shipmentId = `RS${Math.floor(100000 + Math.random() * 900000)}`;
+    
     const newShipment: Shipment = {
-      ...data,
       id: shipmentId,
+      senderName: data.senderName,
+      senderAddress: data.senderAddress,
+      senderPhone: data.senderPhone,
+      receiverName: data.receiverName,
+      receiverAddress: data.receiverAddress,
+      receiverPhone: data.receiverPhone,
+      packageWeight: data.packageWeight,
+      packageWidth: data.packageWidth,
+      packageHeight: data.packageHeight,
+      packageLength: data.packageLength,
+      pickupDate: data.pickupDate,
+      serviceType: data.serviceType,
       bookingDate: new Date(),
       status: "Booked",
     };
     addShipment(newShipment);
 
-    // Create Invoice
-    const weightInHalfKgs = Math.ceil(data.packageWeight / 0.5);
-    let calculatedCharge = BASE_CHARGE + (weightInHalfKgs * RATE_PER_HALF_KG);
-    if (data.serviceType === "Express") {
-      calculatedCharge += EXPRESS_FEE;
-    }
-
-    const taxAmount = calculatedCharge * TAX_RATE;
-    const grandTotal = calculatedCharge + taxAmount;
+    const grandTotal = paymentStep.amount;
+    const subtotal = grandTotal / (1 + TAX_RATE);
+    const taxAmount = grandTotal - subtotal;
 
     const invoiceItem: InvoiceItem = {
       description: `${data.serviceType} Shipping for package ${shipmentId} (${data.packageWeight}kg)`,
       quantity: 1,
-      unitPrice: calculatedCharge,
-      total: calculatedCharge,
+      unitPrice: subtotal,
+      total: subtotal,
     };
     
     const invoiceId = `INV-${shipmentId}`;
@@ -97,7 +130,7 @@ export function BookShipmentForm() {
       id: invoiceId,
       shipmentId: shipmentId,
       invoiceDate: new Date(),
-      dueDate: new Date(), // Same as invoice date for simulation
+      dueDate: new Date(), 
       senderDetails: {
         name: data.senderName,
         address: data.senderAddress,
@@ -109,11 +142,11 @@ export function BookShipmentForm() {
         phone: data.receiverPhone,
       },
       items: [invoiceItem],
-      subtotal: calculatedCharge,
+      subtotal: subtotal,
       taxRate: TAX_RATE,
       taxAmount: taxAmount,
       grandTotal: grandTotal,
-      status: "Paid", // Simulated as paid
+      status: "Paid", 
       serviceType: data.serviceType,
       packageWeight: data.packageWeight,
     };
@@ -125,6 +158,7 @@ export function BookShipmentForm() {
       invoiceId: invoiceId,
     });
     form.reset();
+    setPaymentStep({ show: false, amount: 0, formData: null });
   };
 
   if (submissionStatus) {
@@ -144,6 +178,46 @@ export function BookShipmentForm() {
           </div>
         </AlertDescription>
       </Alert>
+    );
+  }
+
+  if (paymentStep.show && paymentStep.formData) {
+    return (
+      <Card className="w-full max-w-md mx-auto shadow-xl">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl sm:text-3xl flex items-center gap-2">
+            <ScanLine className="h-8 w-8 text-primary" /> Complete Your Payment
+          </CardTitle>
+          <CardDescription>Scan the QR code using any UPI app to pay.</CardDescription>
+        </CardHeader>
+        <CardContent className="text-center space-y-6">
+          <div>
+            <p className="text-muted-foreground">Amount to Pay:</p>
+            <p className="text-3xl font-bold text-primary flex items-center justify-center">
+              <IndianRupee className="h-7 w-7 mr-1" />{paymentStep.amount.toFixed(2)}
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Image
+              src="https://placehold.co/256x256.png?text=Scan+UPI+QR"
+              alt="UPI QR Code Placeholder"
+              width={200}
+              height={200}
+              className="rounded-md border shadow-sm"
+              data-ai-hint="upi payment"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">This is a dummy payment page. No actual payment will be processed.</p>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-4">
+          <Button onClick={handleConfirmPaymentAndBook} className="w-full text-lg py-3">
+            I Have Completed The Payment
+          </Button>
+          <Button variant="outline" onClick={() => setPaymentStep({ show: false, amount: 0, formData: null })} className="w-full">
+            Cancel Payment
+          </Button>
+        </CardFooter>
+      </Card>
     );
   }
 
@@ -170,17 +244,49 @@ export function BookShipmentForm() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="senderAddress" render={({ field }) => (
+                <FormField control={form.control} name="senderAddress.street" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sender Address</FormLabel>
-                    <FormControl><Textarea placeholder="123 Main St, City, Country, Pincode" {...field} /></FormControl>
+                    <FormLabel>Street Address / Building</FormLabel>
+                    <FormControl><Input placeholder="123 Main St, Apt 4B" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField control={form.control} name="senderAddress.city" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl><Input placeholder="Mumbai" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="senderAddress.state" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl><Input placeholder="Maharashtra" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField control={form.control} name="senderAddress.pincode" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pincode</FormLabel>
+                      <FormControl><Input placeholder="400001" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="senderAddress.country" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <FormControl><Input placeholder="India" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
                 <FormField control={form.control} name="senderPhone" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sender Phone</FormLabel>
-                    <FormControl><Input type="tel" placeholder="+1234567890" {...field} /></FormControl>
+                    <FormControl><Input type="tel" placeholder="+919876543210" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -197,17 +303,49 @@ export function BookShipmentForm() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="receiverAddress" render={({ field }) => (
+                <FormField control={form.control} name="receiverAddress.street" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Receiver Address</FormLabel>
-                    <FormControl><Textarea placeholder="456 Market St, City, Country, Pincode" {...field} /></FormControl>
+                    <FormLabel>Street Address / Building</FormLabel>
+                    <FormControl><Input placeholder="456 Market St, Tower C" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField control={form.control} name="receiverAddress.city" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl><Input placeholder="Delhi" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="receiverAddress.state" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl><Input placeholder="Delhi" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField control={form.control} name="receiverAddress.pincode" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pincode</FormLabel>
+                      <FormControl><Input placeholder="110001" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="receiverAddress.country" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <FormControl><Input placeholder="India" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
                 <FormField control={form.control} name="receiverPhone" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Receiver Phone</FormLabel>
-                    <FormControl><Input type="tel" placeholder="+0987654321" {...field} /></FormControl>
+                    <FormControl><Input type="tel" placeholder="+919123456789" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -313,7 +451,7 @@ export function BookShipmentForm() {
 
             <CardFooter className="p-0 pt-8">
               <Button type="submit" className="w-full md:w-auto text-lg py-3 px-8 bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Booking...' : 'Book Shipment'}
+                {form.formState.isSubmitting ? 'Processing...' : 'Proceed to Payment'}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </CardFooter>
