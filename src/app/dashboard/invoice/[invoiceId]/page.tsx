@@ -9,21 +9,36 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { Printer, Download, ArrowLeft, IndianRupee, Loader2, AlertTriangle } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid } from 'date-fns';
 import Image from 'next/image';
 import { siteConfig } from '@/config/site';
 import apiClient from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { mapApiShipmentToFrontend } from '@/contexts/shipment-context'; // Import the mapper
+import { mapApiShipmentToFrontend } from '@/contexts/shipment-context'; 
 
 const formatAddress = (address: AddressDetail | undefined) => {
   if (!address) return "Address not available";
+  const parts = [
+    address.street,
+    `${address.city ? address.city + ', ' : ''}${address.state ? address.state + ' - ' : ''}${address.pincode}`,
+    address.country
+  ].filter(Boolean); // Filter out empty or null parts
+
+  if (parts.length === 0 && (address.street || address.city || address.state || address.pincode || address.country)) {
+    // If all individual fields are empty/null but the address object itself existed
+    return "Address details incomplete.";
+  }
+  if (parts.length === 0) return "Address not available";
+
   return (
     <>
-      {address.street}<br />
-      {address.city}, {address.state} - {address.pincode}<br />
-      {address.country}
+      {parts.map((part, index) => (
+        <React.Fragment key={index}>
+          {part}
+          {index < parts.length - 1 && <br />}
+        </React.Fragment>
+      ))}
     </>
   );
 };
@@ -35,20 +50,17 @@ export default function InvoiceDetailPage() {
   const { toast } = useToast();
   const { logoutUser } = useAuth();
 
-  // Parameter 'invoiceId' is actually the shipment_id_str
   const shipment_id_str_param = params.invoiceId as string; 
 
-  const [shipment, setShipment] = useState<Shipment | null | undefined>(undefined); // Mapped shipment
+  const [shipment, setShipment] = useState<Shipment | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (shipment_id_str_param && shipment_id_str_param !== 'undefined') {
+    if (shipment_id_str_param && shipment_id_str_param !== 'undefined' && shipment_id_str_param !== 'null') {
       const fetchShipmentForInvoice = async () => {
         setIsLoading(true);
         try {
-          // API returns shipment with snake_case
           const fetchedApiShipment = await apiClient<any>(`/api/shipments/${shipment_id_str_param}`);
-          // Map to frontend camelCase (or hybrid) Shipment object
           setShipment(mapApiShipmentToFrontend(fetchedApiShipment));
         } catch (error: any) {
           console.error("Error fetching shipment for invoice:", error);
@@ -86,6 +98,7 @@ export default function InvoiceDetailPage() {
   };
 
   const handleDownloadPdf = () => {
+    // For simplicity, using print to PDF. Actual PDF generation would need a library.
     window.print(); 
   };
 
@@ -111,7 +124,6 @@ export default function InvoiceDetailPage() {
     );
   }
 
-  // Use direct snake_case fields from the mapped shipment object
   const senderAddress: AddressDetail = {
     street: shipment.sender_address_street || '',
     city: shipment.sender_address_city || '',
@@ -128,7 +140,8 @@ export default function InvoiceDetailPage() {
     country: shipment.receiver_address_country || '',
   };
   
-  const invoiceDate = shipment.booking_date ? parseISO(shipment.booking_date) : new Date();
+  const invoiceDateStr = shipment.booking_date || new Date().toISOString();
+  const invoiceDate = isValid(parseISO(invoiceDateStr)) ? parseISO(invoiceDateStr) : new Date();
   const dueDate = invoiceDate; 
 
 
@@ -142,7 +155,6 @@ export default function InvoiceDetailPage() {
               <h1 className="text-3xl font-headline font-bold text-primary print:text-2xl">INVOICE</h1>
             </div>
             <div className="text-left sm:text-right mt-4 sm:mt-0">
-              {/* Display shipment.shipment_id_str */}
               <p className="font-semibold text-lg">Invoice #: {shipment.shipment_id_str}</p>
               <p className="text-sm text-muted-foreground">Date: {format(invoiceDate, 'dd MMM, yyyy')}</p>
               <p className="text-sm text-muted-foreground">Due Date: {format(dueDate, 'dd MMM, yyyy')}</p>
@@ -151,7 +163,7 @@ export default function InvoiceDetailPage() {
           </div>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
             <div>
               <h3 className="font-semibold mb-1 text-primary">Billed From:</h3>
               <p className="font-bold">{siteConfig.company.legalName}</p>
@@ -162,13 +174,11 @@ export default function InvoiceDetailPage() {
             </div>
             <div>
               <h3 className="font-semibold mb-1 text-primary">Billed To:</h3>
-              {/* Use shipment.sender_name */}
-              <p className="font-bold">{shipment.sender_name}</p>
+              <p className="font-bold">{shipment.sender_name || 'N/A'}</p>
               <div className="text-sm text-muted-foreground">
                 {formatAddress(senderAddress)}
               </div>
-              {/* Use shipment.sender_phone */}
-              <p className="text-sm text-muted-foreground">Phone: {shipment.sender_phone}</p>
+              <p className="text-sm text-muted-foreground">Phone: {shipment.sender_phone || 'N/A'}</p>
             </div>
           </div>
 
@@ -176,13 +186,11 @@ export default function InvoiceDetailPage() {
 
           <div>
              <h3 className="font-semibold mb-1 text-primary">Ship To:</h3>
-              {/* Use shipment.receiver_name */}
-              <p className="font-bold">{shipment.receiver_name}</p>
+              <p className="font-bold">{shipment.receiver_name || 'N/A'}</p>
               <div className="text-sm text-muted-foreground">
                 {formatAddress(receiverAddress)}
               </div>
-              {/* Use shipment.receiver_phone */}
-              <p className="text-sm text-muted-foreground">Phone: {shipment.receiver_phone}</p>
+              <p className="text-sm text-muted-foreground">Phone: {shipment.receiver_phone || 'N/A'}</p>
           </div>
           
           <Separator />
@@ -200,12 +208,10 @@ export default function InvoiceDetailPage() {
               </TableHeader>
               <TableBody>
                   <TableRow>
-                    {/* Use shipment.service_type, shipment.package_weight_kg, shipment.shipment_id_str */}
-                    <TableCell>{shipment.service_type} Shipping ({shipment.package_weight_kg}kg) for {shipment.shipment_id_str}</TableCell>
+                    <TableCell>{shipment.service_type || 'N/A'} Shipping ({shipment.package_weight_kg || 'N/A'}kg) for {shipment.shipment_id_str}</TableCell>
                     <TableCell className="text-right">1</TableCell>
                     <TableCell className="text-right flex items-center justify-end">
                         <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
-                        {/* Use shipment.price_without_tax */}
                         {(shipment.price_without_tax || 0).toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right flex items-center justify-end">
@@ -221,18 +227,15 @@ export default function InvoiceDetailPage() {
             <div className="w-full md:w-1/2 lg:w-1/3 space-y-2">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal:</span>
-                {/* Use shipment.price_without_tax */}
                 <span className="font-medium flex items-center"><IndianRupee className="h-4 w-4 mr-0.5" />{(shipment.price_without_tax || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tax (18%):</span>
-                {/* Use shipment.tax_amount_18_percent */}
                 <span className="font-medium flex items-center"><IndianRupee className="h-4 w-4 mr-0.5" />{(shipment.tax_amount_18_percent || 0).toFixed(2)}</span>
               </div>
               <Separator />
               <div className="flex justify-between text-lg font-bold text-primary">
                 <span>Grand Total:</span>
-                {/* Use shipment.total_with_tax_18_percent */}
                 <span className="flex items-center"><IndianRupee className="h-5 w-5 mr-0.5" />{(shipment.total_with_tax_18_percent || 0).toFixed(2)}</span>
               </div>
             </div>
@@ -242,7 +245,7 @@ export default function InvoiceDetailPage() {
           
           <div>
              <h3 className="font-semibold mb-1 text-primary">Payment Status:</h3>
-             <p className="font-bold text-lg text-green-600">PAID</p> {/* Assuming all are paid for invoice */}
+             <p className="font-bold text-lg text-green-600">PAID</p>
           </div>
 
         </CardContent>
