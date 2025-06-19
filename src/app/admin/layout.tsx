@@ -3,8 +3,8 @@
 
 import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAdminAuth } from '@/hooks/use-admin-auth'; // Uses AdminAuthContext
-import { useAuth } from '@/hooks/use-auth'; // Also use main AuthContext for user details
+import { useAdminAuth } from '@/hooks/use-admin-auth'; 
+import { useAuth } from '@/hooks/use-auth'; 
 import { siteConfig } from '@/config/site';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -22,16 +22,17 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 
 function AdminUserNav() {
-  const { user } = useAuth(); // Get user from main AuthContext
+  const { user } = useAuth(); 
   const { adminLogout } = useAdminAuth();
   const router = useRouter();
 
   const handleLogout = () => {
-    adminLogout(); // This will call logoutUser from main AuthContext
-    router.replace('/admin/login'); // Or /login if admin login is merged
+    adminLogout(); 
+    router.replace('/login'); // Redirect to main login as admin status is part of user object
   };
 
-  if (!user || !user.isAdmin) return null; // Should not happen if layout protects correctly
+  // User must exist and be an admin to show this nav
+  if (!user || !user.isAdmin) return null; 
 
   return (
     <DropdownMenu>
@@ -65,14 +66,6 @@ function AdminUserNav() {
 
 
 function AdminHeader() {
-  // const { adminUser, adminLogout } = useAdminAuth(); // Replaced by AdminUserNav
-  // const router = useRouter();
-
-  // const handleLogout = () => {
-  //   adminLogout();
-  //   router.replace('/admin/login');
-  // };
-
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
       <Link href="/admin/dashboard" className="flex items-center gap-2 text-lg font-semibold">
@@ -89,22 +82,26 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // isAdminAuthenticated now relies on user.isAdmin from useAuth via useAdminAuth
   const { isAdminAuthenticated, isAdminLoading } = useAdminAuth();
-  const { reloadUserFromStorage } = useAuth(); // From main AuthContext
+  const { reloadUserFromStorage } = useAuth(); 
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    reloadUserFromStorage(); // Attempt to reload on mount
+    reloadUserFromStorage(); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (!isAdminLoading && !isAdminAuthenticated && pathname !== '/admin/login') {
-      router.replace('/admin/login');
+    // If not loading and not admin authenticated, redirect to main login page
+    // (as admin login is now part of the main login flow)
+    if (!isAdminLoading && !isAdminAuthenticated && pathname !== '/admin/login' && pathname !== '/login') {
+      router.replace('/login');
     }
   }, [isAdminAuthenticated, isAdminLoading, router, pathname]);
 
+  // Admin login page itself is handled by its own page component logic
   if (pathname === '/admin/login') {
     return (
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -128,10 +125,12 @@ export default function AdminLayout({
   }
 
   if (!isAdminAuthenticated) {
+    // If not authenticated as admin, show loading/redirecting or simply don't render protected content.
+    // The useEffect above handles redirection. This is a fallback.
     return (
         <div className="flex h-screen items-center justify-center bg-background text-foreground">
             <Loader2 className="h-12 w-12 animate-spin text-destructive" />
-            <span className="ml-3 text-lg text-destructive">Redirecting to Admin Login...</span>
+            <span className="ml-3 text-lg text-destructive">Redirecting...</span>
         </div>
     );
   }

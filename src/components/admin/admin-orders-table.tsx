@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import apiClient from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth'; // For user info, not token
 import { useRouter } from 'next/navigation';
 
 const statusColors: Record<TrackingStage, string> = {
@@ -57,8 +57,7 @@ const mapApiShipmentToFrontend = (apiShipment: any): Shipment => ({
   totalWithTax18Percent: parseFloat(apiShipment.total_with_tax_18_percent),
   trackingHistory: apiShipment.tracking_history || [],
   lastUpdatedAt: apiShipment.last_updated_at,
-  // Fields for admin table if not directly on base Shipment model
-  customerName: apiShipment.sender_name, // Assuming sender is customer
+  customerName: apiShipment.sender_name, 
   orderNumber: apiShipment.shipment_id_str,
   description: `${apiShipment.service_type} (${apiShipment.package_weight_kg}kg) to ${apiShipment.receiver_address_city || 'N/A'}`,
 });
@@ -75,33 +74,28 @@ export function AdminOrdersTable() {
   const itemsPerPage = 10;
 
   const { toast } = useToast();
-  const { token, user, isAuthenticated, logoutUser } = useAuth();
+  const { user, isAuthenticated, logoutUser } = useAuth(); // user for isAdmin check
   const router = useRouter();
 
   const handleApiError = useCallback((error: any, operation: string) => {
     console.error(`API error during ${operation}:`, error);
-    if (error.status === 422) {
-      toast({
-        title: "Authentication Error",
-        description: "Your session is invalid. Please log in again.",
-        variant: "destructive",
-      });
-      logoutUser();
-      router.replace('/login'); // Or admin login if separate
-    } else {
-      toast({
-        title: `Error ${operation}`,
-        description: error?.data?.error || error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    }
+    // Removed 422 specific logout as per new requirements.
+    // Generic error display
+    toast({
+      title: `Error ${operation}`,
+      description: error?.data?.error || error.message || "An unexpected error occurred.",
+      variant: "destructive",
+    });
   }, [toast, logoutUser, router]);
 
   const fetchAdminShipments = useCallback(async (page = 1, search = searchTerm, status = statusFilter) => {
-    if (!isAuthenticated || !user?.isAdmin || !token) {
+    // Check if user is authenticated and an admin - for UI gating, actual API call is open
+    if (!isAuthenticated || !user?.isAdmin) {
         setAllShipments([]);
         setTotalCount(0);
         setTotalPages(1);
+        // Optionally, redirect or show message if not admin, though layout should handle this.
+        // For now, just clear data if somehow accessed without admin rights in context.
         return;
     }
     setIsLoading(true);
@@ -110,6 +104,7 @@ export function AdminOrdersTable() {
       if (search) queryParams += `&q=${encodeURIComponent(search)}`;
       if (status !== 'all') queryParams += `&status=${encodeURIComponent(status)}`;
       
+      // API call does not require token anymore
       const response = await apiClient<AdminShipmentsResponse>(`/api/admin/shipments${queryParams}`);
       setAllShipments(response.shipments.map(mapApiShipmentToFrontend));
       setTotalPages(response.totalPages);
@@ -123,11 +118,19 @@ export function AdminOrdersTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, user?.isAdmin, isAuthenticated, itemsPerPage, searchTerm, statusFilter, handleApiError]); 
+  }, [user?.isAdmin, isAuthenticated, itemsPerPage, searchTerm, statusFilter, handleApiError]); 
 
   useEffect(() => {
-    fetchAdminShipments(1, searchTerm, statusFilter);
-  }, [fetchAdminShipments, searchTerm, statusFilter]);
+    // Fetch only if authenticated as admin
+    if (isAuthenticated && user?.isAdmin) {
+      fetchAdminShipments(1, searchTerm, statusFilter);
+    } else {
+      // Clear data if not admin authenticated
+      setAllShipments([]);
+      setTotalCount(0);
+      setTotalPages(1);
+    }
+  }, [fetchAdminShipments, searchTerm, statusFilter, isAuthenticated, user?.isAdmin]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -137,6 +140,10 @@ export function AdminOrdersTable() {
 
 
   const handleStatusUpdate = async (shipmentIdStr: string, newStatus: TrackingStage, currentShipment: Shipment) => {
+    if (!isAuthenticated || !user?.isAdmin) {
+        toast({ title: "Access Denied", description: "You are not authorized to perform this action.", variant: "destructive"});
+        return;
+    }
     let location = currentShipment.receiverAddressCity || "Destination City";
     let activity = `Status updated to ${newStatus}`;
 
@@ -146,9 +153,10 @@ export function AdminOrdersTable() {
     if (newStatus === "Cancelled") activity = `Shipment has been Cancelled`;
 
     try {
+      // API call does not require token
       await apiClient<UpdateShipmentStatusResponse>(`/api/admin/shipments/${shipmentIdStr}/status`, {
         method: 'PUT',
-        body: JSON.stringify({ status: newStatus, location, activity }), // API expects snake_case
+        body: JSON.stringify({ status: newStatus, location, activity }),
       });
       toast({ title: "Success", description: `Shipment ${shipmentIdStr} status updated to ${newStatus}.` });
       fetchAdminShipments(currentPage, searchTerm, statusFilter);
@@ -198,6 +206,21 @@ export function AdminOrdersTable() {
     link.click();
     document.body.removeChild(link);
   }, [allShipments, toast]);
+
+  // If not authenticated as admin, don't render the sensitive table content
+  if (!isAuthenticated || !user?.isAdmin) {
+    return (
+        <Card className="shadow-xl mt-8">
+            <CardHeader>
+                <CardTitle className="font-headline text-xl sm:text-2xl">Access Denied</CardTitle>
+                <CardDescription>You do not have permission to view this page.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <p>Please log in as an administrator.</p>
+            </CardContent>
+        </Card>
+    );
+  }
 
   return (
     <Card className="shadow-xl mt-8">

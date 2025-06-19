@@ -1,31 +1,19 @@
 
-import { API_BASE_URL, AUTH_TOKEN_KEY } from './constants';
+import { API_BASE_URL } from './constants';
 
-interface RequestOptions extends RequestInit {
-  useAuthToken?: boolean;
-}
+// Removed RequestOptions and useAuthToken logic
 
 async function apiClient<T>(
   endpoint: string,
-  options: RequestOptions = {}
+  options: RequestInit = {} // Standard RequestInit
 ): Promise<T> {
-  const { useAuthToken = true, ...fetchOptions } = options;
-  const headers = new Headers(fetchOptions.headers || {});
+  const headers = new Headers(options.headers || {});
   headers.set('Content-Type', 'application/json');
 
-  if (useAuthToken) {
-    try {
-        const token = localStorage.getItem(AUTH_TOKEN_KEY);
-        if (token) {
-            headers.set('Authorization', `Bearer ${token}`);
-        }
-    } catch (e) {
-        console.warn("localStorage is not available for auth token retrieval.");
-    }
-  }
+  // Removed Authorization header logic
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...fetchOptions,
+    ...options, // Use options directly
     headers,
   });
 
@@ -34,10 +22,13 @@ async function apiClient<T>(
     try {
       errorData = await response.json();
     } catch (e) {
-      errorData = { message: response.statusText };
+      // If response is not JSON, use statusText or a generic message
+      errorData = { message: response.statusText || 'An API error occurred without a JSON body' };
     }
     console.error('API Error:', endpoint, response.status, errorData);
-    throw { status: response.status, data: errorData, message: errorData?.error || errorData?.message || 'An API error occurred' };
+    // Ensure the error object always has a message for consistent handling
+    const message = errorData?.error || errorData?.message || `API request failed with status ${response.status}`;
+    throw { status: response.status, data: errorData, message: message };
   }
 
   if (response.status === 204 || response.headers.get("content-length") === "0") {

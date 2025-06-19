@@ -17,8 +17,41 @@ interface InvoiceContextType {
 
 export const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
 
+// Helper function to map API snake_case to frontend camelCase for Shipment
+const mapApiShipmentToFrontend = (apiShipment: any): Shipment => ({
+  id: apiShipment.id,
+  userId: apiShipment.user_id,
+  shipmentIdStr: apiShipment.shipment_id_str,
+  senderName: apiShipment.sender_name,
+  senderAddressStreet: apiShipment.sender_address_street,
+  senderAddressCity: apiShipment.sender_address_city,
+  senderAddressState: apiShipment.sender_address_state,
+  senderAddressPincode: apiShipment.sender_address_pincode,
+  senderAddressCountry: apiShipment.sender_address_country,
+  senderPhone: apiShipment.sender_phone,
+  receiverName: apiShipment.receiver_name,
+  receiverAddressStreet: apiShipment.receiver_address_street,
+  receiverAddressCity: apiShipment.receiver_address_city,
+  receiverAddressState: apiShipment.receiver_address_state,
+  receiverAddressPincode: apiShipment.receiver_address_pincode,
+  receiverAddressCountry: apiShipment.receiver_address_country,
+  receiverPhone: apiShipment.receiver_phone,
+  packageWeightKg: parseFloat(apiShipment.package_weight_kg),
+  packageWidthCm: parseFloat(apiShipment.package_width_cm),
+  packageHeightCm: parseFloat(apiShipment.package_height_cm),
+  packageLengthCm: parseFloat(apiShipment.package_length_cm),
+  pickupDate: apiShipment.pickup_date,
+  serviceType: apiShipment.service_type,
+  bookingDate: apiShipment.booking_date,
+  status: apiShipment.status,
+  priceWithoutTax: parseFloat(apiShipment.price_without_tax),
+  taxAmount18Percent: parseFloat(apiShipment.tax_amount_18_percent),
+  totalWithTax18Percent: parseFloat(apiShipment.total_with_tax_18_percent),
+  trackingHistory: apiShipment.tracking_history || [],
+  lastUpdatedAt: apiShipment.last_updated_at,
+});
+
 const transformShipmentToDisplayInvoice = (shipment: Shipment): DisplayInvoice => {
-  // Ensure all properties accessed from shipment match its actual structure (camelCase from frontend type)
   const senderAddr: AddressDetail = {
     street: shipment.senderAddressStreet,
     city: shipment.senderAddressCity,
@@ -59,7 +92,7 @@ const transformShipmentToDisplayInvoice = (shipment: Shipment): DisplayInvoice =
     taxRate: 0.18, 
     taxAmount: shipment.taxAmount18Percent,
     grandTotal: shipment.totalWithTax18Percent,
-    status: "Paid", 
+    status: "Paid", // Assuming all booked shipments are "Paid" for invoice display purposes
     serviceType: shipment.serviceType,
     packageWeight: shipment.packageWeightKg,
   };
@@ -69,68 +102,29 @@ const transformShipmentToDisplayInvoice = (shipment: Shipment): DisplayInvoice =
 export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
   const [displayInvoices, setDisplayInvoices] = useState<DisplayInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { token, isAuthenticated, logoutUser } = useAuth();
+  const { user, isAuthenticated, logoutUser } = useAuth(); // Removed token
   const { toast } = useToast();
 
   const handleApiError = useCallback((error: any, operation: string) => {
     console.error(`API error during ${operation}:`, error);
-    if (error.status === 422) {
-      toast({
-        title: "Authentication Error",
-        description: "Your session is invalid. Please log in again.",
-        variant: "destructive",
-      });
-      logoutUser();
-    } else {
-      toast({
-        title: `Error ${operation}`,
-        description: error?.data?.error || error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    }
+    // No automatic logout for 422.
+    toast({
+      title: `Error ${operation}`,
+      description: error?.data?.error || error.message || "An unexpected error occurred.",
+      variant: "destructive",
+    });
   }, [toast, logoutUser]);
 
   const fetchUserShipmentsForInvoices = useCallback(async () => {
-    if (!isAuthenticated || !token) {
+    // if (!isAuthenticated || !token) { // Check isAuthenticated
+    if (!isAuthenticated || !user) { // Check if user object exists
       setDisplayInvoices([]);
       return;
     }
     setIsLoading(true);
     try {
       const shipmentsDataFromApi = await apiClient<any[]>('/api/shipments'); 
-      // Map API's snake_case to frontend's camelCase Shipment type before transforming
-      const shipmentsData: Shipment[] = shipmentsDataFromApi.map(s => ({
-        id: s.id,
-        userId: s.user_id,
-        shipmentIdStr: s.shipment_id_str,
-        senderName: s.sender_name,
-        senderAddressStreet: s.sender_address_street,
-        senderAddressCity: s.sender_address_city,
-        senderAddressState: s.sender_address_state,
-        senderAddressPincode: s.sender_address_pincode,
-        senderAddressCountry: s.sender_address_country,
-        senderPhone: s.sender_phone,
-        receiverName: s.receiver_name,
-        receiverAddressStreet: s.receiver_address_street,
-        receiverAddressCity: s.receiver_address_city,
-        receiverAddressState: s.receiver_address_state,
-        receiverAddressPincode: s.receiver_address_pincode,
-        receiverAddressCountry: s.receiver_address_country,
-        receiverPhone: s.receiver_phone,
-        packageWeightKg: s.package_weight_kg,
-        packageWidthCm: s.package_width_cm,
-        packageHeightCm: s.package_height_cm,
-        packageLengthCm: s.package_length_cm,
-        pickupDate: s.pickup_date,
-        serviceType: s.service_type,
-        bookingDate: s.booking_date,
-        status: s.status,
-        priceWithoutTax: s.price_without_tax,
-        taxAmount18Percent: s.tax_amount_18_percent,
-        totalWithTax18Percent: s.total_with_tax_18_percent,
-        trackingHistory: s.tracking_history || [],
-        lastUpdatedAt: s.last_updated_at,
-      }));
+      const shipmentsData: Shipment[] = shipmentsDataFromApi.map(mapApiShipmentToFrontend);
       const transformedInvoices = shipmentsData.map(transformShipmentToDisplayInvoice);
       setDisplayInvoices(transformedInvoices);
     } catch (error: any) {
@@ -139,46 +133,15 @@ export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, token, handleApiError]);
+  }, [isAuthenticated, user, handleApiError]); // Removed token from deps
 
   const getDisplayInvoiceById = useCallback(async (shipmentIdStr: string): Promise<DisplayInvoice | undefined> => {
-    if (!isAuthenticated || !token) return undefined;
+    // if (!isAuthenticated || !token) return undefined; // Check isAuthenticated
+    if (!isAuthenticated) return undefined; // Endpoint is open, but conceptually tied to user context
     setIsLoading(true);
     try {
       const shipmentFromApi = await apiClient<any>(`/api/shipments/${shipmentIdStr}`);
-      // Map API's snake_case to frontend's camelCase Shipment type
-      const shipment: Shipment = {
-        id: shipmentFromApi.id,
-        userId: shipmentFromApi.user_id,
-        shipmentIdStr: shipmentFromApi.shipment_id_str,
-        senderName: shipmentFromApi.sender_name,
-        senderAddressStreet: shipmentFromApi.sender_address_street,
-        senderAddressCity: shipmentFromApi.sender_address_city,
-        senderAddressState: shipmentFromApi.sender_address_state,
-        senderAddressPincode: shipmentFromApi.sender_address_pincode,
-        senderAddressCountry: shipmentFromApi.sender_address_country,
-        senderPhone: shipmentFromApi.sender_phone,
-        receiverName: shipmentFromApi.receiver_name,
-        receiverAddressStreet: shipmentFromApi.receiver_address_street,
-        receiverAddressCity: shipmentFromApi.receiver_address_city,
-        receiverAddressState: shipmentFromApi.receiver_address_state,
-        receiverAddressPincode: shipmentFromApi.receiver_address_pincode,
-        receiverAddressCountry: shipmentFromApi.receiver_address_country,
-        receiverPhone: shipmentFromApi.receiver_phone,
-        packageWeightKg: shipmentFromApi.package_weight_kg,
-        packageWidthCm: shipmentFromApi.package_width_cm,
-        packageHeightCm: shipmentFromApi.package_height_cm,
-        packageLengthCm: shipmentFromApi.package_length_cm,
-        pickupDate: shipmentFromApi.pickup_date,
-        serviceType: shipmentFromApi.service_type,
-        bookingDate: shipmentFromApi.booking_date,
-        status: shipmentFromApi.status,
-        priceWithoutTax: shipmentFromApi.price_without_tax,
-        taxAmount18Percent: shipmentFromApi.tax_amount_18_percent,
-        totalWithTax18Percent: shipmentFromApi.total_with_tax_18_percent,
-        trackingHistory: shipmentFromApi.tracking_history || [],
-        lastUpdatedAt: shipmentFromApi.last_updated_at,
-      };
+      const shipment: Shipment = mapApiShipmentToFrontend(shipmentFromApi);
       return transformShipmentToDisplayInvoice(shipment);
     } catch (error: any) {
       handleApiError(error, `fetching shipment ${shipmentIdStr} for invoice`);
@@ -186,7 +149,7 @@ export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, token, handleApiError]);
+  }, [isAuthenticated, handleApiError]); // Removed token from deps
 
 
   return (
