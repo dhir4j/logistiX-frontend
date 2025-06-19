@@ -49,7 +49,7 @@ type ShipmentFormValues = z.infer<typeof shipmentSchema>;
 const RATE_PER_HALF_KG = 45; // Rs. 45 per 0.5 kg
 const BASE_CHARGE = 20; // Rs. 20 base charge
 const EXPRESS_FEE = 50; // Rs. 50 extra for express
-const TAX_RATE = 0.05; // 5% tax
+const TAX_RATE = 0.18; // 18% tax
 
 export function BookShipmentForm() {
   const [submissionStatus, setSubmissionStatus] = useState<{ id: string; message: string, invoiceId: string } | null>(null);
@@ -80,8 +80,9 @@ export function BookShipmentForm() {
     if (data.serviceType === "Express") {
       charge += EXPRESS_FEE;
     }
+    // This charge is subtotal (before tax)
     const taxAmount = charge * TAX_RATE;
-    return charge + taxAmount;
+    return charge + taxAmount; // This is grandTotal
   };
 
   const onSubmit = (data: ShipmentFormValues) => {
@@ -109,13 +110,14 @@ export function BookShipmentForm() {
       packageLength: data.packageLength,
       pickupDate: data.pickupDate,
       serviceType: data.serviceType,
-      bookingDate: new Date(),
+      bookingDate: new Date(), // Will be overridden by context's addShipment
       status: "Booked",
+      lastUpdatedAt: new Date(), // Will be overridden by context's addShipment
     };
     addShipment(newShipment);
 
     const grandTotal = paymentStep.amount;
-    const subtotal = grandTotal / (1 + TAX_RATE);
+    const subtotal = grandTotal / (1 + TAX_RATE); // Calculate subtotal from grandTotal and TAX_RATE
     const taxAmount = grandTotal - subtotal;
 
     const invoiceItem: InvoiceItem = {
@@ -461,3 +463,4 @@ export function BookShipmentForm() {
     </Card>
   );
 }
+

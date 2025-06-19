@@ -2,12 +2,12 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Package, DollarSign, Users, Truck, CheckCircle, Clock } from "lucide-react";
-import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Legend as RechartsLegend, Tooltip as RechartsTooltip } from 'recharts'; // Updated import for Legend
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Legend as RechartsLegend, Tooltip as RechartsTooltip } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'; // Added ChartTooltip here
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { AdminOrdersTable } from './admin-orders-table'; // Import the new table
 
 const shipmentsData = [
   { month: "Jan", shipments: Math.floor(Math.random() * 500) + 100, revenue: Math.floor(Math.random() * 20000) + 5000 },
@@ -100,8 +100,8 @@ export function AdminDashboardContent() {
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsBarChart data={shipmentsData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
                   <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis yAxisId="left" orientation="left" stroke="var(--color-shipments)" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis yAxisId="right" orientation="right" stroke="var(--color-revenue)" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" tickLine={false} axisLine={false} fontSize={12} />
                   <ChartTooltip
                     cursor={false}
                     content={<ChartTooltipContent indicator="dashed" />}
@@ -152,7 +152,9 @@ export function AdminDashboardContent() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Render the new AdminOrdersTable */}
+      <AdminOrdersTable />
     </div>
   );
 }
-

@@ -1,12 +1,14 @@
+
 "use client";
 
-import type { Shipment } from '@/lib/types';
+import type { Shipment, TrackingStage } from '@/lib/types';
 import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
 interface ShipmentContextType {
   shipments: Shipment[];
   addShipment: (shipment: Shipment) => void;
   getShipmentById: (id: string) => Shipment | undefined;
+  updateShipmentStatus: (shipmentId: string, newStatus: TrackingStage) => void;
   isLoading: boolean;
 }
 
@@ -26,6 +28,7 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
           ...s,
           pickupDate: new Date(s.pickupDate),
           bookingDate: new Date(s.bookingDate),
+          lastUpdatedAt: s.lastUpdatedAt ? new Date(s.lastUpdatedAt) : undefined,
         }));
         setShipments(parsedShipments);
       }
@@ -46,7 +49,8 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
 
   const addShipment = useCallback((shipment: Shipment) => {
     setShipments(prevShipments => {
-      const newShipments = [shipment, ...prevShipments];
+      const newShipmentWithTimestamp = { ...shipment, bookingDate: new Date(), lastUpdatedAt: new Date() };
+      const newShipments = [newShipmentWithTimestamp, ...prevShipments];
       updateLocalStorage(newShipments);
       return newShipments;
     });
@@ -56,9 +60,22 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
     return shipments.find(s => s.id === id);
   }, [shipments]);
 
+  const updateShipmentStatus = useCallback((shipmentId: string, newStatus: TrackingStage) => {
+    setShipments(prevShipments => {
+      const updatedShipments = prevShipments.map(shipment =>
+        shipment.id === shipmentId
+          ? { ...shipment, status: newStatus, lastUpdatedAt: new Date() }
+          : shipment
+      );
+      updateLocalStorage(updatedShipments);
+      return updatedShipments;
+    });
+  }, []);
+
   return (
-    <ShipmentContext.Provider value={{ shipments, addShipment, getShipmentById, isLoading }}>
+    <ShipmentContext.Provider value={{ shipments, addShipment, getShipmentById, updateShipmentStatus, isLoading }}>
       {children}
     </ShipmentContext.Provider>
   );
 };
+

@@ -32,6 +32,9 @@ export interface Shipment {
   serviceType: ServiceType;
   bookingDate: Date;
   status: TrackingStage;
+  // Added to allow admin to add notes or for other future use
+  adminNotes?: string; 
+  lastUpdatedAt?: Date;
 }
 
 export type TrackingStage = "Booked" | "In Transit" | "Out for Delivery" | "Delivered" | "Cancelled";
@@ -68,10 +71,11 @@ export interface Invoice {
   };
   items: InvoiceItem[];
   subtotal: number;
-  taxRate: number; // e.g., 0.05 for 5%
+  taxRate: number; // e.g., 0.18 for 18%
   taxAmount: number;
   grandTotal: number;
   status: "Paid" | "Pending"; // For simulation, will default to "Paid"
   serviceType: ServiceType;
   packageWeight: number;
 }
+
