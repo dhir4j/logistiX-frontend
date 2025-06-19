@@ -63,13 +63,13 @@ export function AdminOrdersTable() {
           };
         }
         const subtotal = invoice.subtotal;
-        const tax18 = subtotal * 0.18;
+        const tax18 = subtotal * 0.18; // Ensure this matches displayed "Tax (18%)"
         const total18 = subtotal + tax18;
         return {
           shipmentId: shipment.id,
           customerName: shipment.senderName,
           orderNumber: shipment.id,
-          description: `${shipment.serviceType} (${shipment.packageWeight}kg) to ${shipment.receiverAddress.city}`,
+          description: `${shipment.serviceType} (${shipment.packageWeight}kg) to ${shipment.receiverAddress.city || 'N/A'}`,
           priceWithoutTax: subtotal,
           taxAmount18: tax18,
           totalWithTax18: total18,
@@ -105,14 +105,14 @@ export function AdminOrdersTable() {
       "Booking Date"
     ];
     const rows = processedOrders.map(order => [
-      order.orderNumber,
-      order.customerName,
-      order.description,
+      `"${order.orderNumber}"`, // Enclose in quotes for CSV safety
+      `"${order.customerName}"`,
+      `"${order.description}"`,
       order.priceWithoutTax.toFixed(2),
       order.taxAmount18.toFixed(2),
       order.totalWithTax18.toFixed(2),
-      order.currentStatus,
-      format(order.bookingDate, 'yyyy-MM-dd HH:mm')
+      `"${order.currentStatus}"`,
+      `"${format(order.bookingDate, 'yyyy-MM-dd HH:mm')}"`
     ]);
 
     let csvContent = "data:text/csv;charset=utf-8," 
@@ -200,17 +200,23 @@ export function AdminOrdersTable() {
                     <TableCell className="font-medium text-primary">{order.orderNumber}</TableCell>
                     <TableCell>{order.customerName}</TableCell>
                     <TableCell>{order.description}</TableCell>
-                    <TableCell className="text-right flex items-center justify-end">
-                        <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
-                        {order.priceWithoutTax.toFixed(2)}
+                    <TableCell className="text-right">
+                        <span className="inline-flex items-center justify-end">
+                            <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
+                            {order.priceWithoutTax.toFixed(2)}
+                        </span>
                     </TableCell>
-                    <TableCell className="text-right flex items-center justify-end">
-                        <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
-                        {order.taxAmount18.toFixed(2)}
+                    <TableCell className="text-right">
+                        <span className="inline-flex items-center justify-end">
+                            <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
+                            {order.taxAmount18.toFixed(2)}
+                        </span>
                     </TableCell>
-                    <TableCell className="text-right font-semibold flex items-center justify-end">
-                        <IndianRupee className="h-4 w-4 mr-0.5" />
-                        {order.totalWithTax18.toFixed(2)}
+                    <TableCell className="text-right font-semibold">
+                        <span className="inline-flex items-center justify-end">
+                            <IndianRupee className="h-4 w-4 mr-0.5" />
+                            {order.totalWithTax18.toFixed(2)}
+                        </span>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={cn("text-xs", statusColors[order.currentStatus])}>
@@ -243,3 +249,4 @@ export function AdminOrdersTable() {
     </Card>
   );
 }
+
