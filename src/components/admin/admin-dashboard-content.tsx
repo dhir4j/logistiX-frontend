@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Package, DollarSign, Users, Truck, CheckCircle, Clock } from "lucide-react";
-import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip as RechartsTooltip, CartesianGrid, Legend } from 'recharts';
+import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Legend as RechartsLegend, Tooltip as RechartsTooltip } from 'recharts'; // Updated import for Legend
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -17,17 +17,6 @@ const shipmentsData = [
   { month: "May", shipments: Math.floor(Math.random() * 500) + 100, revenue: Math.floor(Math.random() * 20000) + 5000 },
   { month: "Jun", shipments: Math.floor(Math.random() * 500) + 100, revenue: Math.floor(Math.random() * 20000) + 5000 },
 ];
-
-// const chartConfig = { // This was defined but not used by ChartContainer, Recharts directly uses var(--color-...)
-//   shipments: {
-//     label: "Shipments",
-//     color: "hsl(var(--chart-1))",
-//   },
-//   revenue: {
-//     label: "Revenue (₹)",
-//     color: "hsl(var(--chart-2))",
-//   },
-// };
 
 const recentShipments = [
   { id: "RS738291", customer: "Amit Patel", status: "Delivered", date: "2024-07-28", value: 2500 },
@@ -71,7 +60,7 @@ export function AdminDashboardContent() {
             <DollarSign className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{totalRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">Rs. {totalRevenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">+15% from last month</p>
           </CardContent>
         </Card>
@@ -92,7 +81,7 @@ export function AdminDashboardContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{shipmentsInTransit}</div>
-            <p className="text-xs text-muted-foreground">实时更新</p>
+            <p className="text-xs text-muted-foreground">Live Updates</p>
           </CardContent>
         </Card>
       </div>
@@ -104,20 +93,22 @@ export function AdminDashboardContent() {
             <CardDescription>Monthly performance for the last 6 months.</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] sm:h-[350px] p-0">
-            <ChartContainer config={{}} className="w-full h-full"> {/* Pass empty config if not using its features, or define one */}
+            <ChartContainer config={{
+                shipments: { label: "Shipments", color: "hsl(var(--chart-1))" },
+                revenue: { label: "Revenue (Rs.)", color: "hsl(var(--chart-2))" },
+            }} className="w-full h-full">
               <ResponsiveContainer width="100%" height="100%">
-                <RechartsBarChart data={shipmentsData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <RechartsBarChart data={shipmentsData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
                   <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--chart-1))" tickLine={false} axisLine={false} fontSize={12} />
-                  <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--chart-2))" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis yAxisId="left" orientation="left" stroke="var(--color-shipments)" tickLine={false} axisLine={false} fontSize={12} />
+                  <YAxis yAxisId="right" orientation="right" stroke="var(--color-revenue)" tickLine={false} axisLine={false} fontSize={12} />
                   <ChartTooltip
                     cursor={false}
                     content={<ChartTooltipContent indicator="dashed" />}
                   />
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="shipments" fill="var(--color-shipments, hsl(var(--chart-1)))" radius={[4, 4, 0, 0]} name="Shipments" />
-                  <Bar yAxisId="right" dataKey="revenue" fill="var(--color-revenue, hsl(var(--chart-2)))" radius={[4, 4, 0, 0]} name="Revenue (₹)" />
+                  <RechartsLegend />
+                  <Bar yAxisId="left" dataKey="shipments" fill="var(--color-shipments)" radius={[4, 4, 0, 0]} name="Shipments" />
+                  <Bar yAxisId="right" dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} name="Revenue (Rs.)" />
                 </RechartsBarChart>
               </ResponsiveContainer>
             </ChartContainer>
@@ -136,7 +127,7 @@ export function AdminDashboardContent() {
                   <TableHead>Shipment ID</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Value (₹)</TableHead>
+                  <TableHead className="text-right">Value (Rs.)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -153,7 +144,7 @@ export function AdminDashboardContent() {
                         {shipment.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">{shipment.value.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">Rs. {shipment.value.toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -164,3 +155,4 @@ export function AdminDashboardContent() {
     </div>
   );
 }
+
