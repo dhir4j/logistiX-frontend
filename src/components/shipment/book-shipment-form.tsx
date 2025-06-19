@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Added useEffect
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,6 +20,7 @@ import { useShipments } from '@/hooks/use-shipments';
 import type { ServiceType, CreateShipmentResponse } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth'; // Added useAuth
 
 // Consistent with types.ts for API call, but form will use camelCase
 const shipmentFormSchema = z.object({
@@ -51,19 +52,29 @@ const shipmentFormSchema = z.object({
 type ShipmentFormValues = z.infer<typeof shipmentFormSchema>;
 
 // Dummy calculation, actual calculation is on backend. This is just for display.
-const calculateFrontendDisplayCharge = (data: ShipmentFormValues) => {
+const calculateFrontendDisplayCharge = (data: ShipmentFormValues): number => {
     const RATE_PER_HALF_KG = 45; 
     const BASE_CHARGE = 20; 
     const EXPRESS_FEE = 50;
     const TAX_RATE = 0.18;
 
-    const weightInHalfKgs = Math.ceil(data.packageWeightKg / 0.5);
+    const weightKg = typeof data.packageWeightKg === 'number' && !isNaN(data.packageWeightKg) ? data.packageWeightKg : 0;
+
+    const weightInHalfKgs = Math.ceil(weightKg / 0.5);
     let charge = BASE_CHARGE + (weightInHalfKgs * RATE_PER_HALF_KG);
+
     if (data.serviceType === "Express") {
       charge += EXPRESS_FEE;
     }
+    
+    if (isNaN(charge)) {
+        charge = BASE_CHARGE; // Default to base charge if calculation intermediate fails
+    }
+
     const taxAmount = charge * TAX_RATE;
-    return charge + taxAmount;
+    const totalCharge = charge + taxAmount;
+
+    return isNaN(totalCharge) ? 0 : totalCharge; // Ensure a number is always returned
 };
 
 
@@ -72,11 +83,12 @@ export function BookShipmentForm() {
   const [paymentStep, setPaymentStep] = useState<{ show: boolean; amount: number; formData: ShipmentFormValues | null }>({ show: false, amount: 0, formData: null });
   const { addShipment, isLoading: isShipmentContextLoading } = useShipments();
   const { toast } = useToast();
+  const { user } = useAuth(); // Get user from auth context
 
   const form = useForm<ShipmentFormValues>({
     resolver: zodResolver(shipmentFormSchema),
     defaultValues: {
-      senderName: '',
+      senderName: '', // Will be set by useEffect
       senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
       senderPhone: '',
       receiverName: '',
@@ -91,6 +103,14 @@ export function BookShipmentForm() {
     },
   });
 
+  // Auto-fill sender name
+  useEffect(() => {
+    if (user && user.firstName && user.lastName) {
+      form.setValue('senderName', `${user.firstName} ${user.lastName}`);
+    }
+  }, [user, form]);
+
+
   const onSubmitToPayment = (data: ShipmentFormValues) => {
     const displayCharge = calculateFrontendDisplayCharge(data);
     setPaymentStep({ show: true, amount: displayCharge, formData: data });
@@ -101,7 +121,6 @@ export function BookShipmentForm() {
 
     const data = paymentStep.formData;
     
-    // Ensure pickupDate is formatted as YYYY-MM-DD string for the API
     const formattedPickupDate = format(data.pickupDate, "yyyy-MM-dd");
 
     const apiShipmentData = {
@@ -134,7 +153,20 @@ export function BookShipmentForm() {
             title: "Shipment Booked!",
             description: `Your shipment ID is ${response.shipmentIdStr}.`,
         });
-        form.reset();
+        form.reset({ // Reset form with potentially new default senderName if user changed
+            senderName: (user && user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : '',
+            senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
+            senderPhone: '',
+            receiverName: '',
+            receiverAddressStreet: '', receiverAddressCity: '', receiverAddressState: '', receiverAddressPincode: '', receiverAddressCountry: 'India',
+            receiverPhone: '',
+            packageWeightKg: 0.5,
+            packageWidthCm: 10,
+            packageHeightCm: 10,
+            packageLengthCm: 10,
+            serviceType: "Standard",
+            pickupDate: new Date(new Date().setDate(new Date().getDate() + 1))
+        });
         setPaymentStep({ show: false, amount: 0, formData: null });
     } catch (error: any) {
         const errorMessage = error?.data?.error || error?.message || "Failed to book shipment.";
@@ -143,7 +175,7 @@ export function BookShipmentForm() {
             description: errorMessage,
             variant: "destructive",
         });
-         setPaymentStep({ show: false, amount: 0, formData: null }); // Go back to form
+         setPaymentStep({ show: false, amount: 0, formData: null }); 
     }
   };
 
@@ -155,7 +187,7 @@ export function BookShipmentForm() {
         <AlertDescription>
           <p>{submissionStatus.message}</p>
           <p>Shipment ID: <strong>{submissionStatus.shipmentIdStr}</strong></p>
-          <p>Total Paid: <IndianRupee className="inline h-4 w-4" /> {submissionStatus.data.totalWithTax18Percent.toFixed(2)}</p>
+          <p>Total Paid: <IndianRupee className="inline h-4 w-4" /> {(typeof submissionStatus.data.totalWithTax18Percent === 'number' ? submissionStatus.data.totalWithTax18Percent.toFixed(2) : 'N/A')}</p>
           <div className="mt-4 space-y-2 sm:space-y-0 sm:flex sm:space-x-2">
             <Button onClick={() => setSubmissionStatus(null)} className="w-full sm:w-auto" variant="outline">
               Book Another Shipment
@@ -182,7 +214,9 @@ export function BookShipmentForm() {
           <div>
             <p className="text-muted-foreground">Amount to Pay (Display Only):</p>
             <p className="text-3xl font-bold text-primary flex items-center justify-center">
-              <IndianRupee className="h-7 w-7 mr-1" />{paymentStep.amount.toFixed(2)}
+              <IndianRupee className="h-7 w-7 mr-1" />
+              {/* Ensure paymentStep.amount is a number before calling toFixed */}
+              {typeof paymentStep.amount === 'number' ? paymentStep.amount.toFixed(2) : '0.00'}
             </p>
           </div>
           <div className="flex justify-center">
@@ -377,3 +411,4 @@ export function BookShipmentForm() {
     </Card>
   );
 }
+
