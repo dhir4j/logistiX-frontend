@@ -25,22 +25,35 @@ export default function PrivacyPolicyPage() {
           <p>Welcome to SHEDLOAD OVERSEAS LLP. We are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about this privacy notice, or our practices with regards to your personal information, please contact us.</p>
           
           <h2 className="text-xl font-semibold text-foreground pt-4">1. Information We Collect</h2>
-          <p>As a prototype application, SHEDLOAD OVERSEAS LLP currently uses hardcoded credentials for login ("demo@rswift.com" / "123456") and primarily relies on browser localStorage to store shipment data you enter. We do not collect personal information beyond what is necessary for the app's demonstration features, such as the email used for login (which is not transmitted to a server) and shipment details you input.</p>
+          <p>When you register for an account on SHEDLOAD OVERSEAS LLP, we collect personal information you provide to us, such as your first name, last name, email address, and password. When you use our services to book a shipment, we collect details related to the shipment, including sender and receiver names, addresses, phone numbers, and package information. This information is transmitted to and stored on our secure servers to provide and manage your shipments.</p>
           
           <h2 className="text-xl font-semibold text-foreground pt-4">2. How We Use Your Information</h2>
-          <p>The information stored in localStorage (shipment details) is used solely within your browser to demonstrate the application's features, such as booking history and tracking. This data is not sent to or stored on any external servers.</p>
+          <p>We use the information we collect or receive:</p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li>To facilitate account creation and logon process.</li>
+            <li>To manage user accounts.</li>
+            <li>To provide and manage our shipment booking and tracking services.</li>
+            <li>To send administrative information to you, such as information regarding changes to our terms, conditions, and policies.</li>
+            <li>To respond to your inquiries and solve any potential issues you might have with the use of our Services.</li>
+          </ul>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">3. Will Your Information Be Shared With Anyone?</h2>
-          <p>No. Since all data is stored locally in your browser's localStorage for this prototype, it is not shared with any third parties.</p>
+          <p>We only share information with your consent, to comply with laws, to provide you with services, to protect your rights, or to fulfill business obligations. We do not sell your personal information to third parties.</p>
+          <p>We may need to share your personal information in the following situations:</p>
+          <ul className="list-disc list-inside ml-4 space-y-1">
+            <li><strong>Business Transfers.</strong> We may share or transfer your information in connection with, or during negotiations of, any merger, sale of company assets, financing, or acquisition of all or a portion of our business to another company.</li>
+            <li><strong>Legal Obligations.</strong> We may disclose your information where we are legally required to do so in order to comply with applicable law, governmental requests, a judicial proceeding, court order, or legal process.</li>
+          </ul>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">4. How Long Do We Keep Your Information?</h2>
-          <p>Information stored in localStorage persists until you clear your browser's cache and site data or until the data is overwritten or removed by application logic (which is not currently implemented for automatic deletion in this prototype).</p>
+          <p>We will only keep your personal information for as long as it is necessary for the purposes set out in this privacy notice, unless a longer retention period is required or permitted by law (such as tax, accounting or other legal requirements). When we have no ongoing legitimate business need to process your personal information, we will either delete or anonymize it, or, if this is not possible (for example, because your personal information has been stored in backup archives), then we will securely store your personal information and isolate it from any further processing until deletion is possible.</p>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">5. How Do We Keep Your Information Safe?</h2>
-          <p>While we strive to use commercially acceptable means to protect your information within the browser, remember that no method of transmission over the Internet or method of electronic storage is 100% secure. Data stored in localStorage is specific to your browser and device.</p>
+          <p>We have implemented appropriate technical and organizational security measures designed to protect the security of any personal information we process. However, despite our safeguards and efforts to secure your information, no electronic transmission over the Internet or information storage technology can be guaranteed to be 100% secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our security, and improperly collect, access, steal, or modify your information. Although we will do our best to protect your personal information, transmission of personal information to and from our Services is at your own risk. You should only access the Services within a secure environment.</p>
           
           <h2 className="text-xl font-semibold text-foreground pt-4">6. What Are Your Privacy Rights?</h2>
-          <p>You can manage data stored by this application by clearing your browser's localStorage for this site. For any persistent data concerns (not applicable to this prototype's current design), please contact us.</p>
+          <p>Depending on your location, you may have certain rights regarding your personal information. These may include the right (i) to request access and obtain a copy of your personal information, (ii) to request rectification or erasure; (iii) to restrict the processing of your personal information; and (iv) if applicable, to data portability. In certain circumstances, you may also have the right to object to the processing of your personal information. To make such a request, please use the contact details provided below.</p>
+          <p>If you have an account with us, you can review and change your personal information by logging into your account and visiting your account settings page. You may also send us an email at the contact address below to request access to, correct, or delete any personal information that you have provided to us.</p>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">7. Updates to This Notice</h2>
           <p>We may update this privacy notice from time to time. The updated version will be indicated by an updated "Last updated" date and the updated version will be effective as soon as it is accessible. We encourage you to review this privacy notice frequently to be informed of how we are protecting your information.</p>
@@ -52,4 +65,3 @@ export default function PrivacyPolicyPage() {
     </div>
   );
 }
-
