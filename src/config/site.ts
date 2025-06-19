@@ -1,5 +1,5 @@
 
-import { Home, PackagePlus, Search, ListOrdered, Calculator, MessageSquare, LogOut, UserCircle } from 'lucide-react';
+import { Home, PackagePlus, Search, ListOrdered, Calculator, MessageSquare, Receipt } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export interface NavItem {
@@ -36,6 +36,12 @@ export const dashboardNavItems: NavItem[] = [
     href: '/dashboard/my-shipments',
     icon: ListOrdered,
     description: 'View your shipment history.',
+  },
+  {
+    title: 'My Invoices',
+    href: '/dashboard/my-invoices',
+    icon: Receipt,
+    description: 'View your invoices.',
   },
   {
     title: 'Pricing',

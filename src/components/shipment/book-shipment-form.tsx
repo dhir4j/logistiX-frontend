@@ -13,12 +13,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn }
-from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, Package, User, Phone, MapPin, ArrowRight, CheckCircle, PackagePlus } from 'lucide-react';
+import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus } from 'lucide-react';
 import { useShipments } from '@/hooks/use-shipments';
-import type { Shipment, ServiceType } from '@/lib/types';
+import { useInvoices } from '@/hooks/use-invoices';
+import type { Shipment, ServiceType, Invoice, InvoiceItem } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const shipmentSchema = z.object({
@@ -38,9 +38,15 @@ const shipmentSchema = z.object({
 
 type ShipmentFormValues = z.infer<typeof shipmentSchema>;
 
+const RATE_PER_HALF_KG = 45; // Rs. 45 per 0.5 kg
+const BASE_CHARGE = 20; // Rs. 20 base charge
+const EXPRESS_FEE = 50; // Rs. 50 extra for express
+const TAX_RATE = 0.05; // 5% tax
+
 export function BookShipmentForm() {
-  const [submissionStatus, setSubmissionStatus] = useState<{ id: string; message: string } | null>(null);
+  const [submissionStatus, setSubmissionStatus] = useState<{ id: string; message: string, invoiceId: string } | null>(null);
   const { addShipment } = useShipments();
+  const { addInvoice } = useInvoices();
 
   const form = useForm<ShipmentFormValues>({
     resolver: zodResolver(shipmentSchema),
@@ -68,7 +74,56 @@ export function BookShipmentForm() {
       status: "Booked",
     };
     addShipment(newShipment);
-    setSubmissionStatus({ id: shipmentId, message: `Shipment booked successfully! Your Shipment ID is: ${shipmentId}` });
+
+    // Create Invoice
+    const weightInHalfKgs = Math.ceil(data.packageWeight / 0.5);
+    let calculatedCharge = BASE_CHARGE + (weightInHalfKgs * RATE_PER_HALF_KG);
+    if (data.serviceType === "Express") {
+      calculatedCharge += EXPRESS_FEE;
+    }
+
+    const taxAmount = calculatedCharge * TAX_RATE;
+    const grandTotal = calculatedCharge + taxAmount;
+
+    const invoiceItem: InvoiceItem = {
+      description: `${data.serviceType} Shipping for package ${shipmentId} (${data.packageWeight}kg)`,
+      quantity: 1,
+      unitPrice: calculatedCharge,
+      total: calculatedCharge,
+    };
+    
+    const invoiceId = `INV-${shipmentId}`;
+    const newInvoice: Invoice = {
+      id: invoiceId,
+      shipmentId: shipmentId,
+      invoiceDate: new Date(),
+      dueDate: new Date(), // Same as invoice date for simulation
+      senderDetails: {
+        name: data.senderName,
+        address: data.senderAddress,
+        phone: data.senderPhone,
+      },
+      receiverDetails: {
+        name: data.receiverName,
+        address: data.receiverAddress,
+        phone: data.receiverPhone,
+      },
+      items: [invoiceItem],
+      subtotal: calculatedCharge,
+      taxRate: TAX_RATE,
+      taxAmount: taxAmount,
+      grandTotal: grandTotal,
+      status: "Paid", // Simulated as paid
+      serviceType: data.serviceType,
+      packageWeight: data.packageWeight,
+    };
+    addInvoice(newInvoice);
+
+    setSubmissionStatus({ 
+      id: shipmentId, 
+      message: `Shipment booked successfully! Your Shipment ID is: ${shipmentId}. Invoice ${invoiceId} has been generated.`,
+      invoiceId: invoiceId,
+    });
     form.reset();
   };
 
@@ -78,10 +133,15 @@ export function BookShipmentForm() {
         <CheckCircle className="h-5 w-5 text-green-500" />
         <AlertTitle className="font-headline text-green-700">Shipment Confirmed!</AlertTitle>
         <AlertDescription>
-          {submissionStatus.message}
-          <Button onClick={() => setSubmissionStatus(null)} className="mt-4 w-full" variant="outline">
-            Book Another Shipment
-          </Button>
+          <p>{submissionStatus.message}</p>
+          <div className="mt-4 space-y-2 sm:space-y-0 sm:flex sm:space-x-2">
+            <Button onClick={() => setSubmissionStatus(null)} className="w-full sm:w-auto" variant="outline">
+              Book Another Shipment
+            </Button>
+             <Button asChild className="w-full sm:w-auto" variant="default">
+                <a href={`/dashboard/invoice/${submissionStatus.invoiceId}`} target="_blank" rel="noopener noreferrer">View Invoice</a>
+            </Button>
+          </div>
         </AlertDescription>
       </Alert>
     );
@@ -197,7 +257,7 @@ export function BookShipmentForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField control={form.control} name="pickupDate" render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Pickup Date & Time</FormLabel>
+                      <FormLabel>Pickup Date</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -209,7 +269,7 @@ export function BookShipmentForm() {
                               )}
                             >
                               {field.value ? (
-                                format(field.value, "PPP HH:mm") // Assuming user wants to select time too, currently just date
+                                format(field.value, "PPP") 
                               ) : (
                                 <span>Pick a date</span>
                               )}
@@ -222,10 +282,9 @@ export function BookShipmentForm() {
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date) => date < new Date() || date < new Date("1900-01-01")}
+                            disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || date < new Date("1900-01-01")}
                             initialFocus
                           />
-                          {/* Basic time picker can be added here if needed */}
                         </PopoverContent>
                       </Popover>
                       <FormMessage />

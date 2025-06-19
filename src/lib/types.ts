@@ -34,3 +34,35 @@ export interface TrackingStep {
   activity: string;
   status: "completed" | "current" | "pending";
 }
+
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
+export interface Invoice {
+  id: string; // Invoice ID, e.g., INV-RS123456
+  shipmentId: string;
+  invoiceDate: Date;
+  dueDate: Date; // For simulation, can be same as invoiceDate
+  senderDetails: {
+    name: string;
+    address: string;
+    phone: string;
+  };
+  receiverDetails: {
+    name: string;
+    address: string;
+    phone: string;
+  };
+  items: InvoiceItem[];
+  subtotal: number;
+  taxRate: number; // e.g., 0.05 for 5%
+  taxAmount: number;
+  grandTotal: number;
+  status: "Paid" | "Pending"; // For simulation, will default to "Paid"
+  serviceType: ServiceType;
+  packageWeight: number;
+}
