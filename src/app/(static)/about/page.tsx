@@ -13,8 +13,8 @@ export default function AboutUsPage() {
         </p>
       </section>
 
-      <section className="grid md:grid-cols-1 gap-8 items-stretch"> {/* Changed from md:grid-cols-3 and removed RS Swift Card */}
-        <Card className="shadow-lg"> {/* Changed from md:col-span-2 */}
+      <section className="grid md:grid-cols-1 gap-8 items-stretch">
+        <Card className="shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="font-headline text-2xl sm:text-3xl text-primary flex items-center gap-2">
               <Briefcase className="h-8 w-8" /> Our Mission
@@ -64,3 +64,4 @@ export default function AboutUsPage() {
     </div>
   );
 }
+

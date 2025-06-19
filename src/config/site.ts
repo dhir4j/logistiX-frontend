@@ -58,11 +58,20 @@ export const dashboardNavItems: NavItem[] = [
 ];
 
 export const siteConfig = {
-  name: "Shed Load Overseas",
-  description: "Courier and shipment management solutions by Shed Load Overseas.",
+  name: "Shed Load Overseas", // Brand name for UI
+  description: "Courier and shipment management solutions by SHEDLOAD OVERSEAS LLP.",
   url: "https://shedloadoverseas.example.com", 
   ogImage: "https://shedloadoverseas.example.com/og.jpg", 
   mainNav: dashboardNavItems,
+  company: { // New section for formal company details
+    legalName: "SHEDLOAD OVERSEAS LLP",
+    address: "Showroom no. 30, B Block",
+    email: "SHEDLOADOVERSEAS@GMAIL.COM",
+    phone: "+91 95411 95406",
+    gstin: "03AFPFS8245B1ZY",
+    pan: "AFPFS8245B"
+  },
   links: {
   },
 };
+

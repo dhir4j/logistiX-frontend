@@ -9,7 +9,7 @@ export default function ContactPage() {
     <div className="space-y-8 max-w-4xl mx-auto">
       <Card className="shadow-xl overflow-hidden">
         <div className="md:flex">
-          <div className="md:w-1/2 h-64 md:h-auto"> {/* Added h-64 for mobile, md:h-auto for larger screens */}
+          <div className="md:w-1/2 h-64 md:h-auto">
              <Image
                 src="/images/girl.png"
                 data-ai-hint="customer support"
@@ -32,7 +32,7 @@ export default function ContactPage() {
                 <div>
                   <h4 className="font-semibold">Email Support</h4>
                   <p className="text-muted-foreground">Send us an email for any inquiries.</p>
-                  <a href="mailto:RSSWIFTCOURIERS@GMAIL.COM" className="text-primary hover:underline">RSSWIFTCOURIERS@GMAIL.COM</a>
+                  <a href="mailto:SHEDLOADOVERSEAS@GMAIL.COM" className="text-primary hover:underline">SHEDLOADOVERSEAS@GMAIL.COM</a>
                 </div>
               </div>
               <div className="flex items-start gap-4">
@@ -47,7 +47,7 @@ export default function ContactPage() {
                 <MapPin className="h-6 w-6 text-primary mt-1 shrink-0" />
                 <div>
                   <h4 className="font-semibold">Office Address</h4>
-                  <p className="text-muted-foreground">18AX MODEL TOWN EXTENSION, LUDHIANA<br />NEAR PUNJAB & SIND BANK</p>
+                  <p className="text-muted-foreground">Showroom no. 30, B Block</p>
                 </div>
               </div>
             </CardContent>
@@ -108,3 +108,4 @@ export default function ContactPage() {
     </div>
   );
 }
+

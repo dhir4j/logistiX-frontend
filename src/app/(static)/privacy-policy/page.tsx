@@ -22,10 +22,10 @@ export default function PrivacyPolicyPage() {
           {lastUpdated && <CardDescription>Last updated: {lastUpdated}</CardDescription>}
         </CardHeader>
         <CardContent className="space-y-4 text-muted-foreground">
-          <p>Welcome to Shed Load Overseas. We are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about this privacy notice, or our practices with regards to your personal information, please contact us.</p>
+          <p>Welcome to SHEDLOAD OVERSEAS LLP. We are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about this privacy notice, or our practices with regards to your personal information, please contact us.</p>
           
           <h2 className="text-xl font-semibold text-foreground pt-4">1. Information We Collect</h2>
-          <p>As a prototype application, Shed Load Overseas currently uses hardcoded credentials for login ("demo@rswift.com" / "123456") and primarily relies on browser localStorage to store shipment data you enter. We do not collect personal information beyond what is necessary for the app's demonstration features, such as the email used for login (which is not transmitted to a server) and shipment details you input.</p>
+          <p>As a prototype application, SHEDLOAD OVERSEAS LLP currently uses hardcoded credentials for login ("demo@rswift.com" / "123456") and primarily relies on browser localStorage to store shipment data you enter. We do not collect personal information beyond what is necessary for the app's demonstration features, such as the email used for login (which is not transmitted to a server) and shipment details you input.</p>
           
           <h2 className="text-xl font-semibold text-foreground pt-4">2. How We Use Your Information</h2>
           <p>The information stored in localStorage (shipment details) is used solely within your browser to demonstrate the application's features, such as booking history and tracking. This data is not sent to or stored on any external servers.</p>
@@ -46,9 +46,10 @@ export default function PrivacyPolicyPage() {
           <p>We may update this privacy notice from time to time. The updated version will be indicated by an updated "Last updated" date and the updated version will be effective as soon as it is accessible. We encourage you to review this privacy notice frequently to be informed of how we are protecting your information.</p>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">8. Contact Us</h2>
-          <p>If you have questions or comments about this notice, you may email us at RSSWIFTCOURIERS@GMAIL.COM or by post to 18AX MODEL TOWN EXTENSION, LUDHIANA, NEAR PUNJAB & SIND BANK.</p>
+          <p>If you have questions or comments about this notice, you may email us at SHEDLOADOVERSEAS@GMAIL.COM or by post to Showroom no. 30, B Block.</p>
         </CardContent>
       </Card>
     </div>
   );
 }
+
