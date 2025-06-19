@@ -36,11 +36,7 @@ export default function InvoiceDetailPage() {
   };
 
   const handleDownloadPdf = () => {
-    // PDF generation is complex on client-side. This is a placeholder.
-    toast({
-      title: "Download PDF",
-      description: "PDF download functionality is coming soon!",
-    });
+    window.print(); // Changed from toast message to print dialog
   };
 
   if (invoicesLoading || invoice === undefined) {
