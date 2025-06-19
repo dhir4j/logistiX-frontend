@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"; // Added CardContent
 // Icons for stats removed as stats are simplified/removed
 // import { Package, DollarSign, Users, Truck, CheckCircle, Clock } from "lucide-react";
 // Chart components removed as chart is removed
