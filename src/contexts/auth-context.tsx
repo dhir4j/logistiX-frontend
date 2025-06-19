@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const response = await apiClient<LoginResponse>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
-      useAuthToken: false, // No token needed for login itself
+      useAuthToken: false, 
     });
     
     setToken(response.accessToken);
@@ -70,12 +70,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signupUser = useCallback(async (firstName: string, lastName: string, email: string, password: string): Promise<void> => {
-    await apiClient<{ message: string }>('/api/auth/signup', {
-        method: 'POST',
-        body: JSON.stringify({ firstName, lastName, email, password }),
-        useAuthToken: false,
-    });
-    // User will need to login after signup
+    try {
+      await apiClient<{ message: string }>('/api/auth/signup', {
+          method: 'POST',
+          body: JSON.stringify({ firstName, lastName, email, password }),
+          useAuthToken: false,
+      });
+      // User will need to login after signup
+    } catch (error) {
+      console.error("Full error object during signup:", error); // Enhanced logging
+      // Re-throw the error so the component calling signupUser can also catch it and update UI (e.g., show toast)
+      throw error;
+    }
   }, []);
 
   const logoutUser = useCallback(() => {
