@@ -63,7 +63,7 @@ export interface Shipment {
   total_with_tax_18_percent: number;
   tracking_history: TrackingStep[];
   last_updated_at?: string;
-  final_total_price_with_tax?: number; // Can be part of the object if needed, but primarily for addShipment payload
+  
 
   // Frontend camelCase representation (populated by mapping)
   userId?: number;
@@ -228,5 +228,7 @@ export interface AddShipmentPayload {
     package_length_cm: number;
     pickup_date: string;
     service_type: ServiceType;
-    final_total_price_with_tax: number; // GST-inclusive total from frontend
+    price_without_tax: number;
+    tax_amount_18_percent: number;
+    total_with_tax_18_percent: number;
 }

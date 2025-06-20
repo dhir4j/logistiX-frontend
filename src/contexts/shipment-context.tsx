@@ -22,6 +22,7 @@ export const mapApiShipmentToFrontend = (apiShipment: any): Shipment => {
     console.warn("API Shipment object is missing 'shipment_id_str':", apiShipment);
   }
   return {
+    // Snake_case fields from API (expected in API responses)
     id: apiShipment.id,
     user_id: apiShipment.user_id,
     shipment_id_str: apiShipment.shipment_id_str || 'UNKNOWN_ID', 
@@ -53,6 +54,7 @@ export const mapApiShipmentToFrontend = (apiShipment: any): Shipment => {
     tracking_history: apiShipment.tracking_history || [],
     last_updated_at: apiShipment.last_updated_at,
 
+    // Frontend camelCase representation (populated by mapping)
     userId: apiShipment.user_id,
     shipmentIdStr: apiShipment.shipment_id_str || 'UNKNOWN_ID', 
     senderName: apiShipment.sender_name,
@@ -79,6 +81,8 @@ export const mapApiShipmentToFrontend = (apiShipment: any): Shipment => {
     priceWithoutTax: parseFloat(apiShipment.price_without_tax),
     taxAmount18Percent: parseFloat(apiShipment.tax_amount_18_percent),
     totalWithTax18Percent: parseFloat(apiShipment.total_with_tax_18_percent),
+    trackingHistory: apiShipment.tracking_history || [], // Ensure trackingHistory is also populated
+    lastUpdatedAt: apiShipment.last_updated_at,
   };
 };
 
@@ -149,13 +153,12 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
   }, [isAuthenticated, handleApiError, toast]);
 
   const addShipment = useCallback(async (
-    shipmentData: AddShipmentPayload // Use the new payload type
+    shipmentData: AddShipmentPayload 
   ): Promise<CreateShipmentResponse> => {
     if (!user) throw new Error("User context not available for booking shipment.");
     
     setIsLoading(true);
     try {
-      // API request body uses snake_case, and AddShipmentPayload is defined with snake_case keys
       const response = await apiClient<CreateShipmentResponse>('/api/shipments', {
         method: 'POST',
         body: JSON.stringify(shipmentData), 
@@ -168,7 +171,7 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, fetchUserShipments, handleApiError]); // Removed isAuthenticated, was not used
+  }, [user, fetchUserShipments, handleApiError]); 
 
   return (
     <ShipmentContext.Provider value={{ shipments, isLoading, fetchUserShipments, getShipmentById, addShipment }}>
