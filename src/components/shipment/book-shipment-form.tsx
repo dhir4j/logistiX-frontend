@@ -8,7 +8,7 @@ import * as z from 'zod';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Added Label
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,7 +17,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
-import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus, ScanLine, Globe, Home, Loader2, Edit3 } from 'lucide-react'; // Edit3 for UTR
+import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus, ScanLine, Globe, Home, Loader2, Edit3 } from 'lucide-react';
 import { useShipments } from '@/hooks/use-shipments';
 import type { ServiceType, CreateShipmentResponse, ShipmentTypeOption, DomesticPriceRequest, DomesticPriceResponse, InternationalPriceRequest, InternationalPriceResponse, PriceApiResponse } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -26,6 +26,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { indianStatesAndUTs } from '@/lib/indian-states';
 import { internationalCountryList } from '@/lib/country-list';
 import apiClient from '@/lib/api-client';
+import { API_BASE_URL } from '@/lib/constants';
 
 const shipmentFormSchema = z.object({
   shipmentTypeOption: z.enum(["Domestic", "International"], { required_error: "Please select shipment type." }),
@@ -70,7 +71,7 @@ export function BookShipmentForm() {
   const [submissionStatus, setSubmissionStatus] = useState<CreateShipmentResponse | null>(null);
   const [paymentStep, setPaymentStep] = useState<PaymentStepData>({ show: false, amount: "0.00", priceResponse: null, formData: null, shipmentType: null });
   const { addShipment, isLoading: isShipmentContextLoading } = useShipments();
-  const [isPricingLoading, setIsLoadingPricing] = useState(false); // Renamed for clarity
+  const [isPricingLoading, setIsLoadingPricing] = useState(false);
   const [utr, setUtr] = useState<string>('');
   const [utrError, setUtrError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -84,7 +85,7 @@ export function BookShipmentForm() {
       senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
       senderPhone: '',
       receiverName: '',
-      receiverAddressStreet: '', receiverAddressCity: '', receiverAddressPincode: '',
+      receiverAddressStreet: '', receiverAddressCity: '', receiverAddressPincode: '', receiverAddressCountry: '', // initialize receiver country
       receiverPhone: '',
       packageWeightKg: 0.5,
       packageWidthCm: 10,
@@ -110,11 +111,11 @@ export function BookShipmentForm() {
 
     if (shipmentTypeOption === "Domestic") {
       form.setValue("receiverAddressCountry", "India");
-      form.setValue("serviceType", "Standard");
+      form.setValue("serviceType", "Standard"); // Default for domestic
       form.setValue("receiverAddressPincode", "");
     } else if (shipmentTypeOption === "International") {
-      form.setValue("serviceType", "Express");
-      form.setValue("receiverAddressCountry", "");
+      form.setValue("serviceType", "Express"); // Fixed for international
+      form.setValue("receiverAddressCountry", ""); // Clear for selection
       form.setValue("receiverAddressPincode", "");
     }
   }, [shipmentTypeOption, form]);
@@ -126,7 +127,7 @@ export function BookShipmentForm() {
 
     try {
       let priceResponseData: PriceApiResponse;
-      let displayAmount = "Error";
+      let displayAmount = "0.00"; // Default value
 
       if (data.shipmentTypeOption === "Domestic") {
         if (!data.receiverAddressState) {
@@ -144,12 +145,13 @@ export function BookShipmentForm() {
           mode: data.serviceType.toLowerCase() as "express" | "standard",
           weight: data.packageWeightKg,
         };
-        priceResponseData = await apiClient<DomesticPriceResponse>('/domestic/price', {
+        priceResponseData = await apiClient<DomesticPriceResponse>(`${API_BASE_URL}/domestic/price`, {
           method: 'POST',
           body: JSON.stringify(domesticPayload),
         });
-        if (priceResponseData.error) throw new Error(priceResponseData.error);
-        displayAmount = (priceResponseData as DomesticPriceResponse).total_price;
+        const domesticResp = priceResponseData as DomesticPriceResponse;
+        if (domesticResp.error) throw new Error(domesticResp.error);
+        displayAmount = domesticResp.total_price; // This is expected as "₹XXX"
 
       } else if (data.shipmentTypeOption === "International") {
          if (!data.receiverAddressCountry || data.receiverAddressCountry === "India") {
@@ -161,12 +163,28 @@ export function BookShipmentForm() {
           country: data.receiverAddressCountry,
           weight: data.packageWeightKg,
         };
-        priceResponseData = await apiClient<InternationalPriceResponse>('/international/price', {
+        priceResponseData = await apiClient<InternationalPriceResponse>(`${API_BASE_URL}/international/price`, {
           method: 'POST',
           body: JSON.stringify(internationalPayload),
         });
-        if (priceResponseData.error) throw new Error(priceResponseData.error);
-        displayAmount = (priceResponseData as InternationalPriceResponse).formatted_total || `₹${(priceResponseData as InternationalPriceResponse).total_price.toFixed(2)}`;
+        
+        const intlResp = priceResponseData as InternationalPriceResponse;
+        if (intlResp.error) throw new Error(intlResp.error);
+        
+        if (intlResp.formatted_total) {
+          displayAmount = intlResp.formatted_total; // Expected as "₹X,XXX"
+        } else if (typeof intlResp.total_price === 'number') {
+          displayAmount = `₹${intlResp.total_price.toFixed(2)}`;
+        } else {
+          console.error("International pricing API error: formatted_total missing and total_price is not a number.", intlResp);
+          toast({
+            title: "Pricing Error",
+            description: "Invalid price data received for international shipment.",
+            variant: "destructive",
+          });
+          setIsLoadingPricing(false);
+          return; 
+        }
       } else {
         throw new Error("Invalid shipment type selected.");
       }
@@ -186,7 +204,6 @@ export function BookShipmentForm() {
   };
 
   const handleConfirmPaymentAndBook = async () => {
-    // UTR is validated before this function is called (in the button's onClick)
     if (!paymentStep.formData || !paymentStep.shipmentType || !paymentStep.priceResponse) return;
 
     const data = paymentStep.formData;
@@ -216,15 +233,20 @@ export function BookShipmentForm() {
 
         pickup_date: formattedPickupDate,
         service_type: data.shipmentTypeOption === "Domestic" ? (data.serviceType as ServiceType) : "Express",
-        // UTR is not sent to backend as API doesn't support it yet. It's available in 'utr' state if needed locally.
     };
 
     try {
         const response = await addShipment(apiShipmentData as any);
-        setSubmissionStatus(response);
+        setSubmissionStatus(response); // response is CreateShipmentResponse
+        
+        let displayTotalPaid = 'N/A';
+        if (response.data && typeof response.data.total_with_tax_18_percent === 'number') {
+            displayTotalPaid = `Rs. ${response.data.total_with_tax_18_percent.toFixed(2)}`;
+        }
+
         toast({
             title: "Shipment Booked!",
-            description: `Your shipment ID is ${response.shipment_id_str}. UTR: ${utr}`,
+            description: `Your shipment ID is ${response.shipment_id_str}. Total: ${displayTotalPaid}. UTR: ${utr}`,
         });
         form.reset({
             shipmentTypeOption: undefined,
@@ -232,7 +254,7 @@ export function BookShipmentForm() {
             senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
             senderPhone: '',
             receiverName: '',
-            receiverAddressStreet: '', receiverAddressCity: '', receiverAddressPincode: '',
+            receiverAddressStreet: '', receiverAddressCity: '', receiverAddressPincode: '', receiverAddressCountry: '',
             receiverPhone: '',
             packageWeightKg: 0.5,
             packageWidthCm: 10,
@@ -241,7 +263,7 @@ export function BookShipmentForm() {
             pickupDate: new Date(new Date().setDate(new Date().getDate() + 1))
         });
         setPaymentStep({ show: false, amount: "0.00", priceResponse: null, formData: null, shipmentType: null });
-        setUtr(''); // Clear UTR input on success
+        setUtr('');
         setUtrError(null);
     } catch (error: any) {
         const errorMessage = error?.data?.error || error?.message || "Failed to book shipment.";
@@ -282,10 +304,11 @@ export function BookShipmentForm() {
   }
 
   if (paymentStep.show && paymentStep.formData) {
-    let displayAmountWithRs = paymentStep.amount;
+    let displayAmountWithRs = paymentStep.amount; // Already "₹XXX" or "₹X,XXX"
     if (displayAmountWithRs.includes("₹")) {
       displayAmountWithRs = displayAmountWithRs.replace("₹", "Rs. ");
     } else if (!displayAmountWithRs.toLowerCase().includes("rs.")) {
+       // This case should ideally not happen if API returns "₹" or if displayAmount was formatted to "₹"
       displayAmountWithRs = `Rs. ${displayAmountWithRs}`;
     }
 
@@ -313,13 +336,13 @@ export function BookShipmentForm() {
           </div>
           <div className="flex justify-center">
             <Image
-              src="/api/admin/qr_code" // Fetch the centrally managed QR code
+              src="/api/admin/qr_code" 
               alt="UPI QR Code"
               width={200}
               height={200}
               className="rounded-md border shadow-sm"
               data-ai-hint="payment gateway"
-              onError={(e) => (e.currentTarget.src = "https://placehold.co/256x256.png?text=QR+Error")} // Fallback
+              onError={(e) => (e.currentTarget.src = "https://placehold.co/200x200.png?text=QR+Error")}
             />
           </div>
           <div className="space-y-2 text-left">
@@ -330,9 +353,9 @@ export function BookShipmentForm() {
                 id="utrInput"
                 value={utr}
                 onChange={(e) => {
-                    const numericValue = e.target.value.replace(/\D/g, ''); // Allow only digits
-                    setUtr(numericValue.slice(0, 12)); // Limit to 12 digits
-                    if (utrError) setUtrError(null); // Clear error on change
+                    const numericValue = e.target.value.replace(/\D/g, ''); 
+                    setUtr(numericValue.slice(0, 12)); 
+                    if (utrError) setUtrError(null); 
                 }}
                 placeholder="Enter UTR from your payment app"
                 maxLength={12}
@@ -361,7 +384,7 @@ export function BookShipmentForm() {
             variant="outline"
             onClick={() => {
                 setPaymentStep({ ...paymentStep, show: false });
-                setUtr(''); // Clear UTR when going back
+                setUtr(''); 
                 setUtrError(null);
             }}
             className="w-full"
@@ -422,7 +445,6 @@ export function BookShipmentForm() {
 
             {shipmentTypeOption && (
               <>
-                {/* Sender Details */}
                 <section className="space-y-6 pt-6 border-t">
                   <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
                     <User className="h-5 w-5" /> Sender Details
@@ -440,7 +462,6 @@ export function BookShipmentForm() {
                   <FormField control={form.control} name="senderPhone" render={({ field }) => ( <FormItem><FormLabel>Sender Phone</FormLabel><FormControl><Input type="tel" placeholder="+919876543210" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </section>
 
-                {/* Receiver Details */}
                 <section className="space-y-6 pt-6 border-t">
                   <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
                     <User className="h-5 w-5" /> Receiver Details
@@ -488,7 +509,6 @@ export function BookShipmentForm() {
                   <FormField control={form.control} name="receiverPhone" render={({ field }) => ( <FormItem><FormLabel>Receiver Phone</FormLabel><FormControl><Input type="tel" placeholder="+1234567890" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </section>
 
-                {/* Package Details */}
                 <section className="space-y-6 pt-6 border-t">
                   <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <Package className="h-5 w-5" /> Package Details </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -499,7 +519,6 @@ export function BookShipmentForm() {
                   </div>
                 </section>
 
-                {/* Pickup & Service */}
                 <section className="space-y-6 pt-6 border-t">
                   <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <CalendarIcon className="h-5 w-5" /> Pickup & Service </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -554,5 +573,3 @@ export function BookShipmentForm() {
     </Card>
   );
 }
-
-
