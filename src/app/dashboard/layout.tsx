@@ -232,7 +232,9 @@ export default function DashboardLayout({
               {children}
             </main>
           </SidebarInset>
-          <LandingFooter /> 
+          <div className="print:hidden">
+            <LandingFooter /> 
+          </div>
         </div>
       </div>
     </SidebarProvider>
