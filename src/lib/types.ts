@@ -32,7 +32,7 @@ export interface TrackingStep {
 // This interface represents the structure of shipment data.
 // API fields are snake_case. Frontend uses camelCase internally via mapping.
 export interface Shipment {
-  // Snake_case fields from API
+  // Snake_case fields from API (expected in API responses)
   id: number;
   user_id?: number;
   shipment_id_str: string;
@@ -65,6 +65,8 @@ export interface Shipment {
   last_updated_at?: string;
 
   // Frontend camelCase representation (populated by mapping)
+  // These can be used in frontend logic for convenience.
+  // The mapping function ensures these are consistent with snake_case fields.
   userId?: number;
   shipmentIdStr: string; 
   senderName: string;
@@ -91,9 +93,10 @@ export interface Shipment {
   priceWithoutTax: number;
   taxAmount18Percent: number;
   totalWithTax18Percent: number;
-  trackingHistory: TrackingStep[];
+  trackingHistory: TrackingStep[]; // Already camelCase from API structure for nested array
   lastUpdatedAt?: string;
 
+  // Optional fields sometimes used in frontend displays or older logic
   customerName?: string; 
   orderNumber?: string;  
   description?: string;  
@@ -114,7 +117,7 @@ export interface CreateShipmentResponse {
 
 // API response for admin listing shipments (snake_case)
 export interface AdminShipmentsResponse {
-    shipments: Shipment[]; 
+    shipments: Shipment[]; // Array of snake_case shipment objects
     totalPages: number;
     currentPage: number;
     totalCount: number;
@@ -123,7 +126,7 @@ export interface AdminShipmentsResponse {
 // API response for updating shipment status (snake_case)
 export interface UpdateShipmentStatusResponse {
     message: string;
-    updatedShipment: Shipment; 
+    updatedShipment: Partial<Shipment>; // Partial snake_case shipment object
 }
 
 // API response for web analytics (snake_case)
@@ -165,3 +168,43 @@ export interface DisplayInvoice {
   serviceType: ServiceType;
   packageWeight: number;
 }
+
+// New types for pricing APIs
+export type ShipmentTypeOption = "Domestic" | "International";
+
+export interface DomesticPriceRequest {
+  state: string;
+  mode: "express" | "standard";
+  weight: number;
+}
+
+export interface DomesticPriceResponse {
+  destination_state: string;
+  mode: string; // "Express" or "Standard"
+  weight_kg: number;
+  price_per_kg: string; // e.g., "₹220"
+  rounded_weight: number;
+  total_price: string; // e.g., "₹660"
+  error?: string;
+}
+
+export interface InternationalPriceRequest {
+  country: string;
+  weight: number;
+}
+
+export interface InternationalPriceResponse {
+  country: string;
+  zone: string;
+  mode: string; // Always "Express"
+  weight_kg: number;
+  base_0_5kg: number;
+  per_0_5kg_addl: number;
+  addl_halfkg_units: number;
+  total_price: number; // Numeric total price
+  formatted_total: string; // e.g., "₹2,510"
+  error?: string;
+}
+
+// Union type for payment step data
+export type PriceApiResponse = DomesticPriceResponse | InternationalPriceResponse;
