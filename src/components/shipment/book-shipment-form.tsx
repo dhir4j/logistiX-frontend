@@ -12,8 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
@@ -31,28 +29,28 @@ const shipmentFormSchema = z.object({
   shipmentTypeOption: z.enum(["Domestic", "International"], { required_error: "Please select shipment type." }),
 
   senderName: z.string().min(2, "Sender name is required"),
-  senderAddressStreet: z.string().min(5, "Street address is required (min 5 chars)"),
+  senderAddressLine1: z.string().min(5, "Address Line 1 is required (min 5 chars)"),
+  senderAddressLine2: z.string().optional(),
   senderAddressCity: z.string().min(2, "City is required"),
-  senderAddressState: z.string().min(2, "State is required"),
+  senderAddressState: z.string().min(2, "State is required"), // Still needed for domestic pricing API
   senderAddressPincode: z.string().regex(/^\d{5,6}$/, "Pincode must be 5 or 6 digits"),
-  senderAddressCountry: z.string().min(2, "Country is required").default("India"),
+  senderAddressCountry: z.string().min(2, "Country is required").default("India"), // Still needed for pricing API
   senderPhone: z.string().regex(/^(\+91)?[6-9]\d{9}$/, "Invalid Indian phone number (e.g., +919876543210 or 9876543210)"),
 
   receiverName: z.string().min(2, "Receiver name is required"),
-  receiverAddressStreet: z.string().min(5, "Street address is required (min 5 chars)"),
+  receiverAddressLine1: z.string().min(5, "Address Line 1 is required (min 5 chars)"),
+  receiverAddressLine2: z.string().optional(),
   receiverAddressCity: z.string().min(2, "City is required"),
-  receiverAddressState: z.string().optional(),
+  receiverAddressState: z.string().optional(), // Still needed for domestic pricing API if applicable
   receiverAddressPincode: z.string().regex(/^\d{3,10}$/, "Pincode/ZIP must be 3-10 digits"),
-  receiverAddressCountry: z.string().min(2, "Country is required"),
+  receiverAddressCountry: z.string().min(2, "Country is required"), // Still needed for pricing API
   receiverPhone: z.string().regex(/^(\+?[1-9]\d{1,14})?$/, "Invalid phone number format"),
 
   packageWeightKg: z.coerce.number().min(0.1, "Weight must be at least 0.1kg").max(100, "Max 100kg"),
-  packageWidthCm: z.coerce.number().min(1, "Width must be at least 1cm").max(200, "Max 200cm"),
-  packageHeightCm: z.coerce.number().min(1, "Height must be at least 1cm").max(200, "Max 200cm"),
-  packageLengthCm: z.coerce.number().min(1, "Length must be at least 1cm").max(200, "Max 200cm"),
+  // Dimensions removed as per new API spec for POST /api/shipments
+  // pickupDate removed as per new API spec for POST /api/shipments
 
-  pickupDate: z.date({ required_error: "Pickup date is required." }),
-  serviceType: z.enum(["Standard", "Express"]).optional(),
+  serviceType: z.enum(["Standard", "Express"]), // This is for form state, will be set based on shipmentTypeOption
 });
 
 type ShipmentFormValues = z.infer<typeof shipmentFormSchema>;
@@ -61,7 +59,7 @@ interface PaymentStepData {
   show: boolean;
   amount: string; 
   numericAmount: number | null; 
-  priceResponse: PriceApiResponse | null;
+  priceResponse: PriceApiResponse | null; // To hold raw pricing response if needed
   formData: ShipmentFormValues | null;
   shipmentType: ShipmentTypeOption | null;
 }
@@ -94,16 +92,15 @@ export function BookShipmentForm() {
     defaultValues: {
       shipmentTypeOption: undefined,
       senderName: '',
-      senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
+      senderAddressLine1: '', senderAddressLine2: '', 
+      senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
       senderPhone: '',
       receiverName: '',
-      receiverAddressStreet: '', receiverAddressCity: '', receiverAddressPincode: '', receiverAddressCountry: '', 
+      receiverAddressLine1: '', receiverAddressLine2: '',
+      receiverAddressCity: '', receiverAddressPincode: '', receiverAddressCountry: '', 
       receiverPhone: '',
       packageWeightKg: 0.5,
-      packageWidthCm: 10,
-      packageHeightCm: 10,
-      packageLengthCm: 10,
-      pickupDate: new Date(new Date().setDate(new Date().getDate() + 1))
+      serviceType: "Standard", // Default service type
     },
   });
 
@@ -118,7 +115,6 @@ export function BookShipmentForm() {
   useEffect(() => {
     form.resetField("receiverAddressState");
     form.resetField("receiverAddressCountry");
-    form.resetField("serviceType");
     form.clearErrors(["receiverAddressState", "receiverAddressCountry", "serviceType"]);
 
     if (shipmentTypeOption === "Domestic") {
@@ -143,12 +139,7 @@ export function BookShipmentForm() {
     try {
       if (data.shipmentTypeOption === "Domestic") {
         if (!data.receiverAddressState) {
-          form.setError("receiverAddressState", { type: "manual", message: "Receiver state is required for domestic."});
-          setIsLoadingPricing(false);
-          return;
-        }
-        if (!data.serviceType) {
-          form.setError("serviceType", {type: "manual", message: "Service type is required for domestic."});
+          form.setError("receiverAddressState", { type: "manual", message: "Receiver state is required for domestic pricing."});
           setIsLoadingPricing(false);
           return;
         }
@@ -167,7 +158,7 @@ export function BookShipmentForm() {
 
       } else if (data.shipmentTypeOption === "International") {
          if (!data.receiverAddressCountry || data.receiverAddressCountry === "India") {
-          form.setError("receiverAddressCountry", { type: "manual", message: "A non-Indian country is required for international."});
+          form.setError("receiverAddressCountry", { type: "manual", message: "A non-Indian country is required for international pricing."});
           setIsLoadingPricing(false);
           return;
         }
@@ -182,13 +173,9 @@ export function BookShipmentForm() {
         
         const intlResp = priceResponseData as InternationalPriceResponse;
         if (intlResp.error) {
-             toast({
-                title: "Pricing Error",
-                description: intlResp.error,
-                variant: "destructive",
-            });
-            setIsLoadingPricing(false);
-            return;
+             toast({ title: "Pricing Error", description: intlResp.error, variant: "destructive" });
+             setIsLoadingPricing(false);
+             return;
         }
         
         let rawPriceValue: string | number | undefined | null = null;
@@ -237,67 +224,42 @@ export function BookShipmentForm() {
   };
 
   const handleConfirmPaymentAndBook = async () => {
-    if (!paymentStep.formData || !paymentStep.shipmentType || !paymentStep.priceResponse || paymentStep.numericAmount === null || paymentStep.numericAmount <= 0) {
+    if (!paymentStep.formData || !paymentStep.shipmentType || paymentStep.numericAmount === null || paymentStep.numericAmount <= 0) {
         toast({ title: "Booking Error", description: "Invalid payment data or price. Please try calculating price again.", variant: "destructive" });
         return;
     }
 
     const data = paymentStep.formData;
-    const formattedPickupDate = format(data.pickupDate, "yyyy-MM-dd");
-
-    const gstInclusiveTotal = paymentStep.numericAmount;
-    const priceWithoutTax = gstInclusiveTotal / 1.18;
-    const taxAmount18Percent = gstInclusiveTotal - priceWithoutTax;
 
     const apiShipmentData: AddShipmentPayload = {
         sender_name: data.senderName,
-        sender_address_street: data.senderAddressStreet,
         sender_address_city: data.senderAddressCity,
-        sender_address_state: data.senderAddressState,
-        sender_address_pincode: data.senderAddressPincode,
-        sender_address_country: data.senderAddressCountry,
+        sender_address_line1: data.senderAddressLine1,
+        sender_address_line2: data.senderAddressLine2 || undefined,
+        sender_pincode: data.senderAddressPincode,
         sender_phone: data.senderPhone,
 
         receiver_name: data.receiverName,
-        receiver_address_street: data.receiverAddressStreet,
         receiver_address_city: data.receiverAddressCity,
-        receiver_address_state: data.shipmentTypeOption === "Domestic" ? data.receiverAddressState || "" : data.receiverAddressState || "", 
-        receiver_address_pincode: data.receiverAddressPincode,
-        receiver_address_country: data.shipmentTypeOption === "Domestic" ? "India" : data.receiverAddressCountry,
+        receiver_address_line1: data.receiverAddressLine1,
+        receiver_address_line2: data.receiverAddressLine2 || undefined,
+        receiver_pincode: data.receiverAddressPincode,
         receiver_phone: data.receiverPhone,
 
         package_weight_kg: data.packageWeightKg,
-        package_width_cm: data.packageWidthCm,
-        package_height_cm: data.packageHeightCm,
-        package_length_cm: data.packageLengthCm,
-
-        pickup_date: formattedPickupDate,
-        service_type: "Standard", 
-        price_without_tax: parseFloat(priceWithoutTax.toFixed(2)),
-        tax_amount_18_percent: parseFloat(taxAmount18Percent.toFixed(2)),
-        total_with_tax_18_percent: parseFloat(gstInclusiveTotal.toFixed(2)),
+        service_type: data.serviceType, // This is set based on shipmentTypeOption in useEffect
     };
     
-    if (data.shipmentTypeOption === "Domestic") {
-        if (!data.serviceType) {
-            toast({ title: "Booking Error", description: "Service type is missing for domestic shipment.", variant: "destructive" });
-            return;
-        }
-        apiShipmentData.service_type = data.serviceType;
-    } else { 
-        apiShipmentData.service_type = "Express"; 
-    }
-
-
     try {
         const response = await addShipment(apiShipmentData);
         setSubmissionStatus(response); 
         
-        let displayTotalPaid = `Rs. ${gstInclusiveTotal.toFixed(2)}`;
-        if (response.data && typeof response.data.total_with_tax_18_percent === 'number') {
+        let displayTotalPaid = `Rs. ${paymentStep.numericAmount.toFixed(2)}`; // Use amount from QR page
+         if (response.data && typeof response.data.total_with_tax_18_percent === 'number') {
+           // If backend returns a total, prefer it for consistency in confirmation,
+           // but the QR page amount was what user "paid".
             displayTotalPaid = `Rs. ${response.data.total_with_tax_18_percent.toFixed(2)}`;
         }
-
 
         toast({
             title: "Shipment Booked!",
@@ -306,16 +268,15 @@ export function BookShipmentForm() {
         form.reset({
             shipmentTypeOption: undefined,
             senderName: (user && user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : '',
-            senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
+            senderAddressLine1: '', senderAddressLine2: '',
+            senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
             senderPhone: '',
             receiverName: '',
-            receiverAddressStreet: '', receiverAddressCity: '', receiverAddressPincode: '', receiverAddressCountry: '',
+            receiverAddressLine1: '', receiverAddressLine2: '',
+            receiverAddressCity: '', receiverAddressPincode: '', receiverAddressCountry: '',
             receiverPhone: '',
             packageWeightKg: 0.5,
-            packageWidthCm: 10,
-            packageHeightCm: 10,
-            packageLengthCm: 10,
-            pickupDate: new Date(new Date().setDate(new Date().getDate() + 1))
+            serviceType: "Standard",
         });
         setPaymentStep({ show: false, amount: "Rs. 0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
         setUtr('');
@@ -346,7 +307,7 @@ export function BookShipmentForm() {
         <AlertDescription>
           <p>{submissionStatus.message}</p>
           <p>Shipment ID: <strong>{submissionStatus.shipment_id_str}</strong></p>
-          <p>Total Paid: {displayAmountWithRs}</p>
+          <p>Total Paid (as per QR page): {displayAmountWithRs}</p>
           <div className="mt-4 space-y-2 sm:space-y-0 sm:flex sm:space-x-2">
             <Button onClick={() => { setSubmissionStatus(null); form.setValue("shipmentTypeOption", undefined);}} className="w-full sm:w-auto" variant="outline">
               Book Another Shipment
@@ -499,14 +460,15 @@ export function BookShipmentForm() {
                     <User className="h-5 w-5" /> Sender Details
                   </h3>
                   <FormField control={form.control} name="senderName" render={({ field }) => ( <FormItem><FormLabel>Sender Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <FormField control={form.control} name="senderAddressStreet" render={({ field }) => ( <FormItem><FormLabel>Street Address / Building</FormLabel><FormControl><Input placeholder="123 Main St, Apt 4B" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="senderAddressLine1" render={({ field }) => ( <FormItem><FormLabel>Address Line 1</FormLabel><FormControl><Input placeholder="123 Main St, Apt 4B" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="senderAddressLine2" render={({ field }) => ( <FormItem><FormLabel>Address Line 2 (Optional)</FormLabel><FormControl><Input placeholder="Near City Park" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={form.control} name="senderAddressCity" render={({ field }) => ( <FormItem><FormLabel>City</FormLabel><FormControl><Input placeholder="Mumbai" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="senderAddressState" render={({ field }) => ( <FormItem><FormLabel>State</FormLabel><FormControl><Input placeholder="Maharashtra" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="senderAddressState" render={({ field }) => ( <FormItem><FormLabel>State (for Domestic Pricing)</FormLabel><FormControl><Input placeholder="Maharashtra" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={form.control} name="senderAddressPincode" render={({ field }) => ( <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input placeholder="400001" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="senderAddressCountry" render={({ field }) => ( <FormItem><FormLabel>Country</FormLabel><FormControl><Input placeholder="India" {...field} disabled={true} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="senderAddressCountry" render={({ field }) => ( <FormItem><FormLabel>Country (for Pricing)</FormLabel><FormControl><Input placeholder="India" {...field} disabled={true} /></FormControl><FormMessage /></FormItem> )} />
                   </div>
                   <FormField control={form.control} name="senderPhone" render={({ field }) => ( <FormItem><FormLabel>Sender Phone</FormLabel><FormControl><Input type="tel" placeholder="+919876543210" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </section>
@@ -516,13 +478,14 @@ export function BookShipmentForm() {
                     <User className="h-5 w-5" /> Receiver Details
                   </h3>
                   <FormField control={form.control} name="receiverName" render={({ field }) => ( <FormItem><FormLabel>Receiver Name</FormLabel><FormControl><Input placeholder="Jane Smith" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <FormField control={form.control} name="receiverAddressStreet" render={({ field }) => ( <FormItem><FormLabel>Street Address / Building</FormLabel><FormControl><Input placeholder="456 Market St, Tower C" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="receiverAddressLine1" render={({ field }) => ( <FormItem><FormLabel>Address Line 1</FormLabel><FormControl><Input placeholder="456 Market St, Tower C" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="receiverAddressLine2" render={({ field }) => ( <FormItem><FormLabel>Address Line 2 (Optional)</FormLabel><FormControl><Input placeholder="Opposite Central Mall" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={form.control} name="receiverAddressCity" render={({ field }) => ( <FormItem><FormLabel>City</FormLabel><FormControl><Input placeholder="Receiver City" {...field} /></FormControl><FormMessage /></FormItem> )} />
                     {shipmentTypeOption === "Domestic" ? (
                       <FormField control={form.control} name="receiverAddressState" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>State</FormLabel>
+                          <FormLabel>State (for Domestic Pricing)</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger></FormControl>
                             <SelectContent>
@@ -533,7 +496,7 @@ export function BookShipmentForm() {
                         </FormItem>
                       )} />
                     ) : (
-                      <FormField control={form.control} name="receiverAddressState" render={({ field }) => ( <FormItem><FormLabel>State / Province (Optional)</FormLabel><FormControl><Input placeholder="e.g., California" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                       <FormField control={form.control} name="receiverAddressState" render={({ field }) => ( <FormItem><FormLabel>State / Province (Optional, for Pricing)</FormLabel><FormControl><Input placeholder="e.g., California" {...field} /></FormControl><FormMessage /></FormItem> )} />
                     )}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -541,7 +504,7 @@ export function BookShipmentForm() {
                     {shipmentTypeOption === "International" ? (
                        <FormField control={form.control} name="receiverAddressCountry" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Country</FormLabel>
+                          <FormLabel>Country (for Pricing)</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Select Country" /></SelectTrigger></FormControl>
                             <SelectContent>
@@ -552,7 +515,7 @@ export function BookShipmentForm() {
                         </FormItem>
                       )} />
                     ) : (
-                       <FormField control={form.control} name="receiverAddressCountry" render={({ field }) => ( <FormItem><FormLabel>Country</FormLabel><FormControl><Input placeholder="India" {...field} disabled={true} /></FormControl><FormMessage /></FormItem> )} />
+                       <FormField control={form.control} name="receiverAddressCountry" render={({ field }) => ( <FormItem><FormLabel>Country (for Pricing)</FormLabel><FormControl><Input placeholder="India" {...field} disabled={true} /></FormControl><FormMessage /></FormItem> )} />
                     )}
                   </div>
                   <FormField control={form.control} name="receiverPhone" render={({ field }) => ( <FormItem><FormLabel>Receiver Phone</FormLabel><FormControl><Input type="tel" placeholder="+1234567890" {...field} /></FormControl><FormMessage /></FormItem> )} />
@@ -562,49 +525,24 @@ export function BookShipmentForm() {
                   <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <Package className="h-5 w-5" /> Package Details </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     <FormField control={form.control} name="packageWeightKg" render={({ field }) => ( <FormItem><FormLabel>Weight (kg)</FormLabel><FormControl><Input type="number" step="0.1" placeholder="e.g., 2.5" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="packageLengthCm" render={({ field }) => ( <FormItem><FormLabel>Length (cm)</FormLabel><FormControl><Input type="number" step="1" placeholder="e.g., 30" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="packageWidthCm" render={({ field }) => ( <FormItem><FormLabel>Width (cm)</FormLabel><FormControl><Input type="number" step="1" placeholder="e.g., 20" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="packageHeightCm" render={({ field }) => ( <FormItem><FormLabel>Height (cm)</FormLabel><FormControl><Input type="number" step="1" placeholder="e.g., 15" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    {/* Dimensions and Pickup Date fields removed from UI */}
                   </div>
                 </section>
 
                 <section className="space-y-6 pt-6 border-t">
-                  <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <CalendarIcon className="h-5 w-5" /> Pickup & Service </h3>
+                  <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <Package className="h-5 w-5" /> Service </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField control={form.control} name="pickupDate" render={({ field }) => (
-                        <FormItem className="flex flex-col"> <FormLabel>Pickup Date</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button variant={"outline"} className={cn( "w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground" )}>
-                                  {field.value && isValid(field.value) ? ( format(field.value, "PPP")  ) : ( <span>Pick a date</span> )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) || date < new Date("1900-01-01")} initialFocus />
-                            </PopoverContent>
-                          </Popover> <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {shipmentTypeOption === "Domestic" ? (
-                      <FormField control={form.control} name="serviceType" render={({ field }) => (
+                    <FormField control={form.control} name="serviceType" render={({ field }) => (
                         <FormItem> <FormLabel>Service Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value} disabled={shipmentTypeOption === "International"}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Select service type" /></SelectTrigger></FormControl>
-                            <SelectContent> <SelectItem value="Standard">Standard</SelectItem> <SelectItem value="Express">Express</SelectItem> </SelectContent>
+                            <SelectContent> 
+                                <SelectItem value="Standard">Standard</SelectItem> 
+                                <SelectItem value="Express">Express</SelectItem> 
+                            </SelectContent>
                           </Select> <FormMessage />
                         </FormItem>
                       )} />
-                    ) : (
-                      <FormItem>
-                        <FormLabel>Service Type</FormLabel>
-                        <FormControl><Input value="Express (International)" disabled /></FormControl>
-                         <FormMessage />
-                      </FormItem>
-                    )}
                   </div>
                 </section>
 
