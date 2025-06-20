@@ -19,14 +19,20 @@ import { mapApiShipmentToFrontend } from '@/contexts/shipment-context';
 
 const formatAddress = (address: AddressDetail | undefined) => {
   if (!address) return "Address not available";
-  const parts = [
-    address.street,
-    `${address.city ? address.city + ', ' : ''}${address.state ? address.state + ' - ' : ''}${address.pincode}`,
-    address.country
-  ].filter(Boolean); // Filter out empty or null parts
+  // Use the direct snake_case fields first, then fall back to potential camelCase mappings
+  const street = address.street;
+  const city = address.city;
+  const state = address.state;
+  const pincode = address.pincode;
+  const country = address.country;
 
-  if (parts.length === 0 && (address.street || address.city || address.state || address.pincode || address.country)) {
-    // If all individual fields are empty/null but the address object itself existed
+  const parts = [
+    street,
+    `${city ? city + ', ' : ''}${state ? state + ' - ' : ''}${pincode}`,
+    country
+  ].filter(Boolean);
+
+  if (parts.length === 0 && (street || city || state || pincode || country)) {
     return "Address details incomplete.";
   }
   if (parts.length === 0) return "Address not available";
@@ -98,7 +104,6 @@ export default function InvoiceDetailPage() {
   };
 
   const handleDownloadPdf = () => {
-    // For simplicity, using print to PDF. Actual PDF generation would need a library.
     window.print(); 
   };
 
@@ -124,6 +129,7 @@ export default function InvoiceDetailPage() {
     );
   }
 
+  // Use direct snake_case fields from the mapped shipment object for AddressDetail
   const senderAddress: AddressDetail = {
     street: shipment.sender_address_street || '',
     city: shipment.sender_address_city || '',
@@ -162,59 +168,59 @@ export default function InvoiceDetailPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+        <CardContent className="p-6 space-y-4"> {/* Reduced space-y from 6 to 4 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2"> {/* Reduced gap-y from 4 to 2 */}
             <div>
-              <h3 className="font-semibold mb-1 text-primary">Billed From:</h3>
-              <p className="font-bold">{siteConfig.company.legalName}</p>
-              <p className="text-sm text-muted-foreground">{siteConfig.company.address}</p>
-              <p className="text-sm text-muted-foreground">Email: {siteConfig.company.email}</p>
-              <p className="text-sm text-muted-foreground">Phone: {siteConfig.company.phone}</p>
-              <p className="text-sm text-muted-foreground">GSTIN: {siteConfig.company.gstin}</p>
+              <h3 className="font-semibold text-primary">Billed From:</h3>
+              <p className="font-bold text-sm">{siteConfig.company.legalName}</p>
+              <p className="text-xs text-muted-foreground">{siteConfig.company.address}</p>
+              <p className="text-xs text-muted-foreground">Email: {siteConfig.company.email}</p>
+              <p className="text-xs text-muted-foreground">Phone: {siteConfig.company.phone}</p>
+              <p className="text-xs text-muted-foreground">GSTIN: {siteConfig.company.gstin}</p>
             </div>
             <div>
-              <h3 className="font-semibold mb-1 text-primary">Billed To:</h3>
-              <p className="font-bold">{shipment.sender_name || 'N/A'}</p>
-              <div className="text-sm text-muted-foreground">
+              <h3 className="font-semibold text-primary">Billed To:</h3>
+              <p className="font-bold text-sm">{shipment.sender_name || 'N/A'}</p>
+              <div className="text-xs text-muted-foreground">
                 {formatAddress(senderAddress)}
               </div>
-              <p className="text-sm text-muted-foreground">Phone: {shipment.sender_phone || 'N/A'}</p>
+              <p className="text-xs text-muted-foreground">Phone: {shipment.sender_phone || 'N/A'}</p>
             </div>
           </div>
 
           <Separator />
 
           <div>
-             <h3 className="font-semibold mb-1 text-primary">Ship To:</h3>
-              <p className="font-bold">{shipment.receiver_name || 'N/A'}</p>
-              <div className="text-sm text-muted-foreground">
+             <h3 className="font-semibold text-primary">Ship To:</h3>
+              <p className="font-bold text-sm">{shipment.receiver_name || 'N/A'}</p>
+              <div className="text-xs text-muted-foreground">
                 {formatAddress(receiverAddress)}
               </div>
-              <p className="text-sm text-muted-foreground">Phone: {shipment.receiver_phone || 'N/A'}</p>
+              <p className="text-xs text-muted-foreground">Phone: {shipment.receiver_phone || 'N/A'}</p>
           </div>
           
           <Separator />
 
           <div>
-            <h3 className="font-semibold text-lg mb-2 text-primary">Order Summary</h3>
+            <h3 className="font-semibold text-lg mb-1 text-primary">Order Summary</h3> {/* Reduced mb from 2 to 1 */}
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[60%]">Description</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Unit Price</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="w-[60%] px-2 py-2">Description</TableHead> {/* Reduced padding */}
+                  <TableHead className="text-right px-2 py-2">Qty</TableHead> {/* Reduced padding */}
+                  <TableHead className="text-right px-2 py-2">Unit Price</TableHead> {/* Reduced padding */}
+                  <TableHead className="text-right px-2 py-2">Total</TableHead> {/* Reduced padding */}
                 </TableRow>
               </TableHeader>
               <TableBody>
                   <TableRow>
-                    <TableCell>{shipment.service_type || 'N/A'} Shipping ({shipment.package_weight_kg || 'N/A'}kg) for {shipment.shipment_id_str}</TableCell>
-                    <TableCell className="text-right">1</TableCell>
-                    <TableCell className="text-right flex items-center justify-end">
+                    <TableCell className="px-2 py-2">{shipment.service_type || 'N/A'} Shipping ({shipment.package_weight_kg || 'N/A'}kg) for {shipment.shipment_id_str}</TableCell> {/* Reduced padding */}
+                    <TableCell className="text-right px-2 py-2">1</TableCell> {/* Reduced padding */}
+                    <TableCell className="text-right flex items-center justify-end px-2 py-2"> {/* Reduced padding */}
                         <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
                         {(shipment.price_without_tax || 0).toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-right flex items-center justify-end">
+                    <TableCell className="text-right flex items-center justify-end px-2 py-2"> {/* Reduced padding */}
                         <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
                         {(shipment.price_without_tax || 0).toFixed(2)}
                     </TableCell>
@@ -224,19 +230,19 @@ export default function InvoiceDetailPage() {
           </div>
 
           <div className="flex justify-end">
-            <div className="w-full md:w-1/2 lg:w-1/3 space-y-2">
-              <div className="flex justify-between">
+            <div className="w-full md:w-1/2 lg:w-1/3 space-y-1"> {/* Reduced space-y from 2 to 1 */}
+              <div className="flex justify-between text-sm"> {/* Added text-sm */}
                 <span className="text-muted-foreground">Subtotal:</span>
                 <span className="font-medium flex items-center"><IndianRupee className="h-4 w-4 mr-0.5" />{(shipment.price_without_tax || 0).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-sm"> {/* Added text-sm */}
                 <span className="text-muted-foreground">Tax (18%):</span>
                 <span className="font-medium flex items-center"><IndianRupee className="h-4 w-4 mr-0.5" />{(shipment.tax_amount_18_percent || 0).toFixed(2)}</span>
               </div>
               <Separator />
-              <div className="flex justify-between text-lg font-bold text-primary">
+              <div className="flex justify-between text-base font-bold text-primary"> {/* Reduced text-lg to text-base */}
                 <span>Grand Total:</span>
-                <span className="flex items-center"><IndianRupee className="h-5 w-5 mr-0.5" />{(shipment.total_with_tax_18_percent || 0).toFixed(2)}</span>
+                <span className="flex items-center"><IndianRupee className="h-4 w-4 mr-0.5" />{(shipment.total_with_tax_18_percent || 0).toFixed(2)}</span> {/* Reduced icon size */}
               </div>
             </div>
           </div>
@@ -244,8 +250,8 @@ export default function InvoiceDetailPage() {
           <Separator />
           
           <div>
-             <h3 className="font-semibold mb-1 text-primary">Payment Status:</h3>
-             <p className="font-bold text-lg text-green-600">PAID</p>
+             <h3 className="font-semibold text-primary">Payment Status:</h3>
+             <p className="font-bold text-green-600">PAID</p>
           </div>
 
         </CardContent>
@@ -283,3 +289,4 @@ export default function InvoiceDetailPage() {
     </div>
   );
 }
+
