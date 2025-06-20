@@ -335,12 +335,12 @@ export function BookShipmentForm() {
           </div>
           <div className="flex justify-center">
             <Image
-              src="https://placehold.co/200x200.png?text=Scan+QR+to+Pay" 
-              alt="UPI QR Code Placeholder"
+              src="/qr-code.png" 
+              alt="UPI QR Code for Payment"
               width={200}
               height={200}
               className="rounded-md border shadow-sm"
-              data-ai-hint="payment QR placeholder"
+              data-ai-hint="payment QR"
             />
           </div>
           <div className="space-y-2 text-left">
@@ -571,3 +571,5 @@ export function BookShipmentForm() {
     </Card>
   );
 }
+
+    
