@@ -110,11 +110,11 @@ export function BookShipmentForm() {
 
     if (shipmentTypeOption === "Domestic") {
       form.setValue("receiverAddressCountry", "India");
-      form.setValue("serviceType", "Standard"); // Default for domestic
+      form.setValue("serviceType", "Standard"); 
       form.setValue("receiverAddressPincode", "");
     } else if (shipmentTypeOption === "International") {
-      form.setValue("serviceType", "Express"); // Fixed for international
-      form.setValue("receiverAddressCountry", ""); // Clear for selection
+      form.setValue("serviceType", "Express"); 
+      form.setValue("receiverAddressCountry", ""); 
       form.setValue("receiverAddressPincode", "");
     }
   }, [shipmentTypeOption, form]);
@@ -144,7 +144,7 @@ export function BookShipmentForm() {
           mode: data.serviceType.toLowerCase() as "express" | "standard",
           weight: data.packageWeightKg,
         };
-        priceResponseData = await apiClient<DomesticPriceResponse>(`/domestic/price`, { // Pass only path
+        priceResponseData = await apiClient<DomesticPriceResponse>(`/domestic/price`, { 
           method: 'POST',
           body: JSON.stringify(domesticPayload),
         });
@@ -162,7 +162,7 @@ export function BookShipmentForm() {
           country: data.receiverAddressCountry,
           weight: data.packageWeightKg,
         };
-        priceResponseData = await apiClient<InternationalPriceResponse>(`/international/price`, { // Pass only path
+        priceResponseData = await apiClient<InternationalPriceResponse>(`/international/price`, { 
           method: 'POST',
           body: JSON.stringify(internationalPayload),
         });
@@ -178,12 +178,26 @@ export function BookShipmentForm() {
             return;
         }
         
-        if (intlResp.formatted_total) {
+        if (intlResp.formatted_total && intlResp.formatted_total.trim() !== "") {
           displayAmount = intlResp.formatted_total;
+        } else if (typeof intlResp.total_price === 'string') {
+          const numericTotalPrice = parseFloat(intlResp.total_price.replace(/[^0-9.-]+/g,""));
+          if (!isNaN(numericTotalPrice)) {
+            displayAmount = `₹${numericTotalPrice.toFixed(2)}`;
+          } else {
+            console.error("International pricing API error: total_price is an unparseable string and formatted_total is missing.", intlResp);
+            toast({
+                title: "Pricing Error",
+                description: "Invalid price data (unparseable string) received for international shipment.",
+                variant: "destructive",
+            });
+            setIsLoadingPricing(false);
+            return;
+          }
         } else if (typeof intlResp.total_price === 'number') {
           displayAmount = `₹${intlResp.total_price.toFixed(2)}`;
         } else {
-          console.error("International pricing API error: formatted_total missing and total_price is not a number.", intlResp);
+          console.error("International pricing API error: formatted_total missing and total_price is not a number or usable string.", intlResp);
           toast({
             title: "Pricing Error",
             description: "Invalid price data received for international shipment.",
@@ -580,3 +594,4 @@ export function BookShipmentForm() {
 }
     
     
+
