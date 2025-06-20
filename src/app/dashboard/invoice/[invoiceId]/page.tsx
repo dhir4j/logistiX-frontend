@@ -168,14 +168,16 @@ export default function InvoiceDetailPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6 space-y-4"> {/* Reduced space-y from 6 to 4 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2"> {/* Reduced gap-y from 4 to 2 */}
+        <CardContent className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4"> {/* Changed to md:grid-cols-3 and adjusted gap-y */}
             <div>
               <h3 className="font-semibold text-primary">Billed From:</h3>
               <p className="font-bold text-sm">{siteConfig.company.legalName}</p>
               <p className="text-xs text-muted-foreground">{siteConfig.company.address}</p>
               <p className="text-xs text-muted-foreground">Email: {siteConfig.company.email}</p>
-              <p className="text-xs text-muted-foreground">Phone: {siteConfig.company.phone}</p>
+              {(siteConfig.company.phone && siteConfig.company.phone.toLowerCase() !== 'n/a') && 
+                <p className="text-xs text-muted-foreground">Phone: {siteConfig.company.phone}</p>
+              }
               <p className="text-xs text-muted-foreground">GSTIN: {siteConfig.company.gstin}</p>
             </div>
             <div>
@@ -184,45 +186,50 @@ export default function InvoiceDetailPage() {
               <div className="text-xs text-muted-foreground">
                 {formatAddress(senderAddress)}
               </div>
-              <p className="text-xs text-muted-foreground">Phone: {shipment.sender_phone || 'N/A'}</p>
+              {(shipment.sender_phone && shipment.sender_phone.toLowerCase() !== 'n/a') &&
+                <p className="text-xs text-muted-foreground">Phone: {shipment.sender_phone}</p>
+              }
             </div>
-          </div>
-
-          <Separator />
-
-          <div>
-             <h3 className="font-semibold text-primary">Ship To:</h3>
+             <div> {/* Ship To details now here as the third column */}
+              <h3 className="font-semibold text-primary">Ship To:</h3>
               <p className="font-bold text-sm">{shipment.receiver_name || 'N/A'}</p>
               <div className="text-xs text-muted-foreground">
                 {formatAddress(receiverAddress)}
               </div>
-              <p className="text-xs text-muted-foreground">Phone: {shipment.receiver_phone || 'N/A'}</p>
+              {(shipment.receiver_phone && shipment.receiver_phone.toLowerCase() !== 'n/a') &&
+                <p className="text-xs text-muted-foreground">Phone: {shipment.receiver_phone}</p>
+              }
+            </div>
           </div>
           
           <Separator />
 
           <div>
-            <h3 className="font-semibold text-lg mb-1 text-primary">Order Summary</h3> {/* Reduced mb from 2 to 1 */}
+            <h3 className="font-semibold text-lg mb-1 text-primary">Order Summary</h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[60%] px-2 py-2">Description</TableHead> {/* Reduced padding */}
-                  <TableHead className="text-right px-2 py-2">Qty</TableHead> {/* Reduced padding */}
-                  <TableHead className="text-right px-2 py-2">Unit Price</TableHead> {/* Reduced padding */}
-                  <TableHead className="text-right px-2 py-2">Total</TableHead> {/* Reduced padding */}
+                  <TableHead className="w-[50%] px-2 py-2">Description</TableHead> 
+                  <TableHead className="text-right px-2 py-2">Qty</TableHead>
+                  <TableHead className="text-right px-2 py-2">Unit Price</TableHead>
+                  <TableHead className="text-right px-2 py-2">Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                   <TableRow>
-                    <TableCell className="px-2 py-2">{shipment.service_type || 'N/A'} Shipping ({shipment.package_weight_kg || 'N/A'}kg) for {shipment.shipment_id_str}</TableCell> {/* Reduced padding */}
-                    <TableCell className="text-right px-2 py-2">1</TableCell> {/* Reduced padding */}
-                    <TableCell className="text-right flex items-center justify-end px-2 py-2"> {/* Reduced padding */}
-                        <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
-                        {(shipment.price_without_tax || 0).toFixed(2)}
+                    <TableCell className="px-2 py-2">{shipment.service_type || 'N/A'} Shipping ({shipment.package_weight_kg || 'N/A'}kg) for {shipment.shipment_id_str}</TableCell>
+                    <TableCell className="text-right px-2 py-2">1</TableCell>
+                    <TableCell className="text-right px-2 py-2">
+                        <span className="inline-flex items-center justify-end">
+                            <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
+                            {(shipment.price_without_tax || 0).toFixed(2)}
+                        </span>
                     </TableCell>
-                    <TableCell className="text-right flex items-center justify-end px-2 py-2"> {/* Reduced padding */}
-                        <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
-                        {(shipment.price_without_tax || 0).toFixed(2)}
+                    <TableCell className="text-right px-2 py-2">
+                        <span className="inline-flex items-center justify-end">
+                            <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
+                            {(shipment.price_without_tax || 0).toFixed(2)}
+                        </span>
                     </TableCell>
                   </TableRow>
               </TableBody>
@@ -230,19 +237,19 @@ export default function InvoiceDetailPage() {
           </div>
 
           <div className="flex justify-end">
-            <div className="w-full md:w-1/2 lg:w-1/3 space-y-1"> {/* Reduced space-y from 2 to 1 */}
-              <div className="flex justify-between text-sm"> {/* Added text-sm */}
+            <div className="w-full md:w-1/2 lg:w-1/3 space-y-1">
+              <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal:</span>
                 <span className="font-medium flex items-center"><IndianRupee className="h-4 w-4 mr-0.5" />{(shipment.price_without_tax || 0).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm"> {/* Added text-sm */}
+              <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tax (18%):</span>
                 <span className="font-medium flex items-center"><IndianRupee className="h-4 w-4 mr-0.5" />{(shipment.tax_amount_18_percent || 0).toFixed(2)}</span>
               </div>
               <Separator />
-              <div className="flex justify-between text-base font-bold text-primary"> {/* Reduced text-lg to text-base */}
+              <div className="flex justify-between text-base font-bold text-primary">
                 <span>Grand Total:</span>
-                <span className="flex items-center"><IndianRupee className="h-4 w-4 mr-0.5" />{(shipment.total_with_tax_18_percent || 0).toFixed(2)}</span> {/* Reduced icon size */}
+                <span className="flex items-center"><IndianRupee className="h-4 w-4 mr-0.5" />{(shipment.total_with_tax_18_percent || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
