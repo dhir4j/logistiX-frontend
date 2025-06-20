@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { format, isValid } from "date-fns";
 import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus, ScanLine, Globe, Home, Loader2, Edit3 } from 'lucide-react';
 import { useShipments } from '@/hooks/use-shipments';
-import type { ServiceType, CreateShipmentResponse, ShipmentTypeOption, DomesticPriceRequest, DomesticPriceResponse, InternationalPriceRequest, InternationalPriceResponse, PriceApiResponse } from '@/lib/types';
+import type { ServiceType, CreateShipmentResponse, ShipmentTypeOption, DomesticPriceRequest, DomesticPriceResponse, InternationalPriceRequest, InternationalPriceResponse, PriceApiResponse, AddShipmentPayload } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -59,16 +59,29 @@ type ShipmentFormValues = z.infer<typeof shipmentFormSchema>;
 
 interface PaymentStepData {
   show: boolean;
-  amount: string;
+  amount: string; // Formatted string for display, e.g., "Rs. 1500.00"
+  numericAmount: number; // Numeric GST-inclusive total price
   priceResponse: PriceApiResponse | null;
   formData: ShipmentFormValues | null;
   shipmentType: ShipmentTypeOption | null;
 }
 
+const parsePriceStringToNumber = (priceStr: string | number | undefined): number | null => {
+  if (typeof priceStr === 'number') {
+    return priceStr;
+  }
+  if (typeof priceStr === 'string') {
+    const numericString = priceStr.replace(/[^0-9.-]+/g, ""); // Remove currency symbols, commas, etc.
+    const parsed = parseFloat(numericString);
+    return isNaN(parsed) ? null : parsed;
+  }
+  return null;
+};
+
 
 export function BookShipmentForm() {
   const [submissionStatus, setSubmissionStatus] = useState<CreateShipmentResponse | null>(null);
-  const [paymentStep, setPaymentStep] = useState<PaymentStepData>({ show: false, amount: "0.00", priceResponse: null, formData: null, shipmentType: null });
+  const [paymentStep, setPaymentStep] = useState<PaymentStepData>({ show: false, amount: "0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
   const { addShipment, isLoading: isShipmentContextLoading } = useShipments();
   const [isPricingLoading, setIsLoadingPricing] = useState(false);
   const [utr, setUtr] = useState<string>('');
@@ -122,11 +135,12 @@ export function BookShipmentForm() {
 
   const onSubmitToPayment = async (data: ShipmentFormValues) => {
     setIsLoadingPricing(true);
-    setPaymentStep({ show: false, amount: "0.00", priceResponse: null, formData: null, shipmentType: null });
+    setPaymentStep({ show: false, amount: "0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
 
     try {
       let priceResponseData: PriceApiResponse;
-      let displayAmount = "0.00"; 
+      let numericTotalPrice: number | null = null;
+      let displayAmountForQR = "Rs. 0.00";
 
       if (data.shipmentTypeOption === "Domestic") {
         if (!data.receiverAddressState) {
@@ -150,7 +164,7 @@ export function BookShipmentForm() {
         });
         const domesticResp = priceResponseData as DomesticPriceResponse;
         if (domesticResp.error) throw new Error(domesticResp.error);
-        displayAmount = domesticResp.total_price; 
+        numericTotalPrice = parsePriceStringToNumber(domesticResp.total_price);
 
       } else if (data.shipmentTypeOption === "International") {
          if (!data.receiverAddressCountry || data.receiverAddressCountry === "India") {
@@ -179,38 +193,22 @@ export function BookShipmentForm() {
         }
         
         if (intlResp.formatted_total && intlResp.formatted_total.trim() !== "") {
-          displayAmount = intlResp.formatted_total;
-        } else if (typeof intlResp.total_price === 'string') {
-          const numericTotalPrice = parseFloat(intlResp.total_price.replace(/[^0-9.-]+/g,""));
-          if (!isNaN(numericTotalPrice)) {
-            displayAmount = `₹${numericTotalPrice.toFixed(2)}`;
-          } else {
-            console.error("International pricing API error: total_price is an unparseable string and formatted_total is missing.", intlResp);
-            toast({
-                title: "Pricing Error",
-                description: "Invalid price data (unparseable string) received for international shipment.",
-                variant: "destructive",
-            });
-            setIsLoadingPricing(false);
-            return;
-          }
-        } else if (typeof intlResp.total_price === 'number') {
-          displayAmount = `₹${intlResp.total_price.toFixed(2)}`;
-        } else {
-          console.error("International pricing API error: formatted_total missing and total_price is not a number or usable string.", intlResp);
-          toast({
-            title: "Pricing Error",
-            description: "Invalid price data received for international shipment.",
-            variant: "destructive",
-          });
-          setIsLoadingPricing(false);
-          return; 
+            numericTotalPrice = parsePriceStringToNumber(intlResp.formatted_total);
+        } else { // Fallback to total_price if formatted_total is missing
+            numericTotalPrice = parsePriceStringToNumber(intlResp.total_price);
         }
       } else {
         throw new Error("Invalid shipment type selected.");
       }
 
-      setPaymentStep({ show: true, amount: displayAmount, priceResponse: priceResponseData, formData: data, shipmentType: data.shipmentTypeOption });
+      if (numericTotalPrice === null) {
+        toast({ title: "Pricing Error", description: "Could not determine a valid numeric price from API.", variant: "destructive" });
+        setIsLoadingPricing(false);
+        return;
+      }
+
+      displayAmountForQR = `Rs. ${numericTotalPrice.toFixed(2)}`;
+      setPaymentStep({ show: true, amount: displayAmountForQR, numericAmount: numericTotalPrice, priceResponse: priceResponseData, formData: data, shipmentType: data.shipmentTypeOption });
 
     } catch (error: any) {
       const errorMessage = error?.data?.error || error.message || "Failed to fetch pricing.";
@@ -225,12 +223,15 @@ export function BookShipmentForm() {
   };
 
   const handleConfirmPaymentAndBook = async () => {
-    if (!paymentStep.formData || !paymentStep.shipmentType || !paymentStep.priceResponse) return;
+    if (!paymentStep.formData || !paymentStep.shipmentType || !paymentStep.priceResponse || paymentStep.numericAmount <= 0) {
+        toast({ title: "Booking Error", description: "Invalid payment data. Please try again.", variant: "destructive" });
+        return;
+    }
 
     const data = paymentStep.formData;
     const formattedPickupDate = format(data.pickupDate, "yyyy-MM-dd");
 
-    const apiShipmentData = {
+    const apiShipmentData: AddShipmentPayload = {
         sender_name: data.senderName,
         sender_address_street: data.senderAddressStreet,
         sender_address_city: data.senderAddressCity,
@@ -242,7 +243,7 @@ export function BookShipmentForm() {
         receiver_name: data.receiverName,
         receiver_address_street: data.receiverAddressStreet,
         receiver_address_city: data.receiverAddressCity,
-        receiver_address_state: data.shipmentTypeOption === "Domestic" ? data.receiverAddressState || "" : data.receiverAddressState || "",
+        receiver_address_state: data.shipmentTypeOption === "Domestic" ? data.receiverAddressState || "" : data.receiverAddressState || "", // Ensure state is string
         receiver_address_pincode: data.receiverAddressPincode,
         receiver_address_country: data.shipmentTypeOption === "Domestic" ? "India" : data.receiverAddressCountry,
         receiver_phone: data.receiverPhone,
@@ -253,14 +254,24 @@ export function BookShipmentForm() {
         package_length_cm: data.packageLengthCm,
 
         pickup_date: formattedPickupDate,
-        service_type: data.shipmentTypeOption === "Domestic" ? (data.serviceType as ServiceType) : "Express",
+        service_type: data.shipmentTypeOption === "Domestic" ? (data.serviceType as ServiceType) : "Express", // serviceType should be present
+        final_total_price_with_tax: paymentStep.numericAmount, // Send the GST-inclusive total
     };
 
     try {
-        const response = await addShipment(apiShipmentData as any);
+        // Ensure service_type is correctly assigned for domestic, default to Express for international
+        if (data.shipmentTypeOption === "Domestic" && !data.serviceType) {
+            toast({ title: "Booking Error", description: "Service type is missing for domestic shipment.", variant: "destructive" });
+            return;
+        }
+        apiShipmentData.service_type = data.shipmentTypeOption === "Domestic" ? data.serviceType! : "Express";
+
+
+        const response = await addShipment(apiShipmentData);
         setSubmissionStatus(response); 
         
         let displayTotalPaid = 'N/A';
+        // The response.data.total_with_tax_18_percent should now reflect the final_total_price_with_tax if backend is updated
         if (response.data && typeof response.data.total_with_tax_18_percent === 'number') {
             displayTotalPaid = `Rs. ${response.data.total_with_tax_18_percent.toFixed(2)}`;
         }
@@ -283,7 +294,7 @@ export function BookShipmentForm() {
             packageLengthCm: 10,
             pickupDate: new Date(new Date().setDate(new Date().getDate() + 1))
         });
-        setPaymentStep({ show: false, amount: "0.00", priceResponse: null, formData: null, shipmentType: null });
+        setPaymentStep({ show: false, amount: "0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
         setUtr('');
         setUtrError(null);
     } catch (error: any) {
@@ -325,13 +336,8 @@ export function BookShipmentForm() {
   }
 
   if (paymentStep.show && paymentStep.formData) {
-    let displayAmountWithRs = paymentStep.amount; 
-    if (displayAmountWithRs.includes("₹")) {
-      displayAmountWithRs = displayAmountWithRs.replace("₹", "Rs. ");
-    } else if (!displayAmountWithRs.toLowerCase().startsWith("rs.")) {
-      displayAmountWithRs = `Rs. ${displayAmountWithRs}`;
-    }
-
+    // paymentStep.amount already contains "Rs. XXX.XX"
+    const displayAmountForQRPage = paymentStep.amount; 
 
     return (
       <Card className="w-full max-w-md mx-auto shadow-xl">
@@ -343,9 +349,9 @@ export function BookShipmentForm() {
         </CardHeader>
         <CardContent className="text-center space-y-6">
           <div>
-            <p className="text-muted-foreground">Amount to Pay:</p>
+            <p className="text-muted-foreground">Amount to Pay (GST Inclusive):</p>
             <p className="text-3xl font-bold text-primary flex items-center justify-center">
-              {displayAmountWithRs}
+              {displayAmountForQRPage}
             </p>
             {paymentStep.shipmentType === "International" && (paymentStep.priceResponse as InternationalPriceResponse)?.zone && (
               <p className="text-sm text-muted-foreground mt-1">Zone: {(paymentStep.priceResponse as InternationalPriceResponse).zone}</p>
@@ -361,7 +367,7 @@ export function BookShipmentForm() {
               width={200}
               height={200}
               className="rounded-md border shadow-sm"
-              data-ai-hint="payment QR"
+              data-ai-hint="payment QR code"
             />
           </div>
           <div className="space-y-2 text-left">
@@ -592,6 +598,3 @@ export function BookShipmentForm() {
     </Card>
   );
 }
-    
-    
-

@@ -63,10 +63,9 @@ export interface Shipment {
   total_with_tax_18_percent: number;
   tracking_history: TrackingStep[];
   last_updated_at?: string;
+  final_total_price_with_tax?: number; // Can be part of the object if needed, but primarily for addShipment payload
 
   // Frontend camelCase representation (populated by mapping)
-  // These can be used in frontend logic for convenience.
-  // The mapping function ensures these are consistent with snake_case fields.
   userId?: number;
   shipmentIdStr: string; 
   senderName: string;
@@ -93,10 +92,9 @@ export interface Shipment {
   priceWithoutTax: number;
   taxAmount18Percent: number;
   totalWithTax18Percent: number;
-  trackingHistory: TrackingStep[]; // Already camelCase from API structure for nested array
+  trackingHistory: TrackingStep[];
   lastUpdatedAt?: string;
 
-  // Optional fields sometimes used in frontend displays or older logic
   customerName?: string; 
   orderNumber?: string;  
   description?: string;  
@@ -112,12 +110,12 @@ export interface LoginResponse {
 export interface CreateShipmentResponse {
     shipment_id_str: string; 
     message: string;
-    data: Shipment; // Full shipment object as created on backend (snake_case)
+    data: Shipment; 
 }
 
 // API response for admin listing shipments (snake_case)
 export interface AdminShipmentsResponse {
-    shipments: Shipment[]; // Array of snake_case shipment objects
+    shipments: Shipment[]; 
     totalPages: number;
     currentPage: number;
     totalCount: number;
@@ -126,7 +124,7 @@ export interface AdminShipmentsResponse {
 // API response for updating shipment status (snake_case)
 export interface UpdateShipmentStatusResponse {
     message: string;
-    updatedShipment: Partial<Shipment>; // Partial snake_case shipment object
+    updatedShipment: Partial<Shipment>; 
 }
 
 // API response for web analytics (snake_case)
@@ -180,11 +178,11 @@ export interface DomesticPriceRequest {
 
 export interface DomesticPriceResponse {
   destination_state: string;
-  mode: string; // "Express" or "Standard"
+  mode: string; 
   weight_kg: number;
-  price_per_kg: string; // e.g., "₹220"
+  price_per_kg: string; 
   rounded_weight: number;
-  total_price: string; // e.g., "₹660"
+  total_price: string; 
   error?: string;
 }
 
@@ -196,15 +194,39 @@ export interface InternationalPriceRequest {
 export interface InternationalPriceResponse {
   country: string;
   zone: string;
-  mode: string; // Always "Express"
+  mode: string; 
   weight_kg: number;
-  base_0_5kg: number;
-  per_0_5kg_addl: number;
+  base_0_5kg: number | string; // API might send string
+  per_0_5kg_addl: number | string; // API might send string
   addl_halfkg_units: number;
-  total_price: number; // Numeric total price
-  formatted_total: string; // e.g., "₹2,510"
+  total_price: number | string; // API might send string
+  formatted_total: string; 
   error?: string;
 }
 
-// Union type for payment step data
 export type PriceApiResponse = DomesticPriceResponse | InternationalPriceResponse;
+
+// Payload for creating a shipment
+export interface AddShipmentPayload {
+    sender_name: string;
+    sender_address_street: string;
+    sender_address_city: string;
+    sender_address_state: string;
+    sender_address_pincode: string;
+    sender_address_country: string;
+    sender_phone: string;
+    receiver_name: string;
+    receiver_address_street: string;
+    receiver_address_city: string;
+    receiver_address_state: string; 
+    receiver_address_pincode: string;
+    receiver_address_country: string;
+    receiver_phone: string;
+    package_weight_kg: number;
+    package_width_cm: number;
+    package_height_cm: number;
+    package_length_cm: number;
+    pickup_date: string;
+    service_type: ServiceType;
+    final_total_price_with_tax: number; // GST-inclusive total from frontend
+}

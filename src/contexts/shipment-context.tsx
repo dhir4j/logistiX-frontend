@@ -1,54 +1,30 @@
 
 "use client";
 
-import type { Shipment, CreateShipmentResponse, ServiceType } from '@/lib/types';
+import type { Shipment, CreateShipmentResponse, ServiceType, AddShipmentPayload } from '@/lib/types'; // Added AddShipmentPayload
 import React, { createContext, useState, ReactNode, useCallback } from 'react';
 import apiClient from '@/lib/api-client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 interface ShipmentContextType {
-  shipments: Shipment[]; // Will store mapped (camelCase) shipments
+  shipments: Shipment[]; 
   isLoading: boolean;
   fetchUserShipments: () => Promise<void>;
-  getShipmentById: (shipment_id_str: string) => Promise<Shipment | undefined>; // Param is snake_case
-  addShipment: (shipmentData: { 
-        sender_name: string;
-        sender_address_street: string;
-        sender_address_city: string;
-        sender_address_state: string;
-        sender_address_pincode: string;
-        sender_address_country: string;
-        sender_phone: string;
-        receiver_name: string;
-        receiver_address_street: string;
-        receiver_address_city: string;
-        receiver_address_state: string;
-        receiver_address_pincode: string;
-        receiver_address_country: string;
-        receiver_phone: string;
-        package_weight_kg: number;
-        package_width_cm: number;
-        package_height_cm: number;
-        package_length_cm: number;
-        pickup_date: string; 
-        service_type: ServiceType;
-    }) => Promise<CreateShipmentResponse>;
+  getShipmentById: (shipment_id_str: string) => Promise<Shipment | undefined>; 
+  addShipment: (shipmentData: AddShipmentPayload) => Promise<CreateShipmentResponse>; // Use AddShipmentPayload
 }
 
 export const ShipmentContext = createContext<ShipmentContextType | undefined>(undefined);
 
-// Helper function to map API snake_case to frontend camelCase for Shipment
-// Ensures that the critical shipmentIdStr (from shipment_id_str) is always mapped.
 export const mapApiShipmentToFrontend = (apiShipment: any): Shipment => {
   if (!apiShipment.shipment_id_str) {
     console.warn("API Shipment object is missing 'shipment_id_str':", apiShipment);
   }
   return {
-    // Raw snake_case fields from API
     id: apiShipment.id,
     user_id: apiShipment.user_id,
-    shipment_id_str: apiShipment.shipment_id_str || 'UNKNOWN_ID', // Fallback for safety
+    shipment_id_str: apiShipment.shipment_id_str || 'UNKNOWN_ID', 
     sender_name: apiShipment.sender_name,
     sender_address_street: apiShipment.sender_address_street,
     sender_address_city: apiShipment.sender_address_city,
@@ -77,9 +53,8 @@ export const mapApiShipmentToFrontend = (apiShipment: any): Shipment => {
     tracking_history: apiShipment.tracking_history || [],
     last_updated_at: apiShipment.last_updated_at,
 
-    // Corresponding camelCase fields for frontend use
     userId: apiShipment.user_id,
-    shipmentIdStr: apiShipment.shipment_id_str || 'UNKNOWN_ID', // Fallback for safety
+    shipmentIdStr: apiShipment.shipment_id_str || 'UNKNOWN_ID', 
     senderName: apiShipment.sender_name,
     senderAddressStreet: apiShipment.sender_address_street,
     senderAddressCity: apiShipment.sender_address_city,
@@ -101,11 +76,9 @@ export const mapApiShipmentToFrontend = (apiShipment: any): Shipment => {
     pickupDate: apiShipment.pickup_date,
     serviceType: apiShipment.service_type,
     bookingDate: apiShipment.booking_date,
-    // status is already camelCase
     priceWithoutTax: parseFloat(apiShipment.price_without_tax),
     taxAmount18Percent: parseFloat(apiShipment.tax_amount_18_percent),
     totalWithTax18Percent: parseFloat(apiShipment.total_with_tax_18_percent),
-    // trackingHistory is already camelCase array
   };
 };
 
@@ -142,7 +115,6 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
     }
     setIsLoading(true);
     try {
-      // API returns array of snake_case shipments
       const dataFromApi = await apiClient<any[]>('/api/shipments'); 
       setShipments(dataFromApi.map(mapApiShipmentToFrontend));
     } catch (error: any) {
@@ -155,7 +127,7 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
 
 
   const getShipmentById = useCallback(async (shipment_id_str: string): Promise<Shipment | undefined> => {
-    if (!isAuthenticated) { // Endpoint is open, but this function is contextually for authenticated users
+    if (!isAuthenticated) { 
         toast({ title: "Not Authenticated", description: "Please log in to view shipment details.", variant: "destructive" });
         return undefined;
     }
@@ -166,7 +138,6 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
     }
     setIsLoading(true);
     try {
-      // API returns snake_case shipment
       const dataFromApi = await apiClient<any>(`/api/shipments/${shipment_id_str}`);
       return mapApiShipmentToFrontend(dataFromApi);
     } catch (error: any) {
@@ -178,50 +149,26 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
   }, [isAuthenticated, handleApiError, toast]);
 
   const addShipment = useCallback(async (
-    // Expects snake_case keys as per API spec for request body
-    shipmentData: { 
-        sender_name: string;
-        sender_address_street: string;
-        sender_address_city: string;
-        sender_address_state: string;
-        sender_address_pincode: string;
-        sender_address_country: string;
-        sender_phone: string;
-        receiver_name: string;
-        receiver_address_street: string;
-        receiver_address_city: string;
-        receiver_address_state: string;
-        receiver_address_pincode: string;
-        receiver_address_country: string;
-        receiver_phone: string;
-        package_weight_kg: number;
-        package_width_cm: number;
-        package_height_cm: number;
-        package_length_cm: number;
-        pickup_date: string; 
-        service_type: ServiceType;
-    }
+    shipmentData: AddShipmentPayload // Use the new payload type
   ): Promise<CreateShipmentResponse> => {
     if (!user) throw new Error("User context not available for booking shipment.");
     
     setIsLoading(true);
     try {
-      // API request body uses snake_case
+      // API request body uses snake_case, and AddShipmentPayload is defined with snake_case keys
       const response = await apiClient<CreateShipmentResponse>('/api/shipments', {
         method: 'POST',
-        body: JSON.stringify(shipmentData), // Pass snake_case data directly
+        body: JSON.stringify(shipmentData), 
       });
-      // The response.data should be a snake_case shipment object.
-      // fetchUserShipments will re-fetch and map, or we can map response.data and add to local state.
       await fetchUserShipments(); 
-      return response; // response.shipment_id_str and response.data are snake_case
+      return response; 
     } catch (error: any) {
       handleApiError(error, 'adding shipment');
       throw error; 
     } finally {
       setIsLoading(false);
     }
-  }, [user, fetchUserShipments, handleApiError, isAuthenticated]);
+  }, [user, fetchUserShipments, handleApiError]); // Removed isAuthenticated, was not used
 
   return (
     <ShipmentContext.Provider value={{ shipments, isLoading, fetchUserShipments, getShipmentById, addShipment }}>
