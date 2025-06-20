@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { PackagePlus, Search, ListOrdered, Calculator, MessageSquare, ArrowRight, Settings2, BarChartBig, Gift, Receipt } from 'lucide-react'; // Receipt added
+import { PackagePlus, Search, ListOrdered, MessageSquare, ArrowRight, Settings2, BarChartBig, Gift, Receipt } from 'lucide-react'; // Calculator removed
 import Image from 'next/image';
 
 const quickAccessItems = [
@@ -52,7 +52,7 @@ export default function DashboardPage() {
           <CardDescription className="text-lg">Manage your shipments efficiently with Shed Load Overseas.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p>This is your central hub for all courier activities. You can book new shipments, track existing ones, view your history and invoices, calculate pricing, and get in touch with us for support.</p>
+          <p>This is your central hub for all courier activities. You can book new shipments, track existing ones, view your history and invoices, and get in touch with us for support.</p>
         </CardContent>
       </Card>
 
@@ -81,7 +81,7 @@ export default function DashboardPage() {
             <h3 className="font-headline text-xl sm:text-2xl font-semibold mb-3 text-primary">Need Assistance?</h3>
             <p className="text-muted-foreground mb-4">
               Our support team is ready to help you with any queries or issues you might have.
-              Explore our contact options or use the pricing calculator for quick estimates.
+              Explore our contact options.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
@@ -89,11 +89,14 @@ export default function DashboardPage() {
                   <MessageSquare className="mr-2 h-4 w-4" /> Contact Support
                 </Link>
               </Button>
+              {/* Pricing Calculator Button Removed */}
+              {/* 
               <Button asChild variant="outline">
                 <Link href="/dashboard/pricing">
                   <Calculator className="mr-2 h-4 w-4" /> Pricing Calculator
                 </Link>
-              </Button>
+              </Button> 
+              */}
             </div>
           </div>
           <div className="hidden md:block p-4 md:col-span-1"> 
@@ -103,6 +106,7 @@ export default function DashboardPage() {
               width={200} 
               height={133} 
               className="object-contain rounded-md mx-auto" 
+              data-ai-hint="customer service"
             />
           </div>
         </div>

@@ -1,5 +1,5 @@
 
-import { Home, PackagePlus, Search, ListOrdered, Calculator, MessageSquare, Receipt } from 'lucide-react';
+import { Home, PackagePlus, Search, ListOrdered, MessageSquare, Receipt } from 'lucide-react'; // Calculator removed
 import type { LucideIcon } from 'lucide-react';
 
 export interface NavItem {
@@ -43,12 +43,12 @@ export const dashboardNavItems: NavItem[] = [
     icon: Receipt,
     description: 'View your invoices.',
   },
-  {
-    title: 'Pricing',
-    href: '/dashboard/pricing',
-    icon: Calculator,
-    description: 'Calculate shipment costs.',
-  },
+  // { // Pricing Calculator removed from here
+  //   title: 'Pricing',
+  //   href: '/dashboard/pricing',
+  //   icon: Calculator,
+  //   description: 'Calculate shipment costs.',
+  // },
   {
     title: 'Contact',
     href: '/dashboard/contact',
@@ -74,4 +74,3 @@ export const siteConfig = {
   links: {
   },
 };
-
