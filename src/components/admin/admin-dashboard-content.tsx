@@ -10,7 +10,6 @@ import type { WebAnalyticsResponse } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { QrCodeManager } from './qr-code-manager'; // New import
 
 interface AdminAnalyticsData {
   total_orders: number | null;
@@ -80,7 +79,6 @@ export function AdminDashboardContent() {
 
   const formatCurrency = (amount: number | null) => {
     if (amount === null || isNaN(amount)) return 'N/A';
-    // Ensure "Rs. " prefix and Indian number formatting
     const numberPart = amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return `Rs. ${numberPart}`;
   };
@@ -150,8 +148,6 @@ export function AdminDashboardContent() {
           </CardContent>
         </Card>
       </div>
-
-      <QrCodeManager />
       
       <AdminOrdersTable />
     </div>

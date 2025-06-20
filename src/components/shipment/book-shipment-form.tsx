@@ -85,7 +85,7 @@ export function BookShipmentForm() {
       senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
       senderPhone: '',
       receiverName: '',
-      receiverAddressStreet: '', receiverAddressCity: '', receiverAddressPincode: '', receiverAddressCountry: '', // initialize receiver country
+      receiverAddressStreet: '', receiverAddressCity: '', receiverAddressPincode: '', receiverAddressCountry: '', 
       receiverPhone: '',
       packageWeightKg: 0.5,
       packageWidthCm: 10,
@@ -127,7 +127,7 @@ export function BookShipmentForm() {
 
     try {
       let priceResponseData: PriceApiResponse;
-      let displayAmount = "0.00"; // Default value
+      let displayAmount = "0.00"; 
 
       if (data.shipmentTypeOption === "Domestic") {
         if (!data.receiverAddressState) {
@@ -151,7 +151,7 @@ export function BookShipmentForm() {
         });
         const domesticResp = priceResponseData as DomesticPriceResponse;
         if (domesticResp.error) throw new Error(domesticResp.error);
-        displayAmount = domesticResp.total_price; // This is expected as "₹XXX"
+        displayAmount = domesticResp.total_price; 
 
       } else if (data.shipmentTypeOption === "International") {
          if (!data.receiverAddressCountry || data.receiverAddressCountry === "India") {
@@ -172,7 +172,7 @@ export function BookShipmentForm() {
         if (intlResp.error) throw new Error(intlResp.error);
         
         if (intlResp.formatted_total) {
-          displayAmount = intlResp.formatted_total; // Expected as "₹X,XXX"
+          displayAmount = intlResp.formatted_total;
         } else if (typeof intlResp.total_price === 'number') {
           displayAmount = `₹${intlResp.total_price.toFixed(2)}`;
         } else {
@@ -237,7 +237,7 @@ export function BookShipmentForm() {
 
     try {
         const response = await addShipment(apiShipmentData as any);
-        setSubmissionStatus(response); // response is CreateShipmentResponse
+        setSubmissionStatus(response); 
         
         let displayTotalPaid = 'N/A';
         if (response.data && typeof response.data.total_with_tax_18_percent === 'number') {
@@ -304,11 +304,10 @@ export function BookShipmentForm() {
   }
 
   if (paymentStep.show && paymentStep.formData) {
-    let displayAmountWithRs = paymentStep.amount; // Already "₹XXX" or "₹X,XXX"
+    let displayAmountWithRs = paymentStep.amount; 
     if (displayAmountWithRs.includes("₹")) {
       displayAmountWithRs = displayAmountWithRs.replace("₹", "Rs. ");
-    } else if (!displayAmountWithRs.toLowerCase().includes("rs.")) {
-       // This case should ideally not happen if API returns "₹" or if displayAmount was formatted to "₹"
+    } else if (!displayAmountWithRs.toLowerCase().startsWith("rs.")) {
       displayAmountWithRs = `Rs. ${displayAmountWithRs}`;
     }
 
@@ -336,13 +335,12 @@ export function BookShipmentForm() {
           </div>
           <div className="flex justify-center">
             <Image
-              src="/api/admin/qr_code" 
-              alt="UPI QR Code"
+              src="https://placehold.co/200x200.png?text=Scan+QR+to+Pay" 
+              alt="UPI QR Code Placeholder"
               width={200}
               height={200}
               className="rounded-md border shadow-sm"
-              data-ai-hint="payment gateway"
-              onError={(e) => (e.currentTarget.src = "https://placehold.co/200x200.png?text=QR+Error")}
+              data-ai-hint="payment QR placeholder"
             />
           </div>
           <div className="space-y-2 text-left">
