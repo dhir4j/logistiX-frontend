@@ -37,14 +37,14 @@ export interface Shipment {
   user_id?: number;
   shipment_id_str: string;
   sender_name: string;
-  sender_address_street: string; // Will be mapped from sender_address_line1 from creation if needed
+  sender_address_street: string; 
   sender_address_city: string;
   sender_address_state: string;
   sender_address_pincode: string;
   sender_address_country: string;
   sender_phone: string;
   receiver_name: string;
-  receiver_address_street: string; // Will be mapped from receiver_address_line1 from creation if needed
+  receiver_address_street: string; 
   receiver_address_city: string;
   receiver_address_state: string;
   receiver_address_pincode: string;
@@ -66,23 +66,21 @@ export interface Shipment {
   
 
   // Frontend camelCase representation (populated by mapping)
-  // For GET /api/shipments/{id} or GET /api/shipments, the backend might still return these older fields.
-  // The mapping function handles this.
   userId?: number;
   shipmentIdStr: string; 
   senderName: string;
-  senderAddressStreet: string; // This might be sender_address_line1 from GET
-  senderAddressLine1?: string; // For consistency with new payload if needed
-  senderAddressLine2?: string; // For consistency with new payload if needed
+  senderAddressStreet: string; 
+  senderAddressLine1?: string; 
+  senderAddressLine2?: string; 
   senderAddressCity: string;
   senderAddressState: string;
   senderAddressPincode: string;
   senderAddressCountry: string;
   senderPhone: string;
   receiverName: string;
-  receiverAddressStreet: string; // This might be receiver_address_line1 from GET
-  receiverAddressLine1?: string; // For consistency with new payload if needed
-  receiverAddressLine2?: string; // For consistency with new payload if needed
+  receiverAddressStreet: string; 
+  receiverAddressLine1?: string; 
+  receiverAddressLine2?: string; 
   receiverAddressCity: string;
   receiverAddressState: string;
   receiverAddressPincode: string;
@@ -113,12 +111,10 @@ export interface LoginResponse {
 }
 
 // API response for creating shipment (snake_case)
-// This should now match the backend's response for a *created* shipment,
-// which might be different from what we send.
 export interface CreateShipmentResponse {
     shipment_id_str: string; 
     message: string;
-    data: Shipment; // The full shipment object as returned by the backend after creation
+    data: Shipment; 
 }
 
 // API response for admin listing shipments (snake_case)
@@ -190,7 +186,7 @@ export interface DomesticPriceResponse {
   weight_kg: number;
   price_per_kg: string; 
   rounded_weight: number;
-  total_price: string; // Can be string like "₹2,510.00" or number
+  total_price: string; 
   error?: string;
 }
 
@@ -207,7 +203,7 @@ export interface InternationalPriceResponse {
   base_0_5kg: number | string; 
   per_0_5kg_addl: number | string; 
   addl_halfkg_units: number;
-  total_price: number | string; // Can be "₹116912.76" or number
+  total_price: number | string; 
   formatted_total: string; 
   error?: string;
 }
@@ -215,23 +211,29 @@ export interface InternationalPriceResponse {
 export type PriceApiResponse = DomesticPriceResponse | InternationalPriceResponse;
 
 // Payload for creating a shipment (POST /api/shipments)
-// This now matches the new backend specification.
+// Matches the new backend specification.
 export interface AddShipmentPayload {
     sender_name: string;
+    sender_address_street: string; // Combined from line1 and line2
     sender_address_city: string;
-    sender_address_line1: string;
-    sender_address_line2?: string; // Optional
-    sender_pincode: string;
+    sender_address_state: string;
+    sender_address_pincode: string;
+    sender_address_country: string;
     sender_phone: string;
 
     receiver_name: string;
+    receiver_address_street: string; // Combined from line1 and line2
     receiver_address_city: string;
-    receiver_address_line1: string;
-    receiver_address_line2?: string; // Optional
-    receiver_pincode: string;
+    receiver_address_state: string;
+    receiver_address_pincode: string;
+    receiver_address_country: string;
     receiver_phone: string;
 
     package_weight_kg: number;
+    package_width_cm: number;
+    package_height_cm: number;
+    package_length_cm: number;
+    pickup_date: string; // Formatted as "yyyy-MM-dd"
     service_type: ServiceType; // "Express" or "Standard"
-    // user_id is optional, backend defaults to 1
+    user_id?: number; // Optional
 }

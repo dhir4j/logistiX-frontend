@@ -13,9 +13,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { format, isValid } from "date-fns";
-import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus, ScanLine, Globe, Home, Loader2, Edit3 } from 'lucide-react';
+import { format, isValid, parseISO } from "date-fns";
+import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus, ScanLine, Globe, Home, Loader2, Edit3, Info } from 'lucide-react';
 import { useShipments } from '@/hooks/use-shipments';
 import type { ServiceType, CreateShipmentResponse, ShipmentTypeOption, DomesticPriceRequest, DomesticPriceResponse, InternationalPriceRequest, InternationalPriceResponse, PriceApiResponse, AddShipmentPayload } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -32,25 +34,27 @@ const shipmentFormSchema = z.object({
   senderAddressLine1: z.string().min(5, "Address Line 1 is required (min 5 chars)"),
   senderAddressLine2: z.string().optional(),
   senderAddressCity: z.string().min(2, "City is required"),
-  senderAddressState: z.string().min(2, "State is required"), // Still needed for domestic pricing API
+  senderAddressState: z.string().min(2, "State is required"),
   senderAddressPincode: z.string().regex(/^\d{5,6}$/, "Pincode must be 5 or 6 digits"),
-  senderAddressCountry: z.string().min(2, "Country is required").default("India"), // Still needed for pricing API
+  senderAddressCountry: z.string().min(2, "Country is required").default("India"),
   senderPhone: z.string().regex(/^(\+91)?[6-9]\d{9}$/, "Invalid Indian phone number (e.g., +919876543210 or 9876543210)"),
 
   receiverName: z.string().min(2, "Receiver name is required"),
   receiverAddressLine1: z.string().min(5, "Address Line 1 is required (min 5 chars)"),
   receiverAddressLine2: z.string().optional(),
   receiverAddressCity: z.string().min(2, "City is required"),
-  receiverAddressState: z.string().optional(), // Still needed for domestic pricing API if applicable
+  receiverAddressState: z.string().min(2, "State/Province is required"), // Required for backend
   receiverAddressPincode: z.string().regex(/^\d{3,10}$/, "Pincode/ZIP must be 3-10 digits"),
-  receiverAddressCountry: z.string().min(2, "Country is required"), // Still needed for pricing API
+  receiverAddressCountry: z.string().min(2, "Country is required"),
   receiverPhone: z.string().regex(/^(\+?[1-9]\d{1,14})?$/, "Invalid phone number format"),
 
   packageWeightKg: z.coerce.number().min(0.1, "Weight must be at least 0.1kg").max(100, "Max 100kg"),
-  // Dimensions removed as per new API spec for POST /api/shipments
-  // pickupDate removed as per new API spec for POST /api/shipments
+  packageWidthCm: z.coerce.number().min(1, "Width must be at least 1cm").max(200, "Max 200cm"),
+  packageHeightCm: z.coerce.number().min(1, "Height must be at least 1cm").max(200, "Max 200cm"),
+  packageLengthCm: z.coerce.number().min(1, "Length must be at least 1cm").max(200, "Max 200cm"),
+  pickupDate: z.date({ required_error: "Pickup date is required." }),
 
-  serviceType: z.enum(["Standard", "Express"]), // This is for form state, will be set based on shipmentTypeOption
+  serviceType: z.enum(["Standard", "Express"]),
 });
 
 type ShipmentFormValues = z.infer<typeof shipmentFormSchema>;
@@ -59,7 +63,7 @@ interface PaymentStepData {
   show: boolean;
   amount: string; 
   numericAmount: number | null; 
-  priceResponse: PriceApiResponse | null; // To hold raw pricing response if needed
+  priceResponse: PriceApiResponse | null;
   formData: ShipmentFormValues | null;
   shipmentType: ShipmentTypeOption | null;
 }
@@ -69,7 +73,7 @@ const parsePriceStringToNumber = (priceStr: string | number | undefined | null):
     return priceStr;
   }
   if (typeof priceStr === 'string') {
-    const numericString = priceStr.replace(/[^0-9.-]+/g, ""); 
+    const numericString = priceStr.replace(/[^\d.-]/g, ""); // Allow decimal and negative
     const parsed = parseFloat(numericString);
     return isNaN(parsed) ? null : parsed;
   }
@@ -97,10 +101,12 @@ export function BookShipmentForm() {
       senderPhone: '',
       receiverName: '',
       receiverAddressLine1: '', receiverAddressLine2: '',
-      receiverAddressCity: '', receiverAddressPincode: '', receiverAddressCountry: '', 
+      receiverAddressCity: '', receiverAddressState: '', receiverAddressPincode: '', receiverAddressCountry: '', 
       receiverPhone: '',
       packageWeightKg: 0.5,
-      serviceType: "Standard", // Default service type
+      packageWidthCm: 10, packageHeightCm: 10, packageLengthCm: 10,
+      pickupDate: new Date(),
+      serviceType: "Standard",
     },
   });
 
@@ -197,7 +203,6 @@ export function BookShipmentForm() {
              setIsLoadingPricing(false);
              return;
         }
-
       } else {
         throw new Error("Invalid shipment type selected.");
       }
@@ -231,33 +236,45 @@ export function BookShipmentForm() {
 
     const data = paymentStep.formData;
 
+    const senderStreetCombined = data.senderAddressLine2 
+      ? `${data.senderAddressLine1}, ${data.senderAddressLine2}`
+      : data.senderAddressLine1;
+
+    const receiverStreetCombined = data.receiverAddressLine2
+      ? `${data.receiverAddressLine1}, ${data.receiverAddressLine2}`
+      : data.receiverAddressLine1;
+
     const apiShipmentData: AddShipmentPayload = {
         sender_name: data.senderName,
+        sender_address_street: senderStreetCombined,
         sender_address_city: data.senderAddressCity,
-        sender_address_line1: data.senderAddressLine1,
-        sender_address_line2: data.senderAddressLine2 || undefined,
-        sender_pincode: data.senderAddressPincode,
+        sender_address_state: data.senderAddressState, // Assuming form collects this
+        sender_address_pincode: data.senderAddressPincode,
+        sender_address_country: data.senderAddressCountry, // Assuming form collects this
         sender_phone: data.senderPhone,
 
         receiver_name: data.receiverName,
+        receiver_address_street: receiverStreetCombined,
         receiver_address_city: data.receiverAddressCity,
-        receiver_address_line1: data.receiverAddressLine1,
-        receiver_address_line2: data.receiverAddressLine2 || undefined,
-        receiver_pincode: data.receiverAddressPincode,
+        receiver_address_state: data.receiverAddressState, // Assuming form collects this
+        receiver_address_pincode: data.receiverAddressPincode,
+        receiver_address_country: data.receiverAddressCountry, // Assuming form collects this
         receiver_phone: data.receiverPhone,
 
         package_weight_kg: data.packageWeightKg,
-        service_type: data.serviceType, // This is set based on shipmentTypeOption in useEffect
+        package_width_cm: data.packageWidthCm,
+        package_height_cm: data.packageHeightCm,
+        package_length_cm: data.packageLengthCm,
+        pickup_date: format(data.pickupDate, 'yyyy-MM-dd'),
+        service_type: data.serviceType,
     };
     
     try {
         const response = await addShipment(apiShipmentData);
         setSubmissionStatus(response); 
         
-        let displayTotalPaid = `Rs. ${paymentStep.numericAmount.toFixed(2)}`; // Use amount from QR page
+        let displayTotalPaid = `Rs. ${paymentStep.numericAmount.toFixed(2)}`;
          if (response.data && typeof response.data.total_with_tax_18_percent === 'number') {
-           // If backend returns a total, prefer it for consistency in confirmation,
-           // but the QR page amount was what user "paid".
             displayTotalPaid = `Rs. ${response.data.total_with_tax_18_percent.toFixed(2)}`;
         }
 
@@ -273,9 +290,11 @@ export function BookShipmentForm() {
             senderPhone: '',
             receiverName: '',
             receiverAddressLine1: '', receiverAddressLine2: '',
-            receiverAddressCity: '', receiverAddressPincode: '', receiverAddressCountry: '',
+            receiverAddressCity: '', receiverAddressState: '', receiverAddressPincode: '', receiverAddressCountry: '',
             receiverPhone: '',
             packageWeightKg: 0.5,
+            packageWidthCm: 10, packageHeightCm: 10, packageLengthCm: 10,
+            pickupDate: new Date(),
             serviceType: "Standard",
         });
         setPaymentStep({ show: false, amount: "Rs. 0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
@@ -298,7 +317,6 @@ export function BookShipmentForm() {
     } else if (paymentStep.numericAmount !== null) { 
         displayAmountWithRs = `Rs. ${paymentStep.numericAmount.toFixed(2)}`;
     }
-
 
     return (
       <Alert className="border-green-500 bg-green-50 text-green-700">
@@ -460,32 +478,13 @@ export function BookShipmentForm() {
                     <User className="h-5 w-5" /> Sender Details
                   </h3>
                   <FormField control={form.control} name="senderName" render={({ field }) => ( <FormItem><FormLabel>Sender Name</FormLabel><FormControl><Input placeholder="John Doe" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <FormField control={form.control} name="senderAddressLine1" render={({ field }) => ( <FormItem><FormLabel>Address Line 1</FormLabel><FormControl><Input placeholder="123 Main St, Apt 4B" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <FormField control={form.control} name="senderAddressLine2" render={({ field }) => ( <FormItem><FormLabel>Address Line 2 (Optional)</FormLabel><FormControl><Input placeholder="Near City Park" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="senderAddressLine1" render={({ field }) => ( <FormItem><FormLabel>Address Line 1</FormLabel><FormControl><Input placeholder="123 Main St" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="senderAddressLine2" render={({ field }) => ( <FormItem><FormLabel>Address Line 2 (Optional)</FormLabel><FormControl><Input placeholder="Apt 4B, Near City Park" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={form.control} name="senderAddressCity" render={({ field }) => ( <FormItem><FormLabel>City</FormLabel><FormControl><Input placeholder="Mumbai" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="senderAddressState" render={({ field }) => ( <FormItem><FormLabel>State (for Domestic Pricing)</FormLabel><FormControl><Input placeholder="Maharashtra" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="senderAddressPincode" render={({ field }) => ( <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input placeholder="400001" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="senderAddressCountry" render={({ field }) => ( <FormItem><FormLabel>Country (for Pricing)</FormLabel><FormControl><Input placeholder="India" {...field} disabled={true} /></FormControl><FormMessage /></FormItem> )} />
-                  </div>
-                  <FormField control={form.control} name="senderPhone" render={({ field }) => ( <FormItem><FormLabel>Sender Phone</FormLabel><FormControl><Input type="tel" placeholder="+919876543210" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                </section>
-
-                <section className="space-y-6 pt-6 border-t">
-                  <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
-                    <User className="h-5 w-5" /> Receiver Details
-                  </h3>
-                  <FormField control={form.control} name="receiverName" render={({ field }) => ( <FormItem><FormLabel>Receiver Name</FormLabel><FormControl><Input placeholder="Jane Smith" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <FormField control={form.control} name="receiverAddressLine1" render={({ field }) => ( <FormItem><FormLabel>Address Line 1</FormLabel><FormControl><Input placeholder="456 Market St, Tower C" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <FormField control={form.control} name="receiverAddressLine2" render={({ field }) => ( <FormItem><FormLabel>Address Line 2 (Optional)</FormLabel><FormControl><Input placeholder="Opposite Central Mall" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="receiverAddressCity" render={({ field }) => ( <FormItem><FormLabel>City</FormLabel><FormControl><Input placeholder="Receiver City" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    {shipmentTypeOption === "Domestic" ? (
-                      <FormField control={form.control} name="receiverAddressState" render={({ field }) => (
+                    <FormField control={form.control} name="senderAddressState" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>State (for Domestic Pricing)</FormLabel>
+                          <FormLabel>State</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger></FormControl>
                             <SelectContent>
@@ -495,38 +494,109 @@ export function BookShipmentForm() {
                           <FormMessage />
                         </FormItem>
                       )} />
-                    ) : (
-                       <FormField control={form.control} name="receiverAddressState" render={({ field }) => ( <FormItem><FormLabel>State / Province (Optional, for Pricing)</FormLabel><FormControl><Input placeholder="e.g., California" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    )}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField control={form.control} name="receiverAddressPincode" render={({ field }) => ( <FormItem><FormLabel>Pincode / ZIP Code</FormLabel><FormControl><Input placeholder="110001 or 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    {shipmentTypeOption === "International" ? (
-                       <FormField control={form.control} name="receiverAddressCountry" render={({ field }) => (
+                    <FormField control={form.control} name="senderAddressPincode" render={({ field }) => ( <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input placeholder="400001" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                     <FormField control={form.control} name="senderAddressCountry" render={({ field }) => ( <FormItem><FormLabel>Country</FormLabel><FormControl><Input placeholder="India" {...field} disabled={true} /></FormControl><FormMessage /></FormItem> )} />
+                  </div>
+                  <FormField control={form.control} name="senderPhone" render={({ field }) => ( <FormItem><FormLabel>Sender Phone</FormLabel><FormControl><Input type="tel" placeholder="+919876543210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                </section>
+
+                <section className="space-y-6 pt-6 border-t">
+                  <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary">
+                    <User className="h-5 w-5" /> Receiver Details
+                  </h3>
+                  <FormField control={form.control} name="receiverName" render={({ field }) => ( <FormItem><FormLabel>Receiver Name</FormLabel><FormControl><Input placeholder="Jane Smith" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="receiverAddressLine1" render={({ field }) => ( <FormItem><FormLabel>Address Line 1</FormLabel><FormControl><Input placeholder="456 Market St" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <FormField control={form.control} name="receiverAddressLine2" render={({ field }) => ( <FormItem><FormLabel>Address Line 2 (Optional)</FormLabel><FormControl><Input placeholder="Tower C, Opposite Central Mall" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="receiverAddressCity" render={({ field }) => ( <FormItem><FormLabel>City</FormLabel><FormControl><Input placeholder="Receiver City" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="receiverAddressState" render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Country (for Pricing)</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select Country" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                              {internationalCountryList.map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>State / Province</FormLabel>
+                          {shipmentTypeOption === "Domestic" ? (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                {indianStatesAndUTs.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input placeholder="e.g., California" {...field} />
+                          )}
                           <FormMessage />
                         </FormItem>
                       )} />
-                    ) : (
-                       <FormField control={form.control} name="receiverAddressCountry" render={({ field }) => ( <FormItem><FormLabel>Country (for Pricing)</FormLabel><FormControl><Input placeholder="India" {...field} disabled={true} /></FormControl><FormMessage /></FormItem> )} />
-                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField control={form.control} name="receiverAddressPincode" render={({ field }) => ( <FormItem><FormLabel>Pincode / ZIP Code</FormLabel><FormControl><Input placeholder="110001 or 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                     <FormField control={form.control} name="receiverAddressCountry" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Country</FormLabel>
+                          {shipmentTypeOption === "International" ? (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select Country" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                {internationalCountryList.map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            ) : (
+                            <Input placeholder="India" {...field} disabled={true} />
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )} />
                   </div>
                   <FormField control={form.control} name="receiverPhone" render={({ field }) => ( <FormItem><FormLabel>Receiver Phone</FormLabel><FormControl><Input type="tel" placeholder="+1234567890" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </section>
 
                 <section className="space-y-6 pt-6 border-t">
-                  <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <Package className="h-5 w-5" /> Package Details </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <Package className="h-5 w-5" /> Package & Pickup Details </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
                     <FormField control={form.control} name="packageWeightKg" render={({ field }) => ( <FormItem><FormLabel>Weight (kg)</FormLabel><FormControl><Input type="number" step="0.1" placeholder="e.g., 2.5" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    {/* Dimensions and Pickup Date fields removed from UI */}
+                    <FormField control={form.control} name="packageLengthCm" render={({ field }) => ( <FormItem><FormLabel>Length (cm)</FormLabel><FormControl><Input type="number" step="1" placeholder="e.g., 30" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="packageWidthCm" render={({ field }) => ( <FormItem><FormLabel>Width (cm)</FormLabel><FormControl><Input type="number" step="1" placeholder="e.g., 20" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                    <FormField control={form.control} name="packageHeightCm" render={({ field }) => ( <FormItem><FormLabel>Height (cm)</FormLabel><FormControl><Input type="number" step="1" placeholder="e.g., 10" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   </div>
+                   <FormField
+                      control={form.control}
+                      name="pickupDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Pickup Date</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "w-full sm:w-[240px] pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1)) } // Disable past dates
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                 </section>
 
                 <section className="space-y-6 pt-6 border-t">
@@ -540,7 +610,13 @@ export function BookShipmentForm() {
                                 <SelectItem value="Standard">Standard</SelectItem> 
                                 <SelectItem value="Express">Express</SelectItem> 
                             </SelectContent>
-                          </Select> <FormMessage />
+                          </Select>
+                          <FormMessage />
+                          {shipmentTypeOption === 'International' && (
+                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                              <Info size={14} /> International shipments default to Express.
+                            </p>
+                          )}
                         </FormItem>
                       )} />
                   </div>
@@ -560,3 +636,4 @@ export function BookShipmentForm() {
     </Card>
   );
 }
+
