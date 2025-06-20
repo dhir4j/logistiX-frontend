@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Package, DollarSign, Users, IndianRupee, TrendingUp, Loader2 } from "lucide-react";
+import { Package, DollarSign, Users, TrendingUp, Loader2 } from "lucide-react"; // Removed IndianRupee as we will use the char
 import { AdminOrdersTable } from './admin-orders-table';
 import apiClient from '@/lib/api-client';
 import type { WebAnalyticsResponse } from '@/lib/types';
@@ -79,7 +79,9 @@ export function AdminDashboardContent() {
 
   const formatCurrency = (amount: number | null) => {
     if (amount === null || isNaN(amount)) return 'N/A';
-    return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Format the number part only
+    const numberPart = amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `₹${numberPart}`; // Prepend the Rupee symbol "₹"
   };
   
   const formatNumber = (num: number | null) => {
