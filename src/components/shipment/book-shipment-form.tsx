@@ -54,15 +54,20 @@ const shipmentFormSchema = z.object({
   packageLengthCm: z.coerce.number().min(1, "Length must be at least 1cm").max(200, "Max 200cm"),
   pickupDate: z.date({ required_error: "Pickup date is required." }),
 
-  serviceType: z.enum(["Standard", "Express"]),
+  serviceType: z.enum(["Standard", "Express"], {errorMap: (issue, ctx) => {
+    if (issue.code === z.ZodIssueCode.invalid_enum_value && issue.received === '') {
+      return { message: "Service type is required. Please select one." };
+    }
+    return { message: ctx.defaultError };
+  }}),
 });
 
 type ShipmentFormValues = z.infer<typeof shipmentFormSchema>;
 
 interface PaymentStepData {
   show: boolean;
-  amount: string; 
-  numericAmount: number | null; 
+  amount: string;
+  numericAmount: number | null;
   priceResponse: PriceApiResponse | null;
   formData: ShipmentFormValues | null;
   shipmentType: ShipmentTypeOption | null;
@@ -73,7 +78,6 @@ const parsePriceStringToNumber = (priceStr: string | number | undefined | null):
     return priceStr;
   }
   if (typeof priceStr === 'string') {
-    // Remove currency symbols, commas, and any non-numeric characters except for the decimal point and minus sign
     const numericString = priceStr.replace(/[^0-9.-]+/g,"");
     const parsed = parseFloat(numericString);
     return isNaN(parsed) ? null : parsed;
@@ -97,17 +101,17 @@ export function BookShipmentForm() {
     defaultValues: {
       shipmentTypeOption: undefined,
       senderName: '',
-      senderAddressLine1: '', senderAddressLine2: '', 
+      senderAddressLine1: '', senderAddressLine2: '',
       senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
       senderPhone: '',
       receiverName: '',
       receiverAddressLine1: '', receiverAddressLine2: '',
-      receiverAddressCity: '', receiverAddressState: '', receiverAddressPincode: '', receiverAddressCountry: '', 
+      receiverAddressCity: '', receiverAddressState: '', receiverAddressPincode: '', receiverAddressCountry: '',
       receiverPhone: '',
       packageWeightKg: 0.5,
       packageWidthCm: 10, packageHeightCm: 10, packageLengthCm: 10,
       pickupDate: new Date(),
-      serviceType: "Standard",
+      serviceType: "Standard", // Default service type
     },
   });
 
@@ -125,13 +129,13 @@ export function BookShipmentForm() {
     form.clearErrors(["receiverAddressState", "receiverAddressCountry", "serviceType"]);
 
     if (shipmentTypeOption === "Domestic") {
-      form.setValue("receiverAddressCountry", "India");
-      form.setValue("serviceType", "Standard"); 
-      form.setValue("receiverAddressPincode", "");
+      form.setValue("receiverAddressCountry", "India", { shouldTouch: true });
+      form.setValue("serviceType", "Standard", { shouldTouch: true, shouldValidate: false }); // Set default for domestic
+      form.setValue("receiverAddressPincode", "", { shouldTouch: true });
     } else if (shipmentTypeOption === "International") {
-      form.setValue("serviceType", "Express"); 
-      form.setValue("receiverAddressCountry", ""); 
-      form.setValue("receiverAddressPincode", "");
+      form.setValue("serviceType", "Express", { shouldTouch: true, shouldValidate: false }); // Force Express for international
+      form.setValue("receiverAddressCountry", "", { shouldTouch: true });
+      form.setValue("receiverAddressPincode", "", { shouldTouch: true });
     }
   }, [shipmentTypeOption, form]);
 
@@ -143,6 +147,22 @@ export function BookShipmentForm() {
     let displayAmountForQR = "Rs. 0.00";
     let priceResponseData: PriceApiResponse;
 
+    // Ensure serviceType is correctly set for International before proceeding
+    let effectiveServiceType = data.serviceType;
+    if (data.shipmentTypeOption === "International") {
+        effectiveServiceType = "Express";
+        // Optionally, update form state if it somehow diverged, though useEffect should handle this
+        if (form.getValues("serviceType") !== "Express") {
+            form.setValue("serviceType", "Express", {shouldValidate: true});
+        }
+    }
+     if (!effectiveServiceType) {
+        form.setError("serviceType", { type: "manual", message: "Service type is required."});
+        setIsLoadingPricing(false);
+        return;
+    }
+
+
     try {
       if (data.shipmentTypeOption === "Domestic") {
         if (!data.receiverAddressState) {
@@ -152,10 +172,10 @@ export function BookShipmentForm() {
         }
         const domesticPayload: DomesticPriceRequest = {
           state: data.receiverAddressState,
-          mode: data.serviceType.toLowerCase() as "express" | "standard",
+          mode: effectiveServiceType.toLowerCase() as "express" | "standard",
           weight: data.packageWeightKg,
         };
-        priceResponseData = await apiClient<DomesticPriceResponse>(`/domestic/price`, { 
+        priceResponseData = await apiClient<DomesticPriceResponse>(`/domestic/price`, {
           method: 'POST',
           body: JSON.stringify(domesticPayload),
         });
@@ -173,31 +193,36 @@ export function BookShipmentForm() {
           country: data.receiverAddressCountry,
           weight: data.packageWeightKg,
         };
-        priceResponseData = await apiClient<InternationalPriceResponse>(`/international/price`, { 
+        priceResponseData = await apiClient<InternationalPriceResponse>(`/international/price`, {
           method: 'POST',
           body: JSON.stringify(internationalPayload),
         });
         
         const intlResp = priceResponseData as InternationalPriceResponse;
-        if (intlResp.error) {
-             toast({ title: "Pricing Error", description: intlResp.error, variant: "destructive" });
-             setIsLoadingPricing(false);
-             return;
-        }
-        
         let rawPriceValue: string | number | undefined | null = null;
+
         if (intlResp.formatted_total && intlResp.formatted_total.trim() !== "") {
             rawPriceValue = intlResp.formatted_total;
         } else if (intlResp.total_price !== undefined && intlResp.total_price !== null) {
             rawPriceValue = intlResp.total_price;
         }
-
+        
         numericTotalPrice = parsePriceStringToNumber(rawPriceValue);
         
-        if (numericTotalPrice === null) {
-             toast({ title: "Pricing Error", description: "Invalid pricing data received for international shipment. Could not parse a valid number.", variant: "destructive" });
+        if (intlResp.error && numericTotalPrice === null) { // Only throw if error and price is still null
+             toast({ title: "Pricing Error", description: intlResp.error, variant: "destructive" });
              setIsLoadingPricing(false);
              return;
+        }
+        if (numericTotalPrice === null && intlResp.error) {
+             toast({ title: "Pricing Error", description: `Received error: ${intlResp.error}. Could not determine price.`, variant: "destructive" });
+             setIsLoadingPricing(false);
+             return;
+        }
+        if (numericTotalPrice === null) {
+            toast({ title: "Pricing Error", description: "Invalid pricing data received for international shipment. Could not parse a valid number.", variant: "destructive" });
+            setIsLoadingPricing(false);
+            return;
         }
       } else {
         throw new Error("Invalid shipment type selected.");
@@ -231,8 +256,13 @@ export function BookShipmentForm() {
     }
 
     const data = paymentStep.formData;
+    let effectiveServiceType = data.serviceType;
+    if (data.shipmentTypeOption === "International") {
+        effectiveServiceType = "Express";
+    }
 
-    const senderStreetCombined = data.senderAddressLine2 
+
+    const senderStreetCombined = data.senderAddressLine2
       ? `${data.senderAddressLine1}, ${data.senderAddressLine2}`
       : data.senderAddressLine1;
 
@@ -262,18 +292,21 @@ export function BookShipmentForm() {
         package_height_cm: data.packageHeightCm,
         package_length_cm: data.packageLengthCm,
         pickup_date: format(data.pickupDate, 'yyyy-MM-dd'),
-        service_type: data.serviceType,
-        final_total_price_with_tax: paymentStep.numericAmount, // Send the checkout price to backend
+        service_type: effectiveServiceType,
+        final_total_price_with_tax: paymentStep.numericAmount,
     };
-    
+
     try {
         const response = await addShipment(apiShipmentData);
-        setSubmissionStatus(response); 
-        
+        setSubmissionStatus(response);
+
         let displayTotalPaid = `Rs. ${paymentStep.numericAmount.toFixed(2)}`;
          if (response.data && typeof response.data.total_with_tax_18_percent === 'number') {
             displayTotalPaid = `Rs. ${response.data.total_with_tax_18_percent.toFixed(2)}`;
+        } else if (response.data && typeof (response.data as any).final_total_price_with_tax === 'number') {
+            displayTotalPaid = `Rs. ${((response.data as any).final_total_price_with_tax).toFixed(2)}`;
         }
+
 
         toast({
             title: "Shipment Booked!",
@@ -298,7 +331,7 @@ export function BookShipmentForm() {
         setUtr('');
         setUtrError(null);
     } catch (error: any) {
-        const errorMessage = error?.data?.error || error?.message || "Failed to book shipment.";
+        const errorMessage = error?.data?.error || error.message || "Failed to book shipment.";
         toast({
             title: "Booking Failed",
             description: errorMessage,
@@ -311,9 +344,12 @@ export function BookShipmentForm() {
     let displayAmountWithRs = 'N/A';
      if (submissionStatus.data?.total_with_tax_18_percent !== undefined && submissionStatus.data?.total_with_tax_18_percent !== null) {
         displayAmountWithRs = `Rs. ${Number(submissionStatus.data.total_with_tax_18_percent).toFixed(2)}`;
-    } else if (paymentStep.numericAmount !== null) { 
+    } else if ((submissionStatus.data as any)?.final_total_price_with_tax !== undefined && (submissionStatus.data as any)?.final_total_price_with_tax !== null) {
+        displayAmountWithRs = `Rs. ${Number((submissionStatus.data as any).final_total_price_with_tax).toFixed(2)}`;
+    } else if (paymentStep.numericAmount !== null) {
         displayAmountWithRs = `Rs. ${paymentStep.numericAmount.toFixed(2)}`;
     }
+
 
     return (
       <Alert className="border-green-500 bg-green-50 text-green-700">
@@ -337,7 +373,7 @@ export function BookShipmentForm() {
   }
 
   if (paymentStep.show && paymentStep.formData) {
-    const displayAmountForQRPage = paymentStep.amount; 
+    const displayAmountForQRPage = paymentStep.amount;
 
     return (
       <Card className="w-full max-w-md mx-auto shadow-xl">
@@ -362,7 +398,7 @@ export function BookShipmentForm() {
           </div>
           <div className="flex justify-center">
             <Image
-              src="/images/qr-code.png" 
+              src="/images/qr-code.png"
               alt="UPI QR Code for Payment"
               width={200}
               height={200}
@@ -378,9 +414,9 @@ export function BookShipmentForm() {
                 id="utrInput"
                 value={utr}
                 onChange={(e) => {
-                    const numericValue = e.target.value.replace(/\D/g, ''); 
-                    setUtr(numericValue.slice(0, 12)); 
-                    if (utrError) setUtrError(null); 
+                    const numericValue = e.target.value.replace(/\D/g, '');
+                    setUtr(numericValue.slice(0, 12));
+                    if (utrError) setUtrError(null);
                 }}
                 placeholder="Enter UTR from your payment app"
                 maxLength={12}
@@ -409,7 +445,7 @@ export function BookShipmentForm() {
             variant="outline"
             onClick={() => {
                 setPaymentStep({ ...paymentStep, show: false });
-                setUtr(''); 
+                setUtr('');
                 setUtrError(null);
             }}
             className="w-full"
@@ -585,7 +621,7 @@ export function BookShipmentForm() {
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
-                                disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1)) } // Disable past dates
+                                disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() -1)) }
                                 initialFocus
                               />
                             </PopoverContent>
@@ -599,13 +635,31 @@ export function BookShipmentForm() {
                 <section className="space-y-6 pt-6 border-t">
                   <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <Package className="h-5 w-5" /> Service </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField control={form.control} name="serviceType" render={({ field }) => (
+                    <FormField control={form.control} name="serviceType" render={({ field }) => {
+                       // Determine the actual value to be used by the Select component
+                       // Prioritize "Express" if international, otherwise use field value or default to "Standard"
+                       const currentFieldValue = field.value;
+                       let selectValueToShow: ServiceType;
+
+                       if (shipmentTypeOption === "International") {
+                         selectValueToShow = "Express";
+                       } else if (currentFieldValue === "Standard" || currentFieldValue === "Express") {
+                         selectValueToShow = currentFieldValue;
+                       } else {
+                         selectValueToShow = "Standard"; // Fallback default
+                       }
+
+                      return (
                         <FormItem> <FormLabel>Service Type</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value} disabled={shipmentTypeOption === "International"}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={selectValueToShow} // Use the derived value
+                            disabled={shipmentTypeOption === "International"}
+                          >
                             <FormControl><SelectTrigger><SelectValue placeholder="Select service type" /></SelectTrigger></FormControl>
-                            <SelectContent> 
-                                <SelectItem value="Standard">Standard</SelectItem> 
-                                <SelectItem value="Express">Express</SelectItem> 
+                            <SelectContent>
+                                <SelectItem value="Standard">Standard</SelectItem>
+                                <SelectItem value="Express">Express</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -615,12 +669,13 @@ export function BookShipmentForm() {
                             </p>
                           )}
                         </FormItem>
-                      )} />
+                      );
+                    }} />
                   </div>
                 </section>
 
                 <CardFooter className="p-0 pt-8">
-                  <Button type="submit" className="w-full md:w-auto text-lg py-3 px-8 bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting || isPricingLoading || isShipmentContextLoading}>
+                  <Button type="submit" className="w-full md:w-auto text-lg py-3 px-8 bg-primary hover:bg-primary/90" disabled={!shipmentTypeOption || form.formState.isSubmitting || isPricingLoading || isShipmentContextLoading}>
                     {(form.formState.isSubmitting || isPricingLoading || isShipmentContextLoading) ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</> : 'Proceed to Payment'}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
@@ -634,3 +689,5 @@ export function BookShipmentForm() {
   );
 }
 
+
+    
