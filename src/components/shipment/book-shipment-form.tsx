@@ -26,7 +26,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { indianStatesAndUTs } from '@/lib/indian-states';
 import { internationalCountryList } from '@/lib/country-list';
 import apiClient from '@/lib/api-client';
-import { API_BASE_URL } from '@/lib/constants';
 
 const shipmentFormSchema = z.object({
   shipmentTypeOption: z.enum(["Domestic", "International"], { required_error: "Please select shipment type." }),
@@ -145,7 +144,7 @@ export function BookShipmentForm() {
           mode: data.serviceType.toLowerCase() as "express" | "standard",
           weight: data.packageWeightKg,
         };
-        priceResponseData = await apiClient<DomesticPriceResponse>(`/domestic/price`, {
+        priceResponseData = await apiClient<DomesticPriceResponse>(`/domestic/price`, { // Pass only path
           method: 'POST',
           body: JSON.stringify(domesticPayload),
         });
@@ -163,7 +162,7 @@ export function BookShipmentForm() {
           country: data.receiverAddressCountry,
           weight: data.packageWeightKg,
         };
-        priceResponseData = await apiClient<InternationalPriceResponse>(`/international/price`, {
+        priceResponseData = await apiClient<InternationalPriceResponse>(`/international/price`, { // Pass only path
           method: 'POST',
           body: JSON.stringify(internationalPayload),
         });
