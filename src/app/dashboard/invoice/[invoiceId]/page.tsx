@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import type { Shipment, AddressDetail, DomesticPriceRequest, DomesticPriceResponse, InternationalPriceRequest, InternationalPriceResponse } from '@/lib/types'; 
+import type { Shipment, AddressDetail } from '@/lib/types'; 
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -48,19 +48,6 @@ const formatAddress = (address: AddressDetail | undefined) => {
   );
 };
 
-const parsePriceStringToNumber = (priceStr: string | number | undefined | null): number | null => {
-  if (typeof priceStr === 'number') {
-    return priceStr;
-  }
-  if (typeof priceStr === 'string') {
-    const numericString = priceStr.replace(/[^0-9.-]+/g, "");
-    const parsed = parseFloat(numericString);
-    return isNaN(parsed) ? null : parsed;
-  }
-  return null;
-};
-
-
 export default function InvoiceDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -71,13 +58,7 @@ export default function InvoiceDetailPage() {
 
   const [shipment, setShipment] = useState<Shipment | null | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingDisplayPrice, setIsLoadingDisplayPrice] = useState(false);
-  const [displayPrices, setDisplayPrices] = useState<{
-    subtotal: number | null;
-    tax: number | null;
-    grandTotal: number | null;
-  }>({ subtotal: null, tax: null, grandTotal: null });
-
+  
   useEffect(() => {
     if (shipment_id_str_param && shipment_id_str_param !== 'undefined' && shipment_id_str_param !== 'null') {
       const fetchShipmentForInvoice = async () => {
@@ -116,80 +97,6 @@ export default function InvoiceDetailPage() {
     }
   }, [shipment_id_str_param, toast, router, logoutUser]);
 
-  useEffect(() => {
-    if (shipment && shipment.shipment_id_str !== 'ERROR_INVALID_INPUT' && shipment.receiver_address_country) {
-      const calculateDisplayPrice = async () => {
-        setIsLoadingDisplayPrice(true);
-        try {
-          let numericTotalPrice: number | null = null;
-          const shipmentTypeOption = shipment.receiver_address_country.toLowerCase() === 'india' ? 'Domestic' : 'International';
-
-          if (shipmentTypeOption === 'Domestic') {
-            if (!shipment.receiver_address_state) {
-                throw new Error("Receiver state is missing for domestic price calculation.");
-            }
-            const domesticPayload: DomesticPriceRequest = {
-              state: shipment.receiver_address_state,
-              mode: shipment.service_type.toLowerCase() as "express" | "standard",
-              weight: shipment.package_weight_kg,
-            };
-            const priceResponseData = await apiClient<DomesticPriceResponse>(`/domestic/price`, {
-              method: 'POST',
-              body: JSON.stringify(domesticPayload),
-            });
-            if (priceResponseData.error) throw new Error(priceResponseData.error);
-            numericTotalPrice = parsePriceStringToNumber(priceResponseData.total_price);
-          } else { // International
-            if (!shipment.receiver_address_country) {
-                throw new Error("Receiver country is missing for international price calculation.");
-            }
-            const internationalPayload: InternationalPriceRequest = {
-              country: shipment.receiver_address_country,
-              weight: shipment.package_weight_kg,
-            };
-            const priceResponseData = await apiClient<InternationalPriceResponse>(`/international/price`, {
-              method: 'POST',
-              body: JSON.stringify(internationalPayload),
-            });
-            if (priceResponseData.error) throw new Error(priceResponseData.error);
-            
-            let rawPriceValue: string | number | undefined | null = null;
-            if (priceResponseData.formatted_total && priceResponseData.formatted_total.trim() !== "") {
-                rawPriceValue = priceResponseData.formatted_total;
-            } else if (priceResponseData.total_price !== undefined && priceResponseData.total_price !== null) {
-                rawPriceValue = priceResponseData.total_price;
-            }
-            numericTotalPrice = parsePriceStringToNumber(rawPriceValue);
-          }
-
-          if (numericTotalPrice !== null && numericTotalPrice > 0) {
-            const sub = numericTotalPrice / 1.18;
-            const tax = numericTotalPrice - sub;
-            setDisplayPrices({ subtotal: sub, tax: tax, grandTotal: numericTotalPrice });
-          } else {
-            throw new Error("Failed to calculate a valid positive price from pricing API.");
-          }
-        } catch (error: any) {
-          console.error("Error re-calculating price for invoice display:", error.message);
-          setDisplayPrices({
-            subtotal: shipment.price_without_tax,
-            tax: shipment.tax_amount_18_percent,
-            grandTotal: shipment.total_with_tax_18_percent,
-          });
-          toast({ title: "Price Display Notice", description: "Using stored invoice values. Could not re-verify price with current rates.", variant: "default" });
-        } finally {
-          setIsLoadingDisplayPrice(false);
-        }
-      };
-      calculateDisplayPrice();
-    } else if (shipment) { // Fallback for invalid shipment or missing country
-        setDisplayPrices({
-            subtotal: shipment.price_without_tax,
-            tax: shipment.tax_amount_18_percent,
-            grandTotal: shipment.total_with_tax_18_percent,
-        });
-    }
-  }, [shipment, toast]);
 
   const handlePrint = () => {
     window.print();
@@ -241,9 +148,10 @@ export default function InvoiceDetailPage() {
   const invoiceDate = isValid(parseISO(invoiceDateStr)) ? parseISO(invoiceDateStr) : new Date();
   const dueDate = invoiceDate; 
 
-  const subtotalToRender = displayPrices.subtotal !== null ? displayPrices.subtotal : shipment.price_without_tax;
-  const taxToRender = displayPrices.tax !== null ? displayPrices.tax : shipment.tax_amount_18_percent;
-  const grandTotalToRender = displayPrices.grandTotal !== null ? displayPrices.grandTotal : shipment.total_with_tax_18_percent;
+  // Use price details directly from the fetched shipment object
+  const subtotalToRender = shipment.price_without_tax;
+  const taxToRender = shipment.tax_amount_18_percent;
+  const grandTotalToRender = shipment.total_with_tax_18_percent;
 
 
   return (
@@ -281,7 +189,7 @@ export default function InvoiceDetailPage() {
               <div className="text-xs text-muted-foreground">
                 {formatAddress(senderAddress)}
               </div>
-              {(shipment.sender_phone && shipment.sender_phone.toLowerCase() !== 'n/a') &&
+              {(shipment.sender_phone && shipment.sender_phone.toLowerCase() !== 'n/a' && shipment.sender_phone.trim() !== '') &&
                 <p className="text-xs text-muted-foreground">Phone: {shipment.sender_phone}</p>
               }
             </div>
@@ -291,7 +199,7 @@ export default function InvoiceDetailPage() {
               <div className="text-xs text-muted-foreground">
                 {formatAddress(receiverAddress)}
               </div>
-              {(shipment.receiver_phone && shipment.receiver_phone.toLowerCase() !== 'n/a') &&
+              {(shipment.receiver_phone && shipment.receiver_phone.toLowerCase() !== 'n/a' && shipment.receiver_phone.trim() !== '') &&
                 <p className="text-xs text-muted-foreground">Phone: {shipment.receiver_phone}</p>
               }
             </div>
@@ -331,12 +239,6 @@ export default function InvoiceDetailPage() {
             </Table>
           </div>
           
-          {isLoadingDisplayPrice && displayPrices.grandTotal === null && (
-            <div className="flex items-center justify-end text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" /> Verifying price details...
-            </div>
-          )}
-
           <div className="flex justify-end">
             <div className="w-full md:w-1/2 lg:w-1/3 space-y-1">
               <div className="flex justify-between text-sm">

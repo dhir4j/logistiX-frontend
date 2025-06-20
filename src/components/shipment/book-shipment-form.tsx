@@ -43,7 +43,7 @@ const shipmentFormSchema = z.object({
   receiverAddressLine1: z.string().min(5, "Address Line 1 is required (min 5 chars)"),
   receiverAddressLine2: z.string().optional(),
   receiverAddressCity: z.string().min(2, "City is required"),
-  receiverAddressState: z.string().min(2, "State/Province is required"), // Required for backend
+  receiverAddressState: z.string().min(2, "State/Province is required"),
   receiverAddressPincode: z.string().regex(/^\d{3,10}$/, "Pincode/ZIP must be 3-10 digits"),
   receiverAddressCountry: z.string().min(2, "Country is required"),
   receiverPhone: z.string().regex(/^(\+?[1-9]\d{1,14})?$/, "Invalid phone number format"),
@@ -73,7 +73,7 @@ const parsePriceStringToNumber = (priceStr: string | number | undefined | null):
     return priceStr;
   }
   if (typeof priceStr === 'string') {
-    const numericString = priceStr.replace(/[^\d.-]/g, ""); // Allow decimal and negative
+    const numericString = priceStr.replace(/[^\d.-]/g, "");
     const parsed = parseFloat(numericString);
     return isNaN(parsed) ? null : parsed;
   }
@@ -191,15 +191,10 @@ export function BookShipmentForm() {
             rawPriceValue = intlResp.total_price;
         }
 
-        if (rawPriceValue === null || rawPriceValue === undefined) {
-            toast({ title: "Pricing Error", description: "Pricing information is missing for international shipment.", variant: "destructive" });
-            setIsLoadingPricing(false);
-            return;
-        }
         numericTotalPrice = parsePriceStringToNumber(rawPriceValue);
         
         if (numericTotalPrice === null) {
-             toast({ title: "Pricing Error", description: "Invalid pricing data received for international shipment.", variant: "destructive" });
+             toast({ title: "Pricing Error", description: "Invalid pricing data received for international shipment. Could not parse a valid number.", variant: "destructive" });
              setIsLoadingPricing(false);
              return;
         }
@@ -248,17 +243,17 @@ export function BookShipmentForm() {
         sender_name: data.senderName,
         sender_address_street: senderStreetCombined,
         sender_address_city: data.senderAddressCity,
-        sender_address_state: data.senderAddressState, // Assuming form collects this
+        sender_address_state: data.senderAddressState,
         sender_address_pincode: data.senderAddressPincode,
-        sender_address_country: data.senderAddressCountry, // Assuming form collects this
+        sender_address_country: data.senderAddressCountry,
         sender_phone: data.senderPhone,
 
         receiver_name: data.receiverName,
         receiver_address_street: receiverStreetCombined,
         receiver_address_city: data.receiverAddressCity,
-        receiver_address_state: data.receiverAddressState, // Assuming form collects this
+        receiver_address_state: data.receiverAddressState,
         receiver_address_pincode: data.receiverAddressPincode,
-        receiver_address_country: data.receiverAddressCountry, // Assuming form collects this
+        receiver_address_country: data.receiverAddressCountry,
         receiver_phone: data.receiverPhone,
 
         package_weight_kg: data.packageWeightKg,
@@ -267,6 +262,7 @@ export function BookShipmentForm() {
         package_length_cm: data.packageLengthCm,
         pickup_date: format(data.pickupDate, 'yyyy-MM-dd'),
         service_type: data.serviceType,
+        final_total_price_with_tax: paymentStep.numericAmount, // Send the checkout price to backend
     };
     
     try {
@@ -325,7 +321,7 @@ export function BookShipmentForm() {
         <AlertDescription>
           <p>{submissionStatus.message}</p>
           <p>Shipment ID: <strong>{submissionStatus.shipment_id_str}</strong></p>
-          <p>Total Paid (as per QR page): {displayAmountWithRs}</p>
+          <p>Total Paid: {displayAmountWithRs}</p>
           <div className="mt-4 space-y-2 sm:space-y-0 sm:flex sm:space-x-2">
             <Button onClick={() => { setSubmissionStatus(null); form.setValue("shipmentTypeOption", undefined);}} className="w-full sm:w-auto" variant="outline">
               Book Another Shipment
@@ -497,7 +493,7 @@ export function BookShipmentForm() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={form.control} name="senderAddressPincode" render={({ field }) => ( <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input placeholder="400001" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                     <FormField control={form.control} name="senderAddressCountry" render={({ field }) => ( <FormItem><FormLabel>Country</FormLabel><FormControl><Input placeholder="India" {...field} disabled={true} /></FormControl><FormMessage /></FormItem> )} />
+                     <FormField control={form.control} name="senderAddressCountry" render={({ field }) => ( <FormItem><FormLabel>Country</FormLabel><FormControl><Input placeholder="India" {...field} defaultValue="India" disabled={true} /></FormControl><FormMessage /></FormItem> )} />
                   </div>
                   <FormField control={form.control} name="senderPhone" render={({ field }) => ( <FormItem><FormLabel>Sender Phone</FormLabel><FormControl><Input type="tel" placeholder="+919876543210" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </section>
@@ -541,7 +537,7 @@ export function BookShipmentForm() {
                                 </SelectContent>
                             </Select>
                             ) : (
-                            <Input placeholder="India" {...field} disabled={true} />
+                            <Input placeholder="India" {...field} defaultValue="India" disabled={true} />
                           )}
                           <FormMessage />
                         </FormItem>

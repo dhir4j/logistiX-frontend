@@ -211,10 +211,10 @@ export interface InternationalPriceResponse {
 export type PriceApiResponse = DomesticPriceResponse | InternationalPriceResponse;
 
 // Payload for creating a shipment (POST /api/shipments)
-// Matches the new backend specification.
+// Matches the backend specification from the user.
 export interface AddShipmentPayload {
     sender_name: string;
-    sender_address_street: string; // Combined from line1 and line2
+    sender_address_street: string;
     sender_address_city: string;
     sender_address_state: string;
     sender_address_pincode: string;
@@ -222,7 +222,7 @@ export interface AddShipmentPayload {
     sender_phone: string;
 
     receiver_name: string;
-    receiver_address_street: string; // Combined from line1 and line2
+    receiver_address_street: string;
     receiver_address_city: string;
     receiver_address_state: string;
     receiver_address_pincode: string;
@@ -236,4 +236,5 @@ export interface AddShipmentPayload {
     pickup_date: string; // Formatted as "yyyy-MM-dd"
     service_type: ServiceType; // "Express" or "Standard"
     user_id?: number; // Optional
+    final_total_price_with_tax?: number; // Optional: GST-inclusive total from checkout
 }
