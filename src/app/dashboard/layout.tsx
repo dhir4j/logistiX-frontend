@@ -218,17 +218,21 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <AppSidebar />
+        <div className="print:hidden"> {/* Hide sidebar for printing */}
+          <AppSidebar />
+        </div>
         <div className="flex flex-1 flex-col"> 
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
-             <div className="flex items-center gap-2">
-               <MobileSidebar />
-               <h1 className="text-xl font-headline font-semibold hidden md:block">{pageTitle}</h1>
-             </div>
-            <UserNav />
-          </header>
-          <SidebarInset className="flex-1"> 
-            <main className="flex-1 p-4 md:p-6 lg:p-8"> 
+          <div className="print:hidden"> {/* Hide header for printing */}
+            <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
+              <div className="flex items-center gap-2">
+                <MobileSidebar />
+                <h1 className="text-xl font-headline font-semibold hidden md:block">{pageTitle}</h1>
+              </div>
+              <UserNav />
+            </header>
+          </div>
+          <SidebarInset className="flex-1 print:m-0 print:p-0"> 
+            <main className="flex-1 p-4 md:p-6 lg:p-8 print:p-0 print:m-0"> 
               {children}
             </main>
           </SidebarInset>
