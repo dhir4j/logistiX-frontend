@@ -29,15 +29,13 @@ export interface TrackingStep {
   status?: "completed" | "current" | "pending"; // Frontend-only enrichment for UI
 }
 
-// This interface represents the structure of shipment data as returned by your API.
-// API fields are expected to be snake_case.
-// Frontend components will often use a camelCase version, handled by mapping functions.
+// This interface represents the structure of shipment data.
+// API fields are snake_case. Frontend uses camelCase internally via mapping.
 export interface Shipment {
-  // Fields expected directly from API (snake_case)
-  id: number; 
+  // Snake_case fields from API
+  id: number;
   user_id?: number;
-  shipment_id_str: string; // CRITICAL: This is the key identifier from the API
-
+  shipment_id_str: string;
   sender_name: string;
   sender_address_street: string;
   sender_address_city: string;
@@ -45,7 +43,6 @@ export interface Shipment {
   sender_address_pincode: string;
   sender_address_country: string;
   sender_phone: string;
-
   receiver_name: string;
   receiver_address_street: string;
   receiver_address_city: string;
@@ -53,30 +50,23 @@ export interface Shipment {
   receiver_address_pincode: string;
   receiver_address_country: string;
   receiver_phone: string;
-
   package_weight_kg: number;
   package_width_cm: number;
   package_height_cm: number;
   package_length_cm: number;
-
-  pickup_date: string; // YYYY-MM-DD string
+  pickup_date: string;
   service_type: ServiceType;
-  booking_date: string; // ISO8601 Timestamp string from API
+  booking_date: string;
   status: TrackingStage;
-
   price_without_tax: number;
   tax_amount_18_percent: number;
   total_with_tax_18_percent: number;
-
   tracking_history: TrackingStep[];
-  last_updated_at?: string; // ISO8601 Timestamp string from API
-  
-  // Frontend camelCase representation (populated by mapping)
-  // These are primarily for convenience in frontend components if preferred.
-  // The direct snake_case fields above are what the API provides.
-  userId?: number;
-  shipmentIdStr: string; // This will hold the value of shipment_id_str
+  last_updated_at?: string;
 
+  // Frontend camelCase representation (populated by mapping)
+  userId?: number;
+  shipmentIdStr: string; 
   senderName: string;
   senderAddressStreet: string;
   senderAddressCity: string;
@@ -84,7 +74,6 @@ export interface Shipment {
   senderAddressPincode: string;
   senderAddressCountry: string;
   senderPhone: string;
-
   receiverName: string;
   receiverAddressStreet: string;
   receiverAddressCity: string;
@@ -92,27 +81,22 @@ export interface Shipment {
   receiverAddressPincode: string;
   receiverAddressCountry: string;
   receiverPhone: string;
-
   packageWeightKg: number;
   packageWidthCm: number;
   packageHeightCm: number;
   packageLengthCm: number;
-
-  pickupDate: string; // YYYY-MM-DD string
+  pickupDate: string; 
   serviceType: ServiceType;
-  bookingDate: string; // ISO8601 Timestamp string
-  // status is already camelCase (TrackingStage)
-
+  bookingDate: string; 
   priceWithoutTax: number;
   taxAmount18Percent: number;
   totalWithTax18Percent: number;
-  
-  // trackingHistory is already an array of TrackingStep
+  trackingHistory: TrackingStep[];
+  lastUpdatedAt?: string;
 
-  // Admin table helper fields (populated client-side if needed, or derived from above)
-  customerName?: string; // Typically sender_name
-  orderNumber?: string;  // Typically shipment_id_str
-  description?: string;  // Derived
+  customerName?: string; 
+  orderNumber?: string;  
+  description?: string;  
 }
 
 
@@ -121,31 +105,39 @@ export interface LoginResponse {
   user: User; 
 }
 
-// API response for creating shipment
+// API response for creating shipment (snake_case)
 export interface CreateShipmentResponse {
     shipment_id_str: string; 
     message: string;
     data: Shipment; // Full shipment object as created on backend (snake_case)
 }
 
-// API response for admin listing shipments
+// API response for admin listing shipments (snake_case)
 export interface AdminShipmentsResponse {
-    shipments: Shipment[]; // Array of full shipment objects (snake_case)
+    shipments: Shipment[]; 
     totalPages: number;
     currentPage: number;
     totalCount: number;
 }
 
-// API response for updating shipment status
+// API response for updating shipment status (snake_case)
 export interface UpdateShipmentStatusResponse {
     message: string;
-    updatedShipment: Shipment; // Full updated shipment object (snake_case)
+    updatedShipment: Shipment; 
+}
+
+// API response for web analytics (snake_case)
+export interface WebAnalyticsResponse {
+  total_orders: number;
+  total_revenue: number;
+  avg_revenue: number;
+  total_users: number;
 }
 
 // For frontend display, derived from Shipment data
 export interface DisplayInvoice {
-  id: string; // Will be shipment_id_str
-  shipmentIdStr: string; // Explicitly shipment_id_str
+  id: string; 
+  shipmentIdStr: string; 
   invoiceDate: Date; 
   dueDate: Date; 
 
@@ -166,10 +158,10 @@ export interface DisplayInvoice {
     total: number; 
   }>;
   subtotal: number; 
-  taxRate: number; // Always 0.18
+  taxRate: number; 
   taxAmount: number; 
   grandTotal: number; 
-  status: "Paid" | "Pending"; // Client-side logic, assuming "Paid" after successful booking
+  status: "Paid" | "Pending"; 
   serviceType: ServiceType;
   packageWeight: number;
 }

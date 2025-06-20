@@ -1,78 +1,152 @@
 
 "use client";
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"; // Added CardContent
-// Icons for stats removed as stats are simplified/removed
-// import { Package, DollarSign, Users, Truck, CheckCircle, Clock } from "lucide-react";
-// Chart components removed as chart is removed
-// import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Legend as RechartsLegend, Tooltip as RechartsTooltip } from 'recharts';
-// import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-// Badge and other table components are now primarily in AdminOrdersTable
-// import { Badge } from "@/components/ui/badge";
-// import { cn } from "@/lib/utils";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Package, DollarSign, Users, IndianRupee, TrendingUp, Loader2 } from "lucide-react";
 import { AdminOrdersTable } from './admin-orders-table';
-// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; // Not needed here anymore
+import apiClient from '@/lib/api-client';
+import type { WebAnalyticsResponse } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
-// Dummy data for charts and recent shipments removed as we are using AdminOrdersTable for all orders
-// const shipmentsData = [...];
-// const recentShipments = [...];
-// const statusColors = {...};
+interface AdminAnalyticsData {
+  total_orders: number | null;
+  total_revenue: number | null;
+  avg_revenue: number | null;
+  total_users: number | null;
+}
 
 export function AdminDashboardContent() {
-  // Aggregated stats are removed as the API doesn't provide them directly.
-  // const totalShipments = 0; 
-  // const totalRevenue = 0;
-  // const activeUsers = 0; 
-  // const shipmentsInTransit = 0;
+  const [analyticsData, setAnalyticsData] = useState<AdminAnalyticsData>({
+    total_orders: null,
+    total_revenue: null,
+    avg_revenue: null,
+    total_users: null,
+  });
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(true);
+  const { toast } = useToast();
+  const { user, isAuthenticated, logoutUser } = useAuth();
+  const router = useRouter();
+  
+  const handleApiError = useCallback((error: any, operation: string) => {
+    console.error(`API error during ${operation}:`, error);
+    const errorMessage = error?.data?.error || error.message || "An unexpected error occurred.";
+    if (error.status === 422) {
+        toast({
+            title: "Authentication Issue",
+            description: "Your session may have expired or is invalid. Please log in again.",
+            variant: "destructive",
+        });
+        logoutUser();
+        router.replace('/login');
+    } else {
+        toast({
+          title: `Error ${operation}`,
+          description: errorMessage,
+          variant: "destructive",
+        });
+    }
+  }, [toast, logoutUser, router]);
+
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      if (!isAuthenticated || !user?.isAdmin) {
+        setIsLoadingAnalytics(false);
+        return;
+      }
+      setIsLoadingAnalytics(true);
+      try {
+        const data = await apiClient<WebAnalyticsResponse>('/api/admin/web_analytics');
+        setAnalyticsData({
+          total_orders: data.total_orders,
+          total_revenue: data.total_revenue,
+          avg_revenue: data.avg_revenue,
+          total_users: data.total_users,
+        });
+      } catch (error: any) {
+        handleApiError(error, 'fetching web analytics');
+        setAnalyticsData({ total_orders: null, total_revenue: null, avg_revenue: null, total_users: null });
+      } finally {
+        setIsLoadingAnalytics(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, [isAuthenticated, user?.isAdmin, handleApiError]);
+
+  const formatCurrency = (amount: number | null) => {
+    if (amount === null || isNaN(amount)) return 'N/A';
+    return amount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  
+  const formatNumber = (num: number | null) => {
+    if (num === null || isNaN(num)) return 'N/A';
+    return num.toLocaleString('en-IN');
+  }
 
   return (
     <div className="space-y-6">
-      {/* Simplified Stats - these would ideally come from a dedicated stats API endpoint */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            {/* <Package className="h-5 w-5 text-primary" /> */}
+            <Package className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">View Below</div>
-            <p className="text-xs text-muted-foreground">See full list in table</p>
+            {isLoadingAnalytics ? (
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            ) : (
+              <div className="text-2xl font-bold">{formatNumber(analyticsData.total_orders)}</div>
+            )}
+            <p className="text-xs text-muted-foreground">All processed orders</p>
           </CardContent>
         </Card>
         <Card className="shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue Overview</CardTitle>
-            {/* <DollarSign className="h-5 w-5 text-primary" /> */}
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <DollarSign className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Tracked per Order</div>
-            <p className="text-xs text-muted-foreground">Details in table below</p>
+            {isLoadingAnalytics ? (
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            ) : (
+              <div className="text-2xl font-bold">{formatCurrency(analyticsData.total_revenue)}</div>
+            )}
+            <p className="text-xs text-muted-foreground">Gross revenue generated</p>
           </CardContent>
         </Card>
-        {/* Additional simplified cards or remove them if not applicable without API data */}
          <Card className="shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">User Management</CardTitle>
-            {/* <Users className="h-5 w-5 text-primary" /> */}
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">N/A</div>
-            <p className="text-xs text-muted-foreground">(Feature for future)</p>
+             {isLoadingAnalytics ? (
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            ) : (
+              <div className="text-2xl font-bold">{formatNumber(analyticsData.total_users)}</div>
+            )}
+            <p className="text-xs text-muted-foreground">Registered users</p>
           </CardContent>
         </Card>
         <Card className="shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Logistics Overview</CardTitle>
-            {/* <Truck className="h-5 w-5 text-primary" /> */}
+            <CardTitle className="text-sm font-medium">Avg. Revenue/Order</CardTitle>
+            <TrendingUp className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">By Status</div>
-            <p className="text-xs text-muted-foreground">Filter in table below</p>
+            {isLoadingAnalytics ? (
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            ) : (
+             <div className="text-2xl font-bold">{formatCurrency(analyticsData.avg_revenue)}</div>
+            )}
+            <p className="text-xs text-muted-foreground">Average order value</p>
           </CardContent>
         </Card>
       </div>
-
-      {/* Charts and Recent Shipments table are removed, AdminOrdersTable will be the main component */}
       
       <AdminOrdersTable />
     </div>
