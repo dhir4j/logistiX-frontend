@@ -24,6 +24,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth'; 
 import { indianStatesAndUTs } from '@/lib/indian-states';
+import { internationalCountryList } from '@/lib/country-list';
 import apiClient from '@/lib/api-client';
 
 // Adjusted schema: some fields made optional, will be validated conditionally or by API.
@@ -42,7 +43,7 @@ const shipmentFormSchema = z.object({
   receiverAddressStreet: z.string().min(5, "Street address is required (min 5 chars)"),
   receiverAddressCity: z.string().min(2, "City is required"),
   receiverAddressState: z.string().optional(), // Optional for international, required for domestic
-  receiverAddressPincode: z.string().regex(/^\d{5,6}$/, "Pincode/ZIP must be 5 or 6 digits"), // Adjusted for ZIP
+  receiverAddressPincode: z.string().regex(/^\d{3,10}$/, "Pincode/ZIP must be 3-10 digits"), // Adjusted for ZIP and international
   receiverAddressCountry: z.string().min(2, "Country is required"), // Required for International
   receiverPhone: z.string().regex(/^(\+?[1-9]\d{1,14})?$/, "Invalid phone number format"), // More generic for intl.
 
@@ -107,12 +108,16 @@ export function BookShipmentForm() {
     form.resetField("receiverAddressState");
     form.resetField("receiverAddressCountry");
     form.resetField("serviceType");
+    form.clearErrors(["receiverAddressState", "receiverAddressCountry", "serviceType"]); // Clear potential errors
+
     if (shipmentTypeOption === "Domestic") {
       form.setValue("receiverAddressCountry", "India");
       form.setValue("serviceType", "Standard");
+      form.setValue("receiverAddressPincode", ""); // Clear pincode for domestic entry
     } else if (shipmentTypeOption === "International") {
       form.setValue("serviceType", "Express"); // International is always Express
       form.setValue("receiverAddressCountry", ""); // Clear for user input
+      form.setValue("receiverAddressPincode", ""); // Clear pincode for international entry
     }
   }, [shipmentTypeOption, form]);
 
@@ -213,18 +218,10 @@ export function BookShipmentForm() {
         
         pickup_date: formattedPickupDate,
         service_type: data.shipmentTypeOption === "Domestic" ? (data.serviceType as ServiceType) : "Express", // Intl is Express
-
-        // Price details from the pricing API response, if your booking API needs them
-        // Assuming your POST /api/shipments calculates final price itself or takes it.
-        // For now, I am assuming the booking API recalculates or verifies price.
-        // If you need to pass price from frontend, add fields like:
-        // price_without_tax: (paymentStep.priceResponse as any).price_without_tax_from_api,
-        // tax_amount_18_percent: (paymentStep.priceResponse as any).tax_from_api,
-        // total_with_tax_18_percent: (paymentStep.priceResponse as any).total_price_from_api,
     };
 
     try {
-        const response = await addShipment(apiShipmentData as any); // Cast if price fields are missing
+        const response = await addShipment(apiShipmentData as any); 
         setSubmissionStatus(response); 
         toast({
             title: "Shipment Booked!",
@@ -294,7 +291,6 @@ export function BookShipmentForm() {
           <div>
             <p className="text-muted-foreground">Amount to Pay:</p>
             <p className="text-3xl font-bold text-primary flex items-center justify-center">
-              {/* Directly use the formatted string from API or default to ₹ */}
               {paymentStep.amount.includes("₹") ? paymentStep.amount : `₹${paymentStep.amount}`}
             </p>
             {paymentStep.shipmentType === "International" && (paymentStep.priceResponse as InternationalPriceResponse)?.zone && (
@@ -422,19 +418,22 @@ export function BookShipmentForm() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={form.control} name="receiverAddressPincode" render={({ field }) => ( <FormItem><FormLabel>Pincode / ZIP Code</FormLabel><FormControl><Input placeholder="110001 or 90210" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField
-                        control={form.control}
-                        name="receiverAddressCountry"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Country</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Receiver Country" {...field} disabled={shipmentTypeOption === "Domestic"} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    {shipmentTypeOption === "International" ? (
+                       <FormField control={form.control} name="receiverAddressCountry" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Country</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select Country" /></SelectTrigger></FormControl>
+                            <SelectContent>
+                              {internationalCountryList.map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    ) : (
+                       <FormField control={form.control} name="receiverAddressCountry" render={({ field }) => ( <FormItem><FormLabel>Country</FormLabel><FormControl><Input placeholder="India" {...field} disabled={true} /></FormControl><FormMessage /></FormItem> )} />
+                    )}
                   </div>
                   <FormField control={form.control} name="receiverPhone" render={({ field }) => ( <FormItem><FormLabel>Receiver Phone</FormLabel><FormControl><Input type="tel" placeholder="+1234567890" {...field} /></FormControl><FormMessage /></FormItem> )} />
                 </section>
@@ -505,3 +504,4 @@ export function BookShipmentForm() {
     </Card>
   );
 }
+
