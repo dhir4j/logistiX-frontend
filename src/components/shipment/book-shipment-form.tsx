@@ -59,19 +59,19 @@ type ShipmentFormValues = z.infer<typeof shipmentFormSchema>;
 
 interface PaymentStepData {
   show: boolean;
-  amount: string; // Formatted string for display, e.g., "Rs. 1500.00"
-  numericAmount: number; // Numeric GST-inclusive total price
+  amount: string; 
+  numericAmount: number | null; // Allow null if parsing fails
   priceResponse: PriceApiResponse | null;
   formData: ShipmentFormValues | null;
   shipmentType: ShipmentTypeOption | null;
 }
 
-const parsePriceStringToNumber = (priceStr: string | number | undefined): number | null => {
+const parsePriceStringToNumber = (priceStr: string | number | undefined | null): number | null => {
   if (typeof priceStr === 'number') {
     return priceStr;
   }
   if (typeof priceStr === 'string') {
-    const numericString = priceStr.replace(/[^0-9.-]+/g, ""); // Remove currency symbols, commas, etc.
+    const numericString = priceStr.replace(/[^0-9.-]+/g, ""); 
     const parsed = parseFloat(numericString);
     return isNaN(parsed) ? null : parsed;
   }
@@ -81,7 +81,7 @@ const parsePriceStringToNumber = (priceStr: string | number | undefined): number
 
 export function BookShipmentForm() {
   const [submissionStatus, setSubmissionStatus] = useState<CreateShipmentResponse | null>(null);
-  const [paymentStep, setPaymentStep] = useState<PaymentStepData>({ show: false, amount: "0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
+  const [paymentStep, setPaymentStep] = useState<PaymentStepData>({ show: false, amount: "Rs. 0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
   const { addShipment, isLoading: isShipmentContextLoading } = useShipments();
   const [isPricingLoading, setIsLoadingPricing] = useState(false);
   const [utr, setUtr] = useState<string>('');
@@ -135,13 +135,12 @@ export function BookShipmentForm() {
 
   const onSubmitToPayment = async (data: ShipmentFormValues) => {
     setIsLoadingPricing(true);
-    setPaymentStep({ show: false, amount: "0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
+    setPaymentStep({ show: false, amount: "Rs. 0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
+    let numericTotalPrice: number | null = null;
+    let displayAmountForQR = "Rs. 0.00";
+    let priceResponseData: PriceApiResponse;
 
     try {
-      let priceResponseData: PriceApiResponse;
-      let numericTotalPrice: number | null = null;
-      let displayAmountForQR = "Rs. 0.00";
-
       if (data.shipmentTypeOption === "Domestic") {
         if (!data.receiverAddressState) {
           form.setError("receiverAddressState", { type: "manual", message: "Receiver state is required for domestic."});
@@ -192,11 +191,20 @@ export function BookShipmentForm() {
             return;
         }
         
+        let rawPriceValue: string | number | undefined | null = null;
         if (intlResp.formatted_total && intlResp.formatted_total.trim() !== "") {
-            numericTotalPrice = parsePriceStringToNumber(intlResp.formatted_total);
-        } else { // Fallback to total_price if formatted_total is missing
-            numericTotalPrice = parsePriceStringToNumber(intlResp.total_price);
+            rawPriceValue = intlResp.formatted_total;
+        } else if (intlResp.total_price !== undefined && intlResp.total_price !== null) {
+            rawPriceValue = intlResp.total_price;
         }
+
+        if (rawPriceValue === null || rawPriceValue === undefined) {
+            toast({ title: "Pricing Error", description: "Pricing information is missing for international shipment.", variant: "destructive" });
+            setIsLoadingPricing(false);
+            return;
+        }
+        numericTotalPrice = parsePriceStringToNumber(rawPriceValue);
+
       } else {
         throw new Error("Invalid shipment type selected.");
       }
@@ -223,8 +231,8 @@ export function BookShipmentForm() {
   };
 
   const handleConfirmPaymentAndBook = async () => {
-    if (!paymentStep.formData || !paymentStep.shipmentType || !paymentStep.priceResponse || paymentStep.numericAmount <= 0) {
-        toast({ title: "Booking Error", description: "Invalid payment data. Please try again.", variant: "destructive" });
+    if (!paymentStep.formData || !paymentStep.shipmentType || !paymentStep.priceResponse || paymentStep.numericAmount === null || paymentStep.numericAmount <= 0) {
+        toast({ title: "Booking Error", description: "Invalid payment data or price (amount is null or zero). Please try calculating price again.", variant: "destructive" });
         return;
     }
 
@@ -243,7 +251,7 @@ export function BookShipmentForm() {
         receiver_name: data.receiverName,
         receiver_address_street: data.receiverAddressStreet,
         receiver_address_city: data.receiverAddressCity,
-        receiver_address_state: data.shipmentTypeOption === "Domestic" ? data.receiverAddressState || "" : data.receiverAddressState || "", // Ensure state is string
+        receiver_address_state: data.shipmentTypeOption === "Domestic" ? data.receiverAddressState || "" : data.receiverAddressState || "", 
         receiver_address_pincode: data.receiverAddressPincode,
         receiver_address_country: data.shipmentTypeOption === "Domestic" ? "India" : data.receiverAddressCountry,
         receiver_phone: data.receiverPhone,
@@ -254,27 +262,32 @@ export function BookShipmentForm() {
         package_length_cm: data.packageLengthCm,
 
         pickup_date: formattedPickupDate,
-        service_type: data.shipmentTypeOption === "Domestic" ? (data.serviceType as ServiceType) : "Express", // serviceType should be present
-        final_total_price_with_tax: paymentStep.numericAmount, // Send the GST-inclusive total
+        service_type: "Standard", // Default, will be overridden below
+        final_total_price_with_tax: paymentStep.numericAmount, 
     };
-
-    try {
-        // Ensure service_type is correctly assigned for domestic, default to Express for international
-        if (data.shipmentTypeOption === "Domestic" && !data.serviceType) {
+    
+    if (data.shipmentTypeOption === "Domestic") {
+        if (!data.serviceType) {
             toast({ title: "Booking Error", description: "Service type is missing for domestic shipment.", variant: "destructive" });
             return;
         }
-        apiShipmentData.service_type = data.shipmentTypeOption === "Domestic" ? data.serviceType! : "Express";
+        apiShipmentData.service_type = data.serviceType;
+    } else { // International
+        apiShipmentData.service_type = "Express"; // International defaults to Express
+    }
 
 
+    try {
         const response = await addShipment(apiShipmentData);
         setSubmissionStatus(response); 
         
-        let displayTotalPaid = 'N/A';
-        // The response.data.total_with_tax_18_percent should now reflect the final_total_price_with_tax if backend is updated
+        let displayTotalPaid = 'Rs. 0.00';
         if (response.data && typeof response.data.total_with_tax_18_percent === 'number') {
             displayTotalPaid = `Rs. ${response.data.total_with_tax_18_percent.toFixed(2)}`;
+        } else if (paymentStep.numericAmount !== null) {
+             displayTotalPaid = `Rs. ${paymentStep.numericAmount.toFixed(2)}`;
         }
+
 
         toast({
             title: "Shipment Booked!",
@@ -294,7 +307,7 @@ export function BookShipmentForm() {
             packageLengthCm: 10,
             pickupDate: new Date(new Date().setDate(new Date().getDate() + 1))
         });
-        setPaymentStep({ show: false, amount: "0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
+        setPaymentStep({ show: false, amount: "Rs. 0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
         setUtr('');
         setUtrError(null);
     } catch (error: any) {
@@ -308,11 +321,13 @@ export function BookShipmentForm() {
   };
 
   if (submissionStatus) {
-    const totalPaid = submissionStatus.data?.total_with_tax_18_percent;
     let displayAmountWithRs = 'N/A';
-    if (typeof totalPaid === 'number') {
-        displayAmountWithRs = `Rs. ${totalPaid.toFixed(2)}`;
+     if (submissionStatus.data?.total_with_tax_18_percent !== undefined && submissionStatus.data?.total_with_tax_18_percent !== null) {
+        displayAmountWithRs = `Rs. ${Number(submissionStatus.data.total_with_tax_18_percent).toFixed(2)}`;
+    } else if (paymentStep.numericAmount !== null) { // Fallback to numericAmount used for booking if API doesn't return precise total
+        displayAmountWithRs = `Rs. ${paymentStep.numericAmount.toFixed(2)}`;
     }
+
 
     return (
       <Alert className="border-green-500 bg-green-50 text-green-700">
@@ -336,7 +351,6 @@ export function BookShipmentForm() {
   }
 
   if (paymentStep.show && paymentStep.formData) {
-    // paymentStep.amount already contains "Rs. XXX.XX"
     const displayAmountForQRPage = paymentStep.amount; 
 
     return (
@@ -598,3 +612,4 @@ export function BookShipmentForm() {
     </Card>
   );
 }
+
