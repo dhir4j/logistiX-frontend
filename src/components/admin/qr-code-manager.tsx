@@ -11,26 +11,25 @@ import { UploadCloud, CheckCircle, AlertTriangle, Image as ImageIcon, Loader2 } 
 import { API_BASE_URL } from '@/lib/constants';
 
 export function QrCodeManager() {
-  // For display, use a relative path to the API endpoint. Cache buster will be appended.
-  const qrCodeDisplayBasePath = "/api/admin/qr_code";
-  const [currentQrUrl, setCurrentQrUrl] = useState<string | null>(qrCodeDisplayBasePath);
+  const qrCodeEndpointPath = "/api/admin/qr_code";
+  const [currentQrUrl, setCurrentQrUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewSrc, setPreviewSrc] = useState<string | null>(null); // For local file preview before upload
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasUploadedQr, setHasUploadedQr] = useState(false); // To track if an initial QR exists
+  const [hasUploadedQr, setHasUploadedQr] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchCurrentQrStatus = async () => {
     try {
-      // Use a cache-busting query to check the current QR code
-      const response = await fetch(`${qrCodeDisplayBasePath}?t=${new Date().getTime()}`);
+      const fullQrUrl = `${API_BASE_URL}${qrCodeEndpointPath}`;
+      const response = await fetch(`${fullQrUrl}?t=${new Date().getTime()}`);
       if (response.ok && response.headers.get('content-type')?.startsWith('image/')) {
-        setCurrentQrUrl(`${qrCodeDisplayBasePath}?t=${new Date().getTime()}`);
+        setCurrentQrUrl(`${fullQrUrl}?t=${new Date().getTime()}`);
         setHasUploadedQr(true);
       } else {
         setHasUploadedQr(false);
-        setCurrentQrUrl(null); 
+        setCurrentQrUrl(null);
       }
     } catch (error) {
       console.error("Error checking for existing QR code:", error);
@@ -79,33 +78,29 @@ export function QrCodeManager() {
     formData.append('qr_code', selectedFile);
 
     try {
-      // For upload, use the full API_BASE_URL
-      const response = await fetch(`${API_BASE_URL}/api/admin/qr_code`, {
+      const response = await fetch(`${API_BASE_URL}${qrCodeEndpointPath}`, {
         method: 'POST',
         body: formData,
-        // Do not set Content-Type for FormData; browser handles it
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: "Upload failed with non-JSON error response." }));
+        const errorData = await response.json().catch(() => ({ message: `Upload failed. Server responded with ${response.status}.` }));
         throw new Error(errorData.message || `Failed to upload QR code. Status: ${response.status}`);
       }
-      
-      // Assuming backend sends a JSON success message, though it might not be strictly necessary to parse
-      // await response.json(); 
       
       toast({
         title: "Upload Successful",
         description: "QR code has been uploaded.",
         variant: "default",
       });
-      // Refresh the displayed QR code by updating its URL with a cache buster
-      setCurrentQrUrl(`${qrCodeDisplayBasePath}?t=${new Date().getTime()}`);
+      
+      // Refresh the displayed QR code by updating its URL with a cache buster, using the full path
+      setCurrentQrUrl(`${API_BASE_URL}${qrCodeEndpointPath}?t=${new Date().getTime()}`);
       setHasUploadedQr(true);
       setSelectedFile(null);
       setPreviewSrc(null);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Clear the file input
+        fileInputRef.current.value = ""; 
       }
     } catch (error: any) {
       toast({
@@ -132,17 +127,16 @@ export function QrCodeManager() {
           <div className="border rounded-md p-4 flex justify-center items-center min-h-[200px] bg-muted/30">
             {hasUploadedQr && currentQrUrl ? (
               <Image
-                key={currentQrUrl} // Force re-render if URL (with cache-buster) changes
+                key={currentQrUrl} 
                 src={currentQrUrl}
                 alt="Current Payment QR Code"
                 width={180}
                 height={180}
                 className="object-contain rounded-md border"
-                unoptimized // Useful if the image content changes frequently at the same URL root
+                unoptimized 
                 onError={() => {
                   setHasUploadedQr(false); 
                   setCurrentQrUrl(null);
-                  // Don't toast here again if fetchCurrentQrStatus already determined no QR
                 }}
               />
             ) : (
@@ -190,4 +184,3 @@ export function QrCodeManager() {
     </Card>
   );
 }
-
