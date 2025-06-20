@@ -137,7 +137,12 @@ export function LoginForm() {
             Sign Up
           </Link>
         </p>
-         {/* Link to admin login can be removed if admin logs in via same form and is redirected */}
+        <p className="text-muted-foreground text-xs">
+          Are you an administrator?{' '}
+          <Link href="/admin/login" className="font-semibold text-primary hover:underline">
+            Admin Login
+          </Link>
+        </p>
       </CardFooter>
     </Card>
   );
