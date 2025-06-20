@@ -73,7 +73,8 @@ const parsePriceStringToNumber = (priceStr: string | number | undefined | null):
     return priceStr;
   }
   if (typeof priceStr === 'string') {
-    const numericString = priceStr.replace(/[^\d.-]/g, "");
+    // Remove currency symbols, commas, and any non-numeric characters except for the decimal point and minus sign
+    const numericString = priceStr.replace(/[^0-9.-]+/g,"");
     const parsed = parseFloat(numericString);
     return isNaN(parsed) ? null : parsed;
   }
