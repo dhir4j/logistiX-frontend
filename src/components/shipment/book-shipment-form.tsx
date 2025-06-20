@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react'; 
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -22,7 +22,7 @@ import { useShipments } from '@/hooks/use-shipments';
 import type { ServiceType, CreateShipmentResponse, ShipmentTypeOption, DomesticPriceRequest, DomesticPriceResponse, InternationalPriceRequest, InternationalPriceResponse, PriceApiResponse } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth'; 
+import { useAuth } from '@/hooks/use-auth';
 import { indianStatesAndUTs } from '@/lib/indian-states';
 import { internationalCountryList } from '@/lib/country-list';
 import apiClient from '@/lib/api-client';
@@ -30,7 +30,7 @@ import apiClient from '@/lib/api-client';
 // Adjusted schema: some fields made optional, will be validated conditionally or by API.
 const shipmentFormSchema = z.object({
   shipmentTypeOption: z.enum(["Domestic", "International"], { required_error: "Please select shipment type." }),
-  
+
   senderName: z.string().min(2, "Sender name is required"),
   senderAddressStreet: z.string().min(5, "Street address is required (min 5 chars)"),
   senderAddressCity: z.string().min(2, "City is required"),
@@ -51,7 +51,7 @@ const shipmentFormSchema = z.object({
   packageWidthCm: z.coerce.number().min(1, "Width must be at least 1cm").max(200, "Max 200cm"),
   packageHeightCm: z.coerce.number().min(1, "Height must be at least 1cm").max(200, "Max 200cm"),
   packageLengthCm: z.coerce.number().min(1, "Length must be at least 1cm").max(200, "Max 200cm"),
-  
+
   pickupDate: z.date({ required_error: "Pickup date is required." }),
   serviceType: z.enum(["Standard", "Express"]).optional(), // Optional for International (always Express)
 });
@@ -73,13 +73,13 @@ export function BookShipmentForm() {
   const { addShipment, isLoading: isShipmentContextLoading } = useShipments();
   const [isPricingLoading, setIsPricingLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth(); 
+  const { user } = useAuth();
 
   const form = useForm<ShipmentFormValues>({
     resolver: zodResolver(shipmentFormSchema),
     defaultValues: {
       shipmentTypeOption: undefined, // User must select
-      senderName: '', 
+      senderName: '',
       senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
       senderPhone: '',
       receiverName: '',
@@ -91,7 +91,7 @@ export function BookShipmentForm() {
       packageHeightCm: 10,
       packageLengthCm: 10,
       // serviceType default will be set based on shipmentTypeOption
-      pickupDate: new Date(new Date().setDate(new Date().getDate() + 1)) 
+      pickupDate: new Date(new Date().setDate(new Date().getDate() + 1))
     },
   });
 
@@ -172,7 +172,7 @@ export function BookShipmentForm() {
       } else {
         throw new Error("Invalid shipment type selected.");
       }
-      
+
       setPaymentStep({ show: true, amount: displayAmount, priceResponse: priceResponseData, formData: data, shipmentType: data.shipmentTypeOption });
 
     } catch (error: any) {
@@ -202,7 +202,7 @@ export function BookShipmentForm() {
         sender_address_pincode: data.senderAddressPincode,
         sender_address_country: data.senderAddressCountry, // Default "India"
         sender_phone: data.senderPhone,
-        
+
         receiver_name: data.receiverName,
         receiver_address_street: data.receiverAddressStreet,
         receiver_address_city: data.receiverAddressCity,
@@ -210,24 +210,24 @@ export function BookShipmentForm() {
         receiver_address_pincode: data.receiverAddressPincode,
         receiver_address_country: data.shipmentTypeOption === "Domestic" ? "India" : data.receiverAddressCountry,
         receiver_phone: data.receiverPhone,
-        
+
         package_weight_kg: data.packageWeightKg,
         package_width_cm: data.packageWidthCm,
         package_height_cm: data.packageHeightCm,
         package_length_cm: data.packageLengthCm,
-        
+
         pickup_date: formattedPickupDate,
         service_type: data.shipmentTypeOption === "Domestic" ? (data.serviceType as ServiceType) : "Express", // Intl is Express
     };
 
     try {
-        const response = await addShipment(apiShipmentData as any); 
-        setSubmissionStatus(response); 
+        const response = await addShipment(apiShipmentData as any);
+        setSubmissionStatus(response);
         toast({
             title: "Shipment Booked!",
             description: `Your shipment ID is ${response.shipment_id_str}.`,
         });
-        form.reset({ 
+        form.reset({
             shipmentTypeOption: undefined,
             senderName: (user && user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : '',
             senderAddressStreet: '', senderAddressCity: '', senderAddressState: '', senderAddressPincode: '', senderAddressCountry: 'India',
@@ -262,7 +262,7 @@ export function BookShipmentForm() {
         <AlertDescription>
           <p>{submissionStatus.message}</p>
           <p>Shipment ID: <strong>{submissionStatus.shipment_id_str}</strong></p>
-          <p>Total Paid: <IndianRupee className="inline h-4 w-4" /> 
+          <p>Total Paid: Rs.
             {(typeof totalPaid === 'number' ? totalPaid.toFixed(2) : 'N/A')}
           </p>
           <div className="mt-4 space-y-2 sm:space-y-0 sm:flex sm:space-x-2">
@@ -279,6 +279,16 @@ export function BookShipmentForm() {
   }
 
   if (paymentStep.show && paymentStep.formData) {
+    let displayAmountWithRs = paymentStep.amount;
+    if (paymentStep.amount.includes("₹")) {
+      displayAmountWithRs = paymentStep.amount.replace("₹", "Rs. ");
+    } else if (!paymentStep.amount.toLowerCase().includes("rs.")) {
+      // If "₹" is not present and "rs." is not present, prepend "Rs. "
+      // This handles cases where the amount might just be a number string.
+      displayAmountWithRs = `Rs. ${paymentStep.amount}`;
+    }
+
+
     return (
       <Card className="w-full max-w-md mx-auto shadow-xl">
         <CardHeader>
@@ -291,7 +301,7 @@ export function BookShipmentForm() {
           <div>
             <p className="text-muted-foreground">Amount to Pay:</p>
             <p className="text-3xl font-bold text-primary flex items-center justify-center">
-              {paymentStep.amount.includes("₹") ? paymentStep.amount : `₹${paymentStep.amount}`}
+              {displayAmountWithRs}
             </p>
             {paymentStep.shipmentType === "International" && (paymentStep.priceResponse as InternationalPriceResponse)?.zone && (
               <p className="text-sm text-muted-foreground mt-1">Zone: {(paymentStep.priceResponse as InternationalPriceResponse).zone}</p>
@@ -448,7 +458,7 @@ export function BookShipmentForm() {
                     <FormField control={form.control} name="packageHeightCm" render={({ field }) => ( <FormItem><FormLabel>Height (cm)</FormLabel><FormControl><Input type="number" step="1" placeholder="e.g., 15" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   </div>
                 </section>
-                
+
                 {/* Pickup & Service */}
                 <section className="space-y-6 pt-6 border-t">
                   <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <CalendarIcon className="h-5 w-5" /> Pickup & Service </h3>
@@ -504,4 +514,3 @@ export function BookShipmentForm() {
     </Card>
   );
 }
-
