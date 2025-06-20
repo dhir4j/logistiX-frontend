@@ -169,7 +169,15 @@ export function BookShipmentForm() {
         });
         
         const intlResp = priceResponseData as InternationalPriceResponse;
-        if (intlResp.error) throw new Error(intlResp.error);
+        if (intlResp.error) {
+             toast({
+                title: "Pricing Error",
+                description: intlResp.error,
+                variant: "destructive",
+            });
+            setIsLoadingPricing(false);
+            return;
+        }
         
         if (intlResp.formatted_total) {
           displayAmount = intlResp.formatted_total;
@@ -335,7 +343,7 @@ export function BookShipmentForm() {
           </div>
           <div className="flex justify-center">
             <Image
-              src="/qr-code.png" 
+              src="/images/qr-code.png" 
               alt="UPI QR Code for Payment"
               width={200}
               height={200}
@@ -571,5 +579,7 @@ export function BookShipmentForm() {
     </Card>
   );
 }
+
+    
 
     
