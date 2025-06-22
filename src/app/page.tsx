@@ -55,6 +55,8 @@ export function LandingFooter() {
           <Link href="/about" className="text-xs text-muted-foreground hover:text-primary">About Us</Link>
           <Link href="/privacy-policy" className="text-xs text-muted-foreground hover:text-primary">Privacy Policy</Link>
           <Link href="/terms-of-service" className="text-xs text-muted-foreground hover:text-primary">Terms of Service</Link>
+          <Link href="/shipping-and-delivery" className="text-xs text-muted-foreground hover:text-primary">Shipping & Delivery</Link>
+          <Link href="/refund-and-cancellation" className="text-xs text-muted-foreground hover:text-primary">Refund & Cancellation</Link>
           <Link href="/dashboard/contact" className="text-xs text-muted-foreground hover:text-primary">Contact Us</Link>
           <Link href="/dashboard/contact" className="text-xs text-muted-foreground hover:text-primary">Customer Care</Link>
         </div>
