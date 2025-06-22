@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: 'Shed Load Overseas',
   description: 'Courier and shipment management solutions by Shed Load Overseas.',
   icons: {
-    icon: '/images/favicon.png', 
+    icon: '/favicon.ico', 
   }
 };
 
