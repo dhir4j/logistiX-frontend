@@ -47,7 +47,7 @@ export default function ContactPage() {
                 <MapPin className="h-6 w-6 text-primary mt-1 shrink-0" />
                 <div>
                   <h4 className="font-semibold">Office Address</h4>
-                  <p className="text-muted-foreground">Showroom no. 30, B Block</p>
+                  <p className="text-muted-foreground">Showroom no. 30, B Block, LGF, CHD, Citi Center, Zirakpur, Mohali, SAS Nagar, Punjab, 140603</p>
                 </div>
               </div>
             </CardContent>
@@ -108,4 +108,3 @@ export default function ContactPage() {
     </div>
   );
 }
-

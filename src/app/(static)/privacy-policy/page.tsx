@@ -59,7 +59,7 @@ export default function PrivacyPolicyPage() {
           <p>We may update this privacy notice from time to time. The updated version will be indicated by an updated "Last updated" date and the updated version will be effective as soon as it is accessible. We encourage you to review this privacy notice frequently to be informed of how we are protecting your information.</p>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">8. Contact Us</h2>
-          <p>If you have questions or comments about this notice, you may email us at SHEDLOADOVERSEAS@GMAIL.COM or by post to Showroom no. 30, B Block.</p>
+          <p>If you have questions or comments about this notice, you may email us at SHEDLOADOVERSEAS@GMAIL.COM or by post to Showroom no. 30, B Block, LGF, CHD, Citi Center, Zirakpur, Mohali, SAS Nagar, Punjab, 140603.</p>
         </CardContent>
       </Card>
     </div>

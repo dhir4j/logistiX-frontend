@@ -69,10 +69,9 @@ export default function TermsOfServicePage() {
           <p>SHEDLOAD OVERSEAS LLP reserves the right to revise these terms at any time as it sees fit, and by using this Website you are expected to review these terms on a regular basis.</p>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">9. Contact Information</h2>
-          <p>If you have any queries regarding any of our terms, please contact us at SHEDLOADOVERSEAS@GMAIL.COM or by post to Showroom no. 30, B Block.</p>
+          <p>If you have any queries regarding any of our terms, please contact us at SHEDLOADOVERSEAS@GMAIL.COM or by post to Showroom no. 30, B Block, LGF, CHD, Citi Center, Zirakpur, Mohali, SAS Nagar, Punjab, 140603.</p>
         </CardContent>
       </Card>
     </div>
   );
 }
-
