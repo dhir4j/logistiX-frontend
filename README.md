@@ -120,3 +120,61 @@ The project follows a standard Next.js App Router structure:
 
 -   **User Login**: Regular users can sign up and log in via the `/login` and `/signup` pages.
 -   **Admin Login**: Administrators must use the `/admin/login` portal. Access to `/admin/dashboard` is protected and requires admin privileges.
+
+---
+
+## ## Prompt to Recreate This Project
+
+Below is a detailed prompt you can use with a generative AI to create a functional clone of this application with generic branding.
+
+### **AI Prompt Begins**
+
+"Hello! I want to build a full-featured, modern web application for a courier and logistics platform. Let's call the project 'Logistix'.
+
+**1. Core Technology Stack:**
+*   **Framework**: Next.js with the App Router.
+*   **Language**: TypeScript.
+*   **Styling**: Tailwind CSS for styling and utility classes.
+*   **UI Components**: Use ShadCN UI as the primary component library. Use `lucide-react` for icons.
+*   **Forms**: Use React Hook Form with Zod for robust validation.
+*   **AI**: Set up Genkit for potential future AI integrations, but no specific AI features are needed initially.
+
+**2. General Requirements:**
+*   Create a clean, professional, and modern UI. Do not copy any specific brand's color scheme or layout.
+*   Use a generic name like "Logistix" throughout the application.
+*   All specific details like company addresses, contact emails, and phone numbers should be placeholders (e.g., `contact@logistix.com`, `123 Logistics Lane`, etc.).
+*   The application must be fully responsive and work seamlessly on desktop and mobile devices.
+*   Use placeholder images (`https://placehold.co/`) where needed.
+
+**3. Feature Implementation:**
+
+Please implement the following features:
+
+**A. Public-Facing Pages (No Login Required):**
+*   **Landing Page**: A professional marketing page that describes the service, shows key features, and has clear calls-to-action to "Sign Up" or "Login".
+*   **Static Pages**: Create the following informational pages with placeholder text: About Us, Privacy Policy, Terms of Service, Shipping & Delivery Policy, and Refund & Cancellation Policy.
+*   **Header & Footer**: A shared header for these pages with navigation to Login/Signup, and a shared footer with links to all the static pages.
+
+**B. Authentication:**
+*   **User Signup Page**: A form to register new users (First Name, Last Name, Email, Password).
+*   **User Login Page**: A form for registered users to sign in.
+*   **Admin Login Page**: A separate, secure login page at `/admin/login` for administrators.
+
+**C. User Dashboard (Login Required):**
+*   **Layout**: A dashboard layout with a collapsible sidebar for navigation and a header with a user profile menu (for logout).
+*   **Main Dashboard Page**: A welcome page showing quick-access cards to major features.
+*   **Book Shipment Page**: A multi-step form to book a new shipment. It should handle both "Domestic" and "International" types. The form should collect sender and receiver details (name, address, phone), and package details (weight, dimensions).
+*   **Track Shipment Page**: A page with an input field where a user can enter a tracking ID to see the shipment's status and history.
+*   **My Shipments Page**: A table view listing all of the user's past and current shipments, with options to search and filter.
+*   **My Invoices Page**: A table listing all invoices for the user's shipments, with a link to view each invoice.
+*   **Invoice View**: A page that displays a printable invoice for a specific shipment, including company details, sender/receiver info, and a breakdown of charges.
+*   **Contact Page**: A page within the dashboard showing contact information and a simple contact form.
+
+**D. Admin Dashboard (Admin Login Required):**
+*   **Layout**: A separate layout for the admin section.
+*   **Main Admin Dashboard Page**: Display key analytics in cards (e.g., Total Orders, Total Revenue, Total Users).
+*   **Order Management Page**: A comprehensive table listing *all* user shipments. The admin must be able to search, filter by status, and, most importantly, update the status of any shipment (e.g., from "Booked" to "In Transit").
+
+Build the application incrementally, starting with the core layouts and authentication, then moving to the dashboard features. Ensure the code is clean, well-organized, and follows modern React and Next.js best practices."
+
+### **AI Prompt Ends**
