@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -74,6 +74,24 @@ export default function HomePage() {
       router.replace('/dashboard');
     }
   }, [isAuthenticated, isLoading, router]);
+
+  const [particles, setParticles] = useState<React.ReactElement[]>([]);
+
+  useEffect(() => {
+    const generatedParticles = Array.from({ length: 50 }).map((_, i) => {
+      const size = `${Math.random() * 2 + 1}px`;
+      const style = {
+        width: size,
+        height: size,
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        animationDelay: `${Math.random() * 20}s`,
+        animationDuration: `${Math.random() * 10 + 15}s`,
+      };
+      return <span key={i} className="particle" style={style} />;
+    });
+    setParticles(generatedParticles);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   if (isLoading) {
     return (
@@ -166,7 +184,7 @@ export default function HomePage() {
       description: "Receive confirmation upon successful and safe delivery to the recipient.",
       number: 3,
       svg: (
-        <svg width="300" height="225" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-sm mb-6 object-cover aspect-[4/3]">
+         <svg width="300" height="225" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-lg shadow-sm mb-6 object-cover aspect-[4/3]">
           <rect width="100" height="75" rx="8" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="0.5"/>
           <path d="M50 15 L80 25 L80 45 C80 60, 50 70, 50 70 C50 70, 20 60, 20 45 L20 25 L50 15 Z" fill="hsl(var(--primary) / 0.1)" stroke="hsl(var(--primary))" strokeWidth="1.5"/>
           <path d="M40 40 L50 50 L65 30" stroke="hsl(var(--primary))" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
@@ -181,8 +199,11 @@ export default function HomePage() {
       <LandingHeader />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-16 md:py-24 lg:py-32 px-6 md:px-10 bg-gradient-to-br from-primary/10 via-background to-background text-center">
-          <div className="container mx-auto max-w-4xl">
+        <section className="relative overflow-hidden py-16 md:py-24 lg:py-32 px-6 md:px-10 bg-gradient-to-br from-primary/10 via-background to-background text-center">
+          <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none" aria-hidden="true">
+            {particles}
+          </div>
+          <div className="relative z-10 container mx-auto max-w-4xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline mb-6">
               <span className="font-extrabold text-primary inline-block animate-fadeInUpSlo">Shed Load Overseas</span>
               <span className="block text-2xl md:text-3xl lg:text-4xl text-muted-foreground font-medium mt-1 sm:mt-2">
