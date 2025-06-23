@@ -1,4 +1,3 @@
-
 import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import { Providers } from '@/components/providers';
@@ -7,13 +6,6 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Shed Load Overseas',
   description: 'Courier and shipment management solutions by Shed Load Overseas.',
-  icons: {
-    icon: {
-      url: "/favicon.ico",
-      type: "image/x-icon",
-    },
-    shortcut: { url: "/favicon.ico", type: "image/x-icon" },
-  }
 };
 
 export default function RootLayout({
@@ -24,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
