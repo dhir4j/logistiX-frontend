@@ -170,7 +170,6 @@ export default function HomePage() {
           <rect width="100" height="75" rx="8" fill="hsl(var(--card))" stroke="hsl(var(--border))" strokeWidth="0.5"/>
           <path d="M50 15 L80 25 L80 45 C80 60, 50 70, 50 70 C50 70, 20 60, 20 45 L20 25 L50 15 Z" fill="hsl(var(--primary) / 0.1)" stroke="hsl(var(--primary))" strokeWidth="1.5"/>
           <path d="M40 40 L50 50 L65 30" stroke="hsl(var(--primary))" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-          <rect x="60" y="50" width="15" height="10" rx="1" fill="hsl(var(--accent))" stroke="hsl(var(--accent-foreground))" strokeWidth="0.5" opacity="0.7"/>
         </svg>
       )
     }
@@ -277,7 +276,7 @@ export default function HomePage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-start">
                     {howItWorksSteps.map(step => (
-                        <div key={step.number} className="flex flex-col items-center p-6 bg-card rounded-lg shadow-md">
+                        <div key={step.number} className="flex flex-col items-center p-6 bg-card rounded-lg shadow-md max-w-sm mx-auto">
                             {step.svg} 
                             <h3 className="text-xl font-semibold font-headline mb-2 mt-4">{step.number}. {step.title}</h3>
                             <p className="text-muted-foreground text-sm">{step.description}</p>
