@@ -287,7 +287,7 @@ export default function HomePage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-16 md:py-24 px-6 md:px-10 bg-gradient-to-r from-accent/80 to-primary/80 text-center">
+        <section className="py-16 md:py-24 px-6 md:px-10 bg-primary text-center">
           <div className="container mx-auto max-w-3xl">
             <h2 className="text-3xl sm:text-4xl font-headline font-bold text-primary-foreground mb-6">
               Ready to Streamline Your Shipments?
