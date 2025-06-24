@@ -7,13 +7,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2, Globe, CreditCard, Send, Repeat, Truck, Users, Info, ChevronDown } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowRight, DollarSign, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2, Globe, CreditCard, Send, Repeat, Truck, Users, Info, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function LandingHeader() {
   return (
-    <header className="py-4 px-6 md:px-10 flex justify-between items-center sticky top-0 z-50 bg-background/90 backdrop-blur-sm border-b">
+    <header className="py-4 px-6 md:px-10 flex justify-between items-center sticky top-0 z-50 bg-background/90 backdrop-blur-sm border-b border-white/10">
       <Link href="/" className="flex items-center text-primary hover:text-primary/90">
         <Image
           src="/images/brand.png"
@@ -25,7 +25,7 @@ export function LandingHeader() {
         />
       </Link>
       <nav className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:items-center sm:space-x-2">
-        <Button asChild variant="ghost" className="w-full sm:w-auto text-base sm:text-sm">
+        <Button asChild variant="ghost" className="w-full sm:w-auto text-base sm:text-sm text-white hover:bg-white/10">
           <Link href="/login">Login</Link>
         </Button>
         <Button asChild className="w-full sm:w-auto text-base sm:text-sm">
@@ -44,7 +44,7 @@ export function LandingFooter() {
   }, []);
 
   return (
-    <footer className="py-8 px-6 md:px-10 text-center border-t bg-muted/50">
+    <footer className="py-8 px-6 md:px-10 text-center border-t border-white/10 bg-black/30 backdrop-blur-md">
       <div className="container mx-auto">
         <div className="mb-4">
            <Image src="/images/brand.png" alt="Shed Load Overseas Footer Logo" width={150} height={40} className="object-contain mx-auto"/>
@@ -192,171 +192,166 @@ export default function HomePage() {
     }
   ];
 
-
   return (
-    <div className="flex flex-col flex-1 bg-background text-foreground">
-      <LandingHeader />
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden py-16 md:py-24 lg:py-32 px-6 md:px-10 text-center text-white">
-          <div className="absolute inset-0 w-full h-full z-0">
-            {slideshowImages.map((src, index) => {
-              // This logic determines which image is current, which has passed, and which is next.
-              const getTransformClass = (imageIndex: number, currentIndex: number) => {
-                if (imageIndex === currentIndex) {
-                  return 'translate-x-0'; // Current image is in view
-                }
-                // Check if the image is the one that just passed
-                if (
-                  (currentIndex === 0 && imageIndex === slideshowImages.length - 1) ||
-                  (imageIndex === currentIndex - 1)
-                ) {
-                  return '-translate-x-full'; // Previous image slides out to the left
-                }
-                return 'translate-x-full'; // All other images are waiting to the right
-              };
-              
-              return (
-                <Image
-                  key={src}
-                  src={src}
-                  alt={`Logistics background ${index + 1}`}
-                  width={1920}
-                  height={1080}
-                  className={cn(
-                    'absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-in-out',
-                    getTransformClass(index, currentImageIndex)
-                  )}
-                  priority={index === 0}
-                />
-              );
-            })}
+    <div className="flex flex-col flex-1 bg-black text-foreground">
+      {/* FIXED SLIDESHOW BACKGROUND */}
+      <div className="fixed inset-0 w-full h-full z-0">
+        {slideshowImages.map((src, index) => {
+          const getTransformClass = (imageIndex: number, currentIndex: number) => {
+            if (imageIndex === currentIndex) return 'translate-x-0';
+            if ((currentIndex === 0 && imageIndex === slideshowImages.length - 1) || (imageIndex === currentIndex - 1)) return '-translate-x-full';
+            return 'translate-x-full';
+          };
+          return (
+            <Image
+              key={src}
+              src={src}
+              alt={`Logistics background ${index + 1}`}
+              width={1920}
+              height={1080}
+              className={cn(
+                'absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-in-out',
+                getTransformClass(index, currentImageIndex)
+              )}
+              priority={index === 0}
+            />
+          );
+        })}
+        <div className="absolute inset-0 bg-black/60 z-10"></div>
+      </div>
+      
+      {/* SCROLLABLE CONTENT */}
+      <div className="relative z-10 flex flex-col flex-1">
+        <LandingHeader />
+        <main className="flex-1">
+          {/* Hero Section */}
+          <section className="relative flex items-center justify-center text-center text-white min-h-screen px-6 md:px-10">
+            <div className="max-w-4xl mx-auto">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline mb-6">
+                <span className="font-extrabold text-white drop-shadow-lg inline-block animate-fadeInUpSlo">Shed Load Overseas</span>
+                <span className="block text-2xl md:text-3xl lg:text-4xl text-gray-200 font-medium mt-1 sm:mt-2 drop-shadow-md">
+                  Your Global Logistics Partner.
+                </span>
+              </h1>
+              <p className="text-lg md:text-xl text-gray-100 mb-10 max-w-2xl mx-auto drop-shadow-sm">
+                Experience seamless courier and cargo services with Shed Load Overseas. Book, track, and manage your deliveries with unparalleled ease and confidence, worldwide.
+              </p>
+              <div className="space-y-4 sm:space-y-0 sm:space-x-4">
+                <Button size="lg" asChild className="font-semibold text-lg py-3 px-8 w-full sm:w-auto shadow-lg hover:shadow-xl transition-shadow">
+                  <Link href="/login">
+                    Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+             {/* Scroll Down Icon */}
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
+              <Link href="#features" aria-label="Scroll to features section">
+                <div className="p-2 rounded-full bg-white/80 hover:bg-white/100 transition-colors animate-bounceSlo shadow-lg">
+                  <ChevronDown className="h-8 w-8 text-primary" />
+                </div>
+              </Link>
+            </div>
+          </section>
+
+          {/* This is the container for all subsequent "frosted glass" sections */}
+          <div className="space-y-16 md:space-y-24 py-16 md:py-24">
+
+            {/* Core Features Section */}
+            <section id="features" className="px-6 md:px-10">
+              <div className="container mx-auto p-8 md:p-12 bg-background/80 backdrop-blur-md rounded-2xl shadow-2xl">
+                <h2 className="text-3xl sm:text-4xl font-headline font-semibold text-center mb-4">
+                  Everything You Need for Effortless Shipping
+                </h2>
+                <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+                  Shed Load Overseas provides a comprehensive suite of tools to make your shipping experience smooth and efficient.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {coreFeatures.map((feature) => (
+                    <Card key={feature.title} className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out transform hover:-translate-y-1">
+                      <CardHeader className="items-center text-center">
+                        <div className="p-3 bg-primary/10 rounded-full inline-block mb-4 border border-primary/20">
+                          <feature.icon className="h-8 w-8 text-primary" />
+                        </div>
+                        <CardTitle className="font-headline text-xl sm:text-2xl">{feature.title}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-center">
+                        <p className="text-muted-foreground text-sm">{feature.description}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Service Highlights Section */}
+            <section className="px-6 md:px-10">
+              <div className="container mx-auto p-8 md:p-12 bg-background/80 backdrop-blur-md rounded-2xl shadow-2xl">
+                <h2 className="text-3xl sm:text-4xl font-headline font-semibold text-center mb-4">
+                  Our Specialized Services
+                </h2>
+                <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+                  Tailored solutions to meet all your logistical requirements.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {serviceHighlights.map((service) => (
+                    <Card key={service.title} className="shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out">
+                      <CardHeader className="flex flex-row items-start gap-4">
+                        <div className="p-3 bg-primary/10 rounded-lg inline-block border border-primary/20">
+                          <service.icon className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <CardTitle className="font-headline text-xl sm:text-2xl">{service.title}</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-muted-foreground text-sm">{service.description}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* How It Works Section */}
+            <section className="px-6 md:px-10">
+                <div className="container mx-auto p-8 md:p-12 bg-background/80 backdrop-blur-md rounded-2xl shadow-2xl">
+                    <h2 className="text-3xl sm:text-4xl font-headline font-semibold text-center mb-12">
+                        Shipping Made Simple: Just 3 Steps
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-start">
+                      {howItWorksSteps.map(step => (
+                          <div key={step.number} className="flex flex-col items-center p-6 bg-card rounded-lg shadow-md max-w-sm mx-auto">
+                              {step.svg} 
+                              <h3 className="text-xl font-semibold font-headline mb-2 mt-4">{step.number}. {step.title}</h3>
+                              <p className="text-muted-foreground text-sm">{step.description}</p>
+                          </div>
+                      ))}
+                    </div>
+                </div>
+            </section>
           </div>
 
-          <div className="absolute inset-0 bg-black/50 z-0"></div>
-
-          <div className="relative z-10 container mx-auto max-w-4xl">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline mb-6">
-              <span className="font-extrabold text-white drop-shadow-lg inline-block animate-fadeInUpSlo">Shed Load Overseas</span>
-              <span className="block text-2xl md:text-3xl lg:text-4xl text-gray-200 font-medium mt-1 sm:mt-2 drop-shadow-md">
-                Your Global Logistics Partner.
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-gray-100 mb-10 max-w-2xl mx-auto drop-shadow-sm">
-              Experience seamless courier and cargo services with Shed Load Overseas. Book, track, and manage your deliveries with unparalleled ease and confidence, worldwide.
-            </p>
-            <div className="space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button size="lg" asChild className="font-semibold text-lg py-3 px-8 w-full sm:w-auto shadow-lg hover:shadow-xl transition-shadow">
+          {/* CTA Section */}
+          <section className="py-16 md:py-24 px-6 md:px-10 bg-primary text-center">
+            <div className="container mx-auto max-w-3xl">
+              <h2 className="text-3xl sm:text-4xl font-headline font-bold text-primary-foreground mb-6">
+                Ready to Streamline Your Shipments?
+              </h2>
+              <p className="text-lg text-background/90 mb-8">
+                Join businesses worldwide who trust Shed Load Overseas for their critical courier and cargo needs. Sign up today and experience the difference.
+              </p>
+              <Button size="lg" asChild className="font-semibold text-lg py-3 px-8 bg-background text-primary hover:bg-background/90 shadow-xl hover:shadow-2xl transition-shadow">
                 <Link href="/login">
-                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                  Create Your First Shipment <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
             </div>
-          </div>
-        </section>
-
-        {/* Scroll Down Icon */}
-        <div className="relative z-10 -mt-10 mb-10 flex justify-center">
-          <Link href="#features" aria-label="Scroll to features section">
-            <div className="p-2 rounded-full bg-white/80 hover:bg-white/100 transition-colors animate-bounceSlo shadow-lg">
-              <ChevronDown className="h-8 w-8 text-primary" />
-            </div>
-          </Link>
-        </div>
-
-        {/* Core Features Section */}
-        <section id="features" className="py-16 md:py-24 px-6 md:px-10">
-          <div className="container mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-headline font-semibold text-center mb-4">
-              Everything You Need for Effortless Shipping
-            </h2>
-            <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-              Shed Load Overseas provides a comprehensive suite of tools to make your shipping experience smooth and efficient.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {coreFeatures.map((feature) => (
-                <Card key={feature.title} className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out transform hover:-translate-y-1">
-                  <CardHeader className="items-center text-center">
-                    <div className="p-3 bg-primary/10 rounded-full inline-block mb-4 border border-primary/20">
-                      <feature.icon className="h-8 w-8 text-primary" />
-                    </div>
-                    <CardTitle className="font-headline text-xl sm:text-2xl">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-muted-foreground text-sm">{feature.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Service Highlights Section */}
-        <section className="py-16 md:py-24 px-6 md:px-10 bg-muted/30">
-          <div className="container mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-headline font-semibold text-center mb-4">
-              Our Specialized Services
-            </h2>
-            <p className="text-lg text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-              Tailored solutions to meet all your logistical requirements.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {serviceHighlights.map((service) => (
-                <Card key={service.title} className="shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out">
-                   <CardHeader className="flex flex-row items-start gap-4">
-                    <div className="p-3 bg-primary/10 rounded-lg inline-block border border-primary/20">
-                      <service.icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="font-headline text-xl sm:text-2xl">{service.title}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground text-sm">{service.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-
-        {/* How It Works Section */}
-        <section className="py-16 md:py-24 px-6 md:px-10">
-            <div className="container mx-auto text-center">
-                <h2 className="text-3xl sm:text-4xl font-headline font-semibold mb-12">
-                    Shipping Made Simple: Just 3 Steps
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 items-start">
-                    {howItWorksSteps.map(step => (
-                        <div key={step.number} className="flex flex-col items-center p-6 bg-card rounded-lg shadow-md max-w-sm mx-auto">
-                            {step.svg} 
-                            <h3 className="text-xl font-semibold font-headline mb-2 mt-4">{step.number}. {step.title}</h3>
-                            <p className="text-muted-foreground text-sm">{step.description}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-16 md:py-24 px-6 md:px-10 bg-primary text-center">
-          <div className="container mx-auto max-w-3xl">
-            <h2 className="text-3xl sm:text-4xl font-headline font-bold text-primary-foreground mb-6">
-              Ready to Streamline Your Shipments?
-            </h2>
-            <p className="text-lg text-background/90 mb-8">
-              Join businesses worldwide who trust Shed Load Overseas for their critical courier and cargo needs. Sign up today and experience the difference.
-            </p>
-            <Button size="lg" asChild className="font-semibold text-lg py-3 px-8 bg-background text-primary hover:bg-background/90 shadow-xl hover:shadow-2xl transition-shadow">
-              <Link href="/login">
-                Create Your First Shipment <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-        </section>
-      </main>
-      <LandingFooter />
+          </section>
+        </main>
+        <LandingFooter />
+      </div>
     </div>
   );
 }
+
