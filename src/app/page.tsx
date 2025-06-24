@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowRight, DollarSign, MessageCircle, PackageCheck, SearchCheck, ShieldCheck, Zap, Loader2, Globe, CreditCard, Send, Repeat, Truck, Users, Info, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function LandingHeader() {
   return (
@@ -69,29 +70,27 @@ export default function HomePage() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
+  const slideshowImages = [
+    '/images/landing1.jpg',
+    '/images/landing2.jpg',
+    '/images/landing3.jpg',
+  ];
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       router.replace('/dashboard');
     }
   }, [isAuthenticated, isLoading, router]);
 
-  const [particles, setParticles] = useState<React.ReactElement[]>([]);
-
   useEffect(() => {
-    const generatedParticles = Array.from({ length: 50 }).map((_, i) => {
-      const size = `${Math.random() * 2 + 1}px`;
-      const style = {
-        width: size,
-        height: size,
-        top: `${Math.random() * 100}%`,
-        left: `${Math.random() * 100}%`,
-        animationDelay: `${Math.random() * 20}s`,
-        animationDuration: `${Math.random() * 10 + 15}s`,
-      };
-      return <span key={i} className="particle" style={style} />;
-    });
-    setParticles(generatedParticles);
-  }, []); // Empty dependency array ensures this runs only once on mount
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % slideshowImages.length);
+    }, 5000); // Change image every 5 seconds
+
+    return () => clearInterval(timer);
+  }, [slideshowImages.length]);
+
 
   if (isLoading) {
     return (
@@ -199,18 +198,51 @@ export default function HomePage() {
       <LandingHeader />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden py-16 md:py-24 lg:py-32 px-6 md:px-10 bg-gradient-to-br from-primary/10 via-background to-background text-center">
-          <div className="absolute top-0 left-0 w-full h-full z-0 pointer-events-none" aria-hidden="true">
-            {particles}
+        <section className="relative overflow-hidden py-16 md:py-24 lg:py-32 px-6 md:px-10 text-center text-white">
+          <div className="absolute inset-0 w-full h-full z-0">
+            {slideshowImages.map((src, index) => {
+              // This logic determines which image is current, which has passed, and which is next.
+              const getTransformClass = (imageIndex: number, currentIndex: number) => {
+                if (imageIndex === currentIndex) {
+                  return 'translate-x-0'; // Current image is in view
+                }
+                // Check if the image is the one that just passed
+                if (
+                  (currentIndex === 0 && imageIndex === slideshowImages.length - 1) ||
+                  (imageIndex === currentIndex - 1)
+                ) {
+                  return '-translate-x-full'; // Previous image slides out to the left
+                }
+                return 'translate-x-full'; // All other images are waiting to the right
+              };
+              
+              return (
+                <Image
+                  key={src}
+                  src={src}
+                  alt={`Logistics background ${index + 1}`}
+                  width={1920}
+                  height={1080}
+                  className={cn(
+                    'absolute inset-0 w-full h-full object-cover transition-transform duration-1000 ease-in-out',
+                    getTransformClass(index, currentImageIndex)
+                  )}
+                  priority={index === 0}
+                />
+              );
+            })}
           </div>
+
+          <div className="absolute inset-0 bg-black/50 z-0"></div>
+
           <div className="relative z-10 container mx-auto max-w-4xl">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-headline mb-6">
-              <span className="font-extrabold text-primary inline-block animate-fadeInUpSlo">Shed Load Overseas</span>
-              <span className="block text-2xl md:text-3xl lg:text-4xl text-muted-foreground font-medium mt-1 sm:mt-2">
+              <span className="font-extrabold text-white drop-shadow-lg inline-block animate-fadeInUpSlo">Shed Load Overseas</span>
+              <span className="block text-2xl md:text-3xl lg:text-4xl text-gray-200 font-medium mt-1 sm:mt-2 drop-shadow-md">
                 Your Global Logistics Partner.
               </span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-gray-100 mb-10 max-w-2xl mx-auto drop-shadow-sm">
               Experience seamless courier and cargo services with Shed Load Overseas. Book, track, and manage your deliveries with unparalleled ease and confidence, worldwide.
             </p>
             <div className="space-y-4 sm:space-y-0 sm:space-x-4">
@@ -226,7 +258,7 @@ export default function HomePage() {
         {/* Scroll Down Icon */}
         <div className="relative z-10 -mt-10 mb-10 flex justify-center">
           <Link href="#features" aria-label="Scroll to features section">
-            <div className="p-2 rounded-full hover:bg-primary/10 transition-colors animate-bounceSlo">
+            <div className="p-2 rounded-full bg-white/80 hover:bg-white/100 transition-colors animate-bounceSlo shadow-lg">
               <ChevronDown className="h-8 w-8 text-primary" />
             </div>
           </Link>
