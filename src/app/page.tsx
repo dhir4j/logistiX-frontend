@@ -197,7 +197,7 @@ export default function HomePage() {
       <LandingHeader />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative flex items-center justify-center text-center text-white min-h-screen px-6 md:px-10 overflow-hidden">
+        <section className="relative flex items-start pt-40 justify-center text-center text-white min-h-screen px-6 md:px-10 overflow-hidden">
           {/* Slideshow background - contained within this section */}
           <div className="absolute inset-0 w-full h-full z-0">
             {slideshowImages.map((src, index) => {
@@ -245,7 +245,7 @@ export default function HomePage() {
           </div>
 
            {/* Scroll Down Icon */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20">
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20">
             <Link href="#features" aria-label="Scroll to features section">
               <div className="p-2 rounded-full bg-white/80 hover:bg-white/100 transition-colors animate-bounceSlo shadow-lg">
                 <ChevronDown className="h-8 w-8 text-primary" />
@@ -352,3 +352,4 @@ export default function HomePage() {
     </div>
   );
 }
+
