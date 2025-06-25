@@ -47,6 +47,7 @@ export const mapApiShipmentToFrontend = (apiShipment: any): Shipment => {
     // Snake_case fields from API
     id: apiShipment.id,
     user_id: apiShipment.user_id,
+    user_email: apiShipment.user_email || '',
     shipment_id_str: apiShipment.shipment_id_str || 'UNKNOWN_ID', 
     sender_name: apiShipment.sender_name || '',
     sender_address_street: senderStreet,
@@ -78,6 +79,7 @@ export const mapApiShipmentToFrontend = (apiShipment: any): Shipment => {
 
     // Frontend camelCase representation
     userId: apiShipment.user_id,
+    userEmail: apiShipment.user_email || '',
     shipmentIdStr: apiShipment.shipment_id_str || 'UNKNOWN_ID', 
     senderName: apiShipment.sender_name || '',
     senderAddressStreet: senderStreet,
@@ -146,13 +148,13 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
   }, [toast, logoutUser]);
 
   const fetchUserShipments = useCallback(async () => {
-    if (!isAuthenticated || !user) { 
+    if (!isAuthenticated || !user?.email) { 
       setShipments([]);
       return;
     }
     setIsLoading(true);
     try {
-      const dataFromApi = await apiClient<any[]>('/api/shipments'); 
+      const dataFromApi = await apiClient<any[]>(`/api/shipments?email=${encodeURIComponent(user.email)}`); 
       setShipments(dataFromApi.map(mapApiShipmentToFrontend));
     } catch (error: any) {
       handleApiError(error, 'fetching user shipments');
@@ -211,4 +213,3 @@ export const ShipmentProvider = ({ children }: { children: ReactNode }) => {
     </ShipmentContext.Provider>
   );
 };
-

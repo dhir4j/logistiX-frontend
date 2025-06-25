@@ -35,6 +35,7 @@ export interface Shipment {
   // Snake_case fields from API (expected in API responses)
   id: number;
   user_id?: number;
+  user_email?: string;
   shipment_id_str: string;
   sender_name: string;
   sender_address_street: string; 
@@ -67,6 +68,7 @@ export interface Shipment {
 
   // Frontend camelCase representation (populated by mapping)
   userId?: number;
+  userEmail?: string;
   shipmentIdStr: string; 
   senderName: string;
   senderAddressStreet: string; 
@@ -236,7 +238,7 @@ export interface AddShipmentPayload {
     pickup_date: string; // Formatted as "yyyy-MM-dd"
     service_type: ServiceType; // "Express" or "Standard"
     
+    user_email: string;
     user_id?: number; // Optional
     final_total_price_with_tax?: number; // Optional: GST-inclusive total from checkout
 }
-

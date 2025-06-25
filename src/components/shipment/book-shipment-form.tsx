@@ -250,6 +250,10 @@ export function BookShipmentForm() {
   };
 
   const handleConfirmPaymentAndBook = async () => {
+    if (!user || !user.email) {
+      toast({ title: "Authentication Error", description: "You must be logged in to book a shipment.", variant: "destructive" });
+      return;
+    }
     if (!paymentStep.formData || !paymentStep.shipmentType || paymentStep.numericAmount === null || paymentStep.numericAmount <= 0) {
         toast({ title: "Booking Error", description: "Invalid payment data or price. Please try calculating price again.", variant: "destructive" });
         return;
@@ -260,7 +264,6 @@ export function BookShipmentForm() {
     if (data.shipmentTypeOption === "International") {
         effectiveServiceType = "Express";
     }
-
 
     const senderStreetCombined = data.senderAddressLine2
       ? `${data.senderAddressLine1}, ${data.senderAddressLine2}`
@@ -293,6 +296,7 @@ export function BookShipmentForm() {
         package_length_cm: data.packageLengthCm,
         pickup_date: format(data.pickupDate, 'yyyy-MM-dd'),
         service_type: effectiveServiceType,
+        user_email: user.email,
         final_total_price_with_tax: paymentStep.numericAmount,
     };
 
@@ -688,6 +692,3 @@ export function BookShipmentForm() {
     </Card>
   );
 }
-
-
-    
