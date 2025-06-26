@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation';
 import { mapApiShipmentToFrontend } from '@/contexts/shipment-context'; // Import the mapper
 
 const statusColors: Record<TrackingStage, string> = {
+  "Pending Payment": "bg-gray-100 text-gray-700 border-gray-300",
   Booked: "bg-blue-100 text-blue-700 border-blue-300",
   "In Transit": "bg-yellow-100 text-yellow-700 border-yellow-300",
   "Out for Delivery": "bg-orange-100 text-orange-700 border-orange-300",
@@ -331,14 +332,14 @@ export function AdminOrdersTable() {
                                 <Select
                                     value={order.status}
                                     onValueChange={(newStatus) => handleStatusUpdate(order.shipment_id_str, newStatus as TrackingStage, order)}
-                                    disabled={!order.shipment_id_str || order.shipment_id_str === 'Unknown ID'}
+                                    disabled={!order.shipment_id_str || order.shipment_id_str === 'Unknown ID' || order.status === 'Pending Payment'}
                                 >
                                     <SelectTrigger className="h-9 text-xs">
                                     <SelectValue placeholder="Update Status" />
                                     </SelectTrigger>
                                     <SelectContent>
                                     {(Object.keys(statusColors) as TrackingStage[]).map(statusVal => (
-                                        <SelectItem key={statusVal} value={statusVal} className="text-xs">{statusVal}</SelectItem>
+                                        <SelectItem key={statusVal} value={statusVal} className="text-xs" disabled={statusVal === 'Pending Payment'}>{statusVal}</SelectItem>
                                     ))}
                                     </SelectContent>
                                 </Select>

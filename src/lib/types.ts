@@ -18,7 +18,7 @@ export interface User {
 }
 
 export type ServiceType = "Standard" | "Express";
-export type TrackingStage = "Booked" | "In Transit" | "Out for Delivery" | "Delivered" | "Cancelled";
+export type TrackingStage = "Pending Payment" | "Booked" | "In Transit" | "Out for Delivery" | "Delivered" | "Cancelled";
 
 // Matches API structure for Tracking History entries
 export interface TrackingStep {
@@ -240,4 +240,29 @@ export interface AddShipmentPayload {
     
     user_id?: number; // Optional
     final_total_price_with_tax?: number; // Optional: GST-inclusive total from checkout
+}
+
+// New types for payment flow
+export interface SubmitUtrPayload {
+  shipment_id_str: string;
+  utr: string;
+  amount: number;
+}
+
+export interface SubmitUtrResponse {
+  message: string;
+  payment_id: number;
+  status: string; // e.g., "Pending"
+}
+
+export type PaymentStatus = "Pending" | "Approved" | "Rejected";
+
+export interface UserPayment {
+    id: number;
+    shipment_id_str: string;
+    utr: string;
+    amount: number;
+    status: PaymentStatus;
+    created_at: string; // ISO Date string
+    updated_at: string; // ISO Date string
 }

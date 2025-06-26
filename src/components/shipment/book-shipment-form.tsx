@@ -17,15 +17,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format, isValid, parseISO } from "date-fns";
-import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus, ScanLine, Globe, Home, Loader2, Edit3, Info } from 'lucide-react';
+import { CalendarIcon, Package, User, ArrowRight, CheckCircle, PackagePlus, ScanLine, Globe, Home, Loader2, Edit3, Info, Wallet } from 'lucide-react';
 import { useShipments } from '@/hooks/use-shipments';
-import type { ServiceType, CreateShipmentResponse, ShipmentTypeOption, DomesticPriceRequest, DomesticPriceResponse, InternationalPriceRequest, InternationalPriceResponse, PriceApiResponse, AddShipmentPayload } from '@/lib/types';
+import type { ServiceType, CreateShipmentResponse, ShipmentTypeOption, DomesticPriceRequest, DomesticPriceResponse, InternationalPriceRequest, InternationalPriceResponse, PriceApiResponse, AddShipmentPayload, SubmitUtrPayload, SubmitUtrResponse } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { indianStatesAndUTs } from '@/lib/indian-states';
 import { internationalCountryList } from '@/lib/country-list';
 import apiClient from '@/lib/api-client';
+import Link from 'next/link';
 
 const shipmentFormSchema = z.object({
   shipmentTypeOption: z.enum(["Domestic", "International"], { required_error: "Please select shipment type." }),
@@ -87,7 +88,7 @@ const parsePriceStringToNumber = (priceStr: string | number | undefined | null):
 
 
 export function BookShipmentForm() {
-  const [submissionStatus, setSubmissionStatus] = useState<CreateShipmentResponse | null>(null);
+  const [submissionStatus, setSubmissionStatus] = useState<Partial<CreateShipmentResponse> | null>(null);
   const [paymentStep, setPaymentStep] = useState<PaymentStepData>({ show: false, amount: "Rs. 0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
   const { addShipment, isLoading: isShipmentContextLoading } = useShipments();
   const [isPricingLoading, setIsLoadingPricing] = useState(false);
@@ -300,21 +301,38 @@ export function BookShipmentForm() {
     };
 
     try {
-        const response = await addShipment(apiShipmentData);
-        setSubmissionStatus(response);
-
-        let displayTotalPaid = `Rs. ${paymentStep.numericAmount.toFixed(2)}`;
-         if (response.data && typeof response.data.total_with_tax_18_percent === 'number') {
-            displayTotalPaid = `Rs. ${response.data.total_with_tax_18_percent.toFixed(2)}`;
-        } else if (response.data && typeof (response.data as any).final_total_price_with_tax === 'number') {
-            displayTotalPaid = `Rs. ${((response.data as any).final_total_price_with_tax).toFixed(2)}`;
+        const shipmentResponse = await addShipment(apiShipmentData);
+        const shipmentIdStr = shipmentResponse.shipment_id_str;
+        
+        if (!shipmentIdStr || !paymentStep.numericAmount) {
+          throw new Error("Missing shipment ID or amount after booking.");
         }
-
-
-        toast({
-            title: "Shipment Booked!",
-            description: `Your shipment ID is ${response.shipment_id_str}. Total: ${displayTotalPaid}. UTR: ${utr}`,
+  
+        // Submit the payment details (UTR) against the new shipment ID.
+        const utrPayload: SubmitUtrPayload = {
+          shipment_id_str: shipmentIdStr,
+          utr: utr,
+          amount: paymentStep.numericAmount,
+        };
+  
+        await apiClient<SubmitUtrResponse>('/api/payments', {
+          method: 'POST',
+          body: JSON.stringify(utrPayload),
         });
+  
+        // Show success message to the user.
+        setSubmissionStatus({
+          message: `Your payment is under review. You can track its status on the 'My Payments' page.`,
+          shipment_id_str: shipmentIdStr,
+          data: shipmentResponse.data,
+        });
+  
+        toast({
+          title: "Submission Successful!",
+          description: `Your UTR for shipment ${shipmentIdStr} has been submitted for review.`,
+        });
+        
+        // Reset form and state
         form.reset({
             shipmentTypeOption: undefined,
             senderName: (user && user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : '',
@@ -333,10 +351,11 @@ export function BookShipmentForm() {
         setPaymentStep({ show: false, amount: "Rs. 0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
         setUtr('');
         setUtrError(null);
+
     } catch (error: any) {
-        const errorMessage = error?.data?.error || error.message || "Failed to book shipment.";
+        const errorMessage = error?.data?.error || error.message || "Failed to book shipment or submit payment.";
         toast({
-            title: "Booking Failed",
+            title: "Submission Failed",
             description: errorMessage,
             variant: "destructive",
         });
@@ -344,30 +363,21 @@ export function BookShipmentForm() {
   };
 
   if (submissionStatus) {
-    let displayAmountWithRs = 'N/A';
-     if (submissionStatus.data?.total_with_tax_18_percent !== undefined && submissionStatus.data?.total_with_tax_18_percent !== null) {
-        displayAmountWithRs = `Rs. ${Number(submissionStatus.data.total_with_tax_18_percent).toFixed(2)}`;
-    } else if ((submissionStatus.data as any)?.final_total_price_with_tax !== undefined && (submissionStatus.data as any)?.final_total_price_with_tax !== null) {
-        displayAmountWithRs = `Rs. ${Number((submissionStatus.data as any).final_total_price_with_tax).toFixed(2)}`;
-    } else if (paymentStep.numericAmount !== null) {
-        displayAmountWithRs = `Rs. ${paymentStep.numericAmount.toFixed(2)}`;
-    }
-
-
     return (
       <Alert className="border-green-500 bg-green-50 text-green-700">
         <CheckCircle className="h-5 w-5 text-green-500" />
-        <AlertTitle className="font-headline text-green-700">Shipment Confirmed!</AlertTitle>
+        <AlertTitle className="font-headline text-green-700">Payment Submitted for Review</AlertTitle>
         <AlertDescription>
           <p>{submissionStatus.message}</p>
           <p>Shipment ID: <strong>{submissionStatus.shipment_id_str}</strong></p>
-          <p>Total Paid: {displayAmountWithRs}</p>
           <div className="mt-4 space-y-2 sm:space-y-0 sm:flex sm:space-x-2">
             <Button onClick={() => { setSubmissionStatus(null); form.setValue("shipmentTypeOption", undefined);}} className="w-full sm:w-auto" variant="outline">
               Book Another Shipment
             </Button>
-            <Button asChild className="w-full sm:w-auto" variant="default" disabled={!submissionStatus.shipment_id_str}>
-              <a href={submissionStatus.shipment_id_str ? `/dashboard/invoice/${submissionStatus.shipment_id_str}`: '#'} target="_blank" rel="noopener noreferrer">View Invoice</a>
+            <Button asChild className="w-full sm:w-auto" variant="default">
+              <Link href="/dashboard/my-payments">
+                <Wallet className="mr-2 h-4 w-4" /> Go to My Payments
+              </Link>
             </Button>
           </div>
         </AlertDescription>
@@ -442,7 +452,7 @@ export function BookShipmentForm() {
             className="w-full text-lg py-3"
             disabled={isShipmentContextLoading || isPricingLoading}
           >
-            {(isShipmentContextLoading || isPricingLoading) ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</> : "Confirm Booking"}
+            {(isShipmentContextLoading || isPricingLoading) ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</> : "Submit for Review"}
           </Button>
           <Button
             variant="outline"
