@@ -296,7 +296,6 @@ export function BookShipmentForm() {
         package_length_cm: data.packageLengthCm,
         pickup_date: format(data.pickupDate, 'yyyy-MM-dd'),
         service_type: effectiveServiceType,
-        user_email: user.email,
         final_total_price_with_tax: paymentStep.numericAmount,
     };
 

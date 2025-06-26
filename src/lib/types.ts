@@ -238,7 +238,6 @@ export interface AddShipmentPayload {
     pickup_date: string; // Formatted as "yyyy-MM-dd"
     service_type: ServiceType; // "Express" or "Standard"
     
-    user_email: string;
     user_id?: number; // Optional
     final_total_price_with_tax?: number; // Optional: GST-inclusive total from checkout
 }
