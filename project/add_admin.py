@@ -8,8 +8,6 @@ with app.app_context():
     user = User(
         email="admin@shedloadoverseas.com",
         password=generate_password_hash("Admin@12345"),
-        first_name="Admin",
-        last_name="User",
         is_admin=True
     )
     db.session.add(user)

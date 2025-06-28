@@ -23,8 +23,6 @@ def signup():
     new_user = User(
         email=user_data["email"],
         password=hashed_password,
-        first_name=user_data["firstName"],
-        last_name=user_data["lastName"],
         is_admin=False
     )
     db.session.add(new_user)
@@ -44,14 +42,26 @@ def login():
     if not user or not check_password_hash(user.password, credentials["password"]):
         return jsonify({"error": "Invalid email or password"}), 401
 
-    # You can still return some user info if you want
+    # Synthesize first name and last name for frontend
+    try:
+        name_part = user.email.split('@')[0]
+        # Capitalize and handle dot-separated names
+        name_parts = name_part.replace('.', ' ').replace('_', ' ').title().split()
+        first_name = name_parts[0] if name_parts else "User"
+        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+    except:
+        first_name = "User"
+        last_name = ""
+
+
+    # The User object from DB doesn't have first_name/last_name, so we add them to the JSON response
     return jsonify({
         "message": "Login successful",
         "user": {
             "id": user.id,
             "email": user.email,
-            "firstName": user.first_name,
-            "lastName": user.last_name,
+            "firstName": first_name, # Synthesized
+            "lastName": last_name,   # Synthesized
             "isAdmin": user.is_admin
         }
     }), 200

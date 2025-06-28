@@ -14,12 +14,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, Mail, Lock, User, CheckCircle } from 'lucide-react';
 import { CompanyLogo } from '@/components/shared/logo';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/use-auth'; // Assuming useAuth provides signup
+import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 const signupSchema = z.object({
-  firstName: z.string().min(1, { message: "First name is required." }),
-  lastName: z.string().min(1, { message: "Last name is required." }),
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
   confirmPassword: z.string().min(6, { message: "Please confirm your password." }),
@@ -40,8 +38,6 @@ export function SignupForm() {
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -54,7 +50,7 @@ export function SignupForm() {
     form.clearErrors();
 
     try {
-      await signupUser(data.firstName, data.lastName, data.email, data.password);
+      await signupUser(data.email, data.password);
       setSuccessMessage("Account created successfully! Redirecting to login...");
       toast({
         title: "Signup Successful",
@@ -99,41 +95,6 @@ export function SignupForm() {
                 <AlertDescription>{successMessage}</AlertDescription>
               </Alert>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base">First Name</FormLabel>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                      <FormControl>
-                        <Input placeholder="John" {...field} className="pl-10 text-base" />
-                      </FormControl>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-base">Last Name</FormLabel
-                    >
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                      <FormControl>
-                        <Input placeholder="Doe" {...field} className="pl-10 text-base" />
-                      </FormControl>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
             <FormField
               control={form.control}
               name="email"

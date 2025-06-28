@@ -1,8 +1,6 @@
 from marshmallow import Schema, fields, validate, validates, ValidationError
 
 class SignupSchema(Schema):
-    firstName = fields.Str(required=True, validate=validate.Length(min=1))
-    lastName = fields.Str(required=True, validate=validate.Length(min=1))
     email = fields.Email(required=True)
     password = fields.Str(required=True, validate=validate.Length(min=6))
 
