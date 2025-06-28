@@ -5,7 +5,7 @@ import React, { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAdminAuth } from '@/hooks/use-admin-auth'; 
 import { useAuth } from '@/hooks/use-auth'; 
-import { siteConfig } from '@/config/site';
+import { adminNavItems, siteConfig } from '@/config/site';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { LogOut, Menu, UserCircle, Loader2 } from 'lucide-react';
@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 
 
 function AdminUserNav() {
@@ -66,12 +67,30 @@ function AdminUserNav() {
 
 
 function AdminHeader() {
+  const pathname = usePathname();
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6">
-      <Link href="/admin/dashboard" className="flex items-center gap-2 text-lg font-semibold">
-        <Image src="/images/brand.png" alt={siteConfig.name} width={150} height={37} className="object-contain"/>
-        <span className="font-headline text-primary">Admin</span>
-      </Link>
+      <div className="flex items-center gap-6">
+        <Link href="/admin/dashboard" className="flex items-center gap-2 text-lg font-semibold">
+          <Image src="/images/brand.png" alt={siteConfig.name} width={150} height={37} className="object-contain"/>
+          <span className="font-headline text-primary">Admin</span>
+        </Link>
+        <nav className="hidden md:flex items-center gap-4">
+          {adminNavItems.map(item => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+                pathname === item.href ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.title}
+            </Link>
+          ))}
+        </nav>
+      </div>
       <AdminUserNav />
     </header>
   );

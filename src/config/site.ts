@@ -1,5 +1,5 @@
 
-import { Home, PackagePlus, Search, ListOrdered, MessageSquare, Receipt, Wallet } from 'lucide-react'; // Calculator removed, Wallet added
+import { Home, PackagePlus, Search, ListOrdered, MessageSquare, Receipt, Wallet, LayoutDashboard } from 'lucide-react'; 
 import type { LucideIcon } from 'lucide-react';
 
 export interface NavItem {
@@ -55,6 +55,19 @@ export const dashboardNavItems: NavItem[] = [
     icon: MessageSquare,
     description: 'Get support and contact information.',
   },
+];
+
+export const adminNavItems: NavItem[] = [
+    {
+        title: 'Dashboard',
+        href: '/admin/dashboard',
+        icon: LayoutDashboard,
+    },
+    {
+        title: 'Payments',
+        href: '/admin/payments',
+        icon: Wallet,
+    }
 ];
 
 export const siteConfig = {

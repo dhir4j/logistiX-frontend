@@ -266,3 +266,21 @@ export interface UserPayment {
     created_at: string; // ISO Date string
     updated_at: string; // ISO Date string
 }
+
+// Type for admin view of payments
+export interface AdminPayment {
+  id: number;
+  order_id: string;
+  first_name: string;
+  last_name: string;
+  amount: number;
+  utr: string;
+  status: PaymentStatus;
+  created_at: string; // ISO String
+}
+
+export type AdminPaymentsResponse = AdminPayment[];
+
+export interface UpdatePaymentStatusResponse {
+    message: string;
+}
