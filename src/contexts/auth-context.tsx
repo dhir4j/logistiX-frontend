@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { User, LoginResponse } from '@/lib/types';
@@ -11,7 +12,7 @@ interface AuthContextType {
   isAuthenticated: boolean; 
   isLoading: boolean;
   loginUser: (email: string, password: string) => Promise<User>;
-  signupUser: (email: string, password: string) => Promise<void>;
+  signupUser: (firstName: string, lastName: string, email: string, password: string) => Promise<void>;
   logoutUser: () => void;
   reloadUserFromStorage: () => void;
 }
@@ -87,12 +88,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [handleApiError]);
 
-  const signupUser = useCallback(async (email: string, password: string): Promise<void> => {
+  const signupUser = useCallback(async (firstName: string, lastName: string, email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
       await apiClient<{ message: string }>('/api/auth/signup', {
           method: 'POST',
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password }),
       });
       setIsLoading(false);
     } catch (error: any) {
