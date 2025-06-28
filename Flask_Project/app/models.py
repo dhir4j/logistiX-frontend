@@ -4,7 +4,6 @@ from datetime import datetime
 
 class User(db.Model):
     __tablename__ = "users"
-    __table_args__ = {'schema': 'shedload'}
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
@@ -18,10 +17,9 @@ class User(db.Model):
 
 class Shipment(db.Model):
     __tablename__ = "shipments"
-    __table_args__ = {'schema': 'shedload'}
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('shedload.users.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     user_email = db.Column(db.String(255), nullable=False, index=True)
     shipment_id_str = db.Column(db.String(20), unique=True, nullable=False, index=True)
 
@@ -59,11 +57,10 @@ class Shipment(db.Model):
 
 class PaymentRequest(db.Model):
     __tablename__ = "payment_requests"
-    __table_args__ = {'schema': 'shedload'}
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('shedload.users.id'), nullable=False)
-    shipment_id = db.Column(db.Integer, db.ForeignKey('shedload.shipments.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    shipment_id = db.Column(db.Integer, db.ForeignKey('shipments.id'), nullable=False)
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     utr = db.Column(db.String(64), nullable=False)
     status = db.Column(db.String(20), default='Pending')  # Pending, Approved, Rejected
