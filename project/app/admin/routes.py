@@ -129,22 +129,36 @@ def web_analytics():
 
 @admin_bp.route("/payments", methods=["GET"])
 def get_payments():
-    payments = PaymentRequest.query.order_by(PaymentRequest.created_at.desc()).all()
-    result = []
-    for p in payments:
-        user = User.query.get(p.user_id)
-        shipment = Shipment.query.get(p.shipment_id)
-        result.append({
-            "id": p.id,
-            "order_id": shipment.shipment_id_str if shipment else None,
-            "first_name": user.first_name if user else "",
-            "last_name": user.last_name if user else "",
-            "amount": p.amount,
-            "utr": p.utr,
-            "status": p.status,
-            "created_at": p.created_at.isoformat()
-        })
-    return jsonify(result), 200
+    try:
+        payments_query = db.session.query(
+            PaymentRequest,
+            User.first_name,
+            User.last_name,
+            Shipment.shipment_id_str
+        ).join(
+            User, PaymentRequest.user_id == User.id
+        ).join(
+            Shipment, PaymentRequest.shipment_id == Shipment.id
+        ).order_by(PaymentRequest.created_at.desc()).all()
+
+        result = []
+        for payment, first_name, last_name, shipment_id_str in payments_query:
+            result.append({
+                "id": payment.id,
+                "order_id": shipment_id_str,
+                "first_name": first_name,
+                "last_name": last_name,
+                "amount": float(payment.amount),
+                "utr": payment.utr,
+                "status": payment.status,
+                "created_at": payment.created_at.isoformat()
+            })
+        return jsonify(result), 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "INTERNAL SERVER ERROR", "details": str(e)}), 500
+
 
 @admin_bp.route("/payments/<int:payment_id>/status", methods=["PUT"])
 def update_payment_status(payment_id):

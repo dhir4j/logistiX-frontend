@@ -1,4 +1,3 @@
-
 import { Home, PackagePlus, Search, ListOrdered, MessageSquare, Receipt, Wallet, LayoutDashboard } from 'lucide-react'; 
 import type { LucideIcon } from 'lucide-react';
 

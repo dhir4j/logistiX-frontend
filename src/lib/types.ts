@@ -1,4 +1,3 @@
-
 // Matches API structure for Address
 export interface AddressDetail {
   street: string;

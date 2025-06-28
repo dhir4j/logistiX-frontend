@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, render_template_string
-from .extensions import db, migrate, cors  # ← REMOVED jwt here
+from .extensions import db, cors
 from .auth.routes import auth_bp
 from .shipments.routes import shipments_bp
 from .admin.routes import admin_bp
@@ -12,7 +12,6 @@ def create_app(env="development"):
     app.config.from_object(config[env])
 
     db.init_app(app)
-    migrate.init_app(app, db)
     cors.init_app(app, origins=app.config.get("CORS_ORIGINS", "*"), supports_credentials=True)
 
     @app.route("/")
