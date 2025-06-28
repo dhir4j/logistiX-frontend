@@ -4,7 +4,6 @@ from datetime import datetime
 
 class User(db.Model):
     __tablename__ = "users"
-    __table_args__ = {"schema": "shedloadoverseas"}  # <--- ADD THIS LINE
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -17,16 +16,13 @@ class User(db.Model):
 
 class Shipment(db.Model):
     __tablename__ = "shipments"
-    __table_args__ = {"schema": "shedloadoverseas"}
 
     id = db.Column(db.Integer, primary_key=True)
-
-    # ✅ Correct SQLAlchemy column
     user_email = db.Column(db.String(255), nullable=False, index=True)
 
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey('shedloadoverseas.users.id', ondelete='CASCADE'),
+        db.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False
     )
 
@@ -66,11 +62,10 @@ class Shipment(db.Model):
 
 class PaymentRequest(db.Model):
     __tablename__ = "payment_requests"
-    __table_args__ = {"schema": "shedloadoverseas"}
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('shedloadoverseas.users.id'), nullable=False)
-    shipment_id = db.Column(db.Integer, db.ForeignKey('shedloadoverseas.shipments.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    shipment_id = db.Column(db.Integer, db.ForeignKey('shipments.id'), nullable=False)
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     utr = db.Column(db.String(64), nullable=False)
     status = db.Column(db.String(20), default='Pending')  # Pending / Approved / Rejected
