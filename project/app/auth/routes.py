@@ -23,8 +23,6 @@ def signup():
     new_user = User(
         email=user_data["email"],
         password=hashed_password,
-        first_name=user_data["first_name"],
-        last_name=user_data["last_name"],
         is_admin=False
     )
     db.session.add(new_user)
@@ -44,13 +42,18 @@ def login():
     if not user or not check_password_hash(user.password, credentials["password"]):
         return jsonify({"error": "Invalid email or password"}), 401
     
+    # Derive firstName and lastName from email if not present in the database
+    email_parts = user.email.split('@')[0].replace('.', ' ').replace('_', ' ').title().split()
+    first_name = email_parts[0] if email_parts else "User"
+    last_name = ' '.join(email_parts[1:]) if len(email_parts) > 1 else ""
+
     return jsonify({
         "message": "Login successful",
         "user": {
             "id": user.id,
             "email": user.email,
-            "firstName": getattr(user, 'first_name', ''),
-            "lastName": getattr(user, 'last_name', ''),
+            "firstName": getattr(user, 'first_name', first_name),
+            "lastName": getattr(user, 'last_name', last_name),
             "isAdmin": user.is_admin
         }
     }), 200
