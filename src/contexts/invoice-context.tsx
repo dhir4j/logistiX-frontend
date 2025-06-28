@@ -38,6 +38,9 @@ const transformShipmentToDisplayInvoice = (mappedShipment: Shipment): DisplayInv
   const bookingDate = mappedShipment.bookingDate || mappedShipment.booking_date;
   const shipmentId = mappedShipment.shipmentIdStr || mappedShipment.shipment_id_str; // Use mapped shipmentIdStr
 
+  // Determine invoice status based on shipment status
+  const invoiceStatus = mappedShipment.status === 'Pending Payment' ? 'Pending' : 'Paid';
+
   return {
     id: shipmentId, 
     shipmentIdStr: shipmentId,
@@ -63,7 +66,7 @@ const transformShipmentToDisplayInvoice = (mappedShipment: Shipment): DisplayInv
     taxRate: 0.18, 
     taxAmount: mappedShipment.taxAmount18Percent || mappedShipment.tax_amount_18_percent,
     grandTotal: mappedShipment.totalWithTax18Percent || mappedShipment.total_with_tax_18_percent,
-    status: "Paid", 
+    status: invoiceStatus, // Use the dynamically determined status
     serviceType: mappedShipment.serviceType || mappedShipment.service_type,
     packageWeight: mappedShipment.packageWeightKg || mappedShipment.package_weight_kg,
   };
