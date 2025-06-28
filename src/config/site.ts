@@ -1,4 +1,4 @@
-import { Home, PackagePlus, Search, ListOrdered, MessageSquare, Receipt, Wallet, LayoutDashboard } from 'lucide-react'; 
+import { Home, PackagePlus, Search, ListOrdered, MessageSquare, Receipt, Wallet, LayoutDashboard, Users } from 'lucide-react'; 
 import type { LucideIcon } from 'lucide-react';
 
 export interface NavItem {
@@ -66,6 +66,11 @@ export const adminNavItems: NavItem[] = [
         title: 'Payments',
         href: '/admin/payments',
         icon: Wallet,
+    },
+    {
+        title: 'Users',
+        href: '/admin/users',
+        icon: Users,
     }
 ];
 

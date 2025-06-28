@@ -187,7 +187,7 @@ export interface DomesticPriceResponse {
   weight_kg: number;
   price_per_kg: string; 
   rounded_weight: number;
-  total_price: string; 
+  total_price: number; 
   error?: string;
 }
 
@@ -201,11 +201,9 @@ export interface InternationalPriceResponse {
   zone: string;
   mode: string; 
   weight_kg: number;
-  base_0_5kg: number | string; 
-  per_0_5kg_addl: number | string; 
-  addl_halfkg_units: number;
-  total_price: number | string; 
-  formatted_total: string; 
+  rounded_weight: number;
+  price_per_kg: string;
+  total_price: number; 
   error?: string;
 }
 
@@ -237,8 +235,8 @@ export interface AddShipmentPayload {
     pickup_date: string; // Formatted as "yyyy-MM-dd"
     service_type: ServiceType; // "Express" or "Standard"
     
-    user_id?: number; // Optional
-    final_total_price_with_tax?: number; // Optional: GST-inclusive total from checkout
+    final_total_price_with_tax: number;
+    user_email: string;
 }
 
 // New types for payment flow
@@ -263,7 +261,6 @@ export interface UserPayment {
     amount: number;
     status: PaymentStatus;
     created_at: string; // ISO Date string
-    updated_at: string; // ISO Date string
 }
 
 // Type for admin view of payments
@@ -282,4 +279,43 @@ export type AdminPaymentsResponse = AdminPayment[];
 
 export interface UpdatePaymentStatusResponse {
     message: string;
+}
+
+// For /api/admin/users list
+export interface AdminUserListItem {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  created_at: string; // ISO date string
+  shipment_count: number;
+}
+
+export interface AdminUsersResponse {
+  users: AdminUserListItem[];
+  totalPages: number;
+  currentPage: number;
+  totalCount: number;
+}
+
+// For /api/admin/users/<id> details
+export interface UserShipmentSummary {
+    id: number;
+    shipment_id_str: string;
+    receiver_name: string;
+    booking_date: string; // ISO Date string
+    status: TrackingStage;
+    total_with_tax_18_percent: number;
+}
+
+export interface AdminUserDetailsResponse {
+    user: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        email: string;
+        created_at: string; // ISO Date string
+    };
+    shipments: UserShipmentSummary[];
+    payments: UserPayment[];
 }

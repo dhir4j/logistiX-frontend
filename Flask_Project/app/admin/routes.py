@@ -167,3 +167,86 @@ def update_payment_status(payment_id):
 
     db.session.commit()
     return jsonify({"message": f"Payment {new_status.lower()} successfully"}), 200
+
+@admin_bp.route("/users", methods=["GET"])
+def get_all_users():
+    page = int(request.args.get("page", 1))
+    limit = int(request.args.get("limit", 10))
+    q = request.args.get("q")
+    query = User.query.filter(User.is_admin == False)
+
+    if q:
+        like_q = f"%{q}%"
+        query = query.filter(
+            or_(
+                User.first_name.ilike(like_q),
+                User.last_name.ilike(like_q),
+                User.email.ilike(like_q)
+            )
+        )
+    
+    total_count = query.count()
+    pagination = query.order_by(User.created_at.desc()).paginate(page=page, per_page=limit, error_out=False)
+    users = pagination.items
+
+    result = []
+    for user in users:
+        result.append({
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "created_at": user.created_at.isoformat(),
+            "shipment_count": len(user.shipments)
+        })
+
+    return jsonify({
+        "users": result,
+        "totalPages": pagination.pages or 1,
+        "currentPage": page,
+        "totalCount": total_count
+    }), 200
+
+@admin_bp.route("/users/<int:user_id>", methods=["GET"])
+def get_user_details(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.is_admin:
+        return jsonify({"error": "Cannot access admin user details"}), 403
+
+    shipments_query = Shipment.query.filter_by(user_id=user.id).order_by(Shipment.booking_date.desc()).all()
+    shipments_result = []
+    for s in shipments_query:
+        shipments_result.append({
+            "id": s.id,
+            "shipment_id_str": s.shipment_id_str,
+            "receiver_name": s.receiver_name,
+            "booking_date": s.booking_date.isoformat(),
+            "status": s.status,
+            "total_with_tax_18_percent": float(s.total_with_tax_18_percent),
+        })
+
+    payments_query = PaymentRequest.query.filter_by(user_id=user.id).order_by(PaymentRequest.created_at.desc()).all()
+    payments_result = []
+    for p in payments_query:
+        shipment_for_payment = Shipment.query.get(p.shipment_id)
+        shipment_id_str_for_payment = shipment_for_payment.shipment_id_str if shipment_for_payment else "N/A"
+        payments_result.append({
+            "id": p.id,
+            "shipment_id_str": shipment_id_str_for_payment,
+            "amount": float(p.amount),
+            "utr": p.utr,
+            "status": p.status,
+            "created_at": p.created_at.isoformat()
+        })
+
+    return jsonify({
+        "user": {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "created_at": user.created_at.isoformat()
+        },
+        "shipments": shipments_result,
+        "payments": payments_result
+    }), 200

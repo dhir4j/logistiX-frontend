@@ -10,6 +10,7 @@ import type { WebAnalyticsResponse } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface AdminAnalyticsData {
   total_orders: number | null;
@@ -90,66 +91,68 @@ export function AdminDashboardContent() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <Package className="h-5 w-5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            {isLoadingAnalytics ? (
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            ) : (
-              <div className="text-2xl font-bold">{formatNumber(analyticsData.total_orders)}</div>
-            )}
-            <p className="text-xs text-muted-foreground">All processed orders</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-5 w-5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            {isLoadingAnalytics ? (
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            ) : (
-              <div className="text-2xl font-bold">{formatCurrency(analyticsData.total_revenue)}</div>
-            )}
-            <p className="text-xs text-muted-foreground">Gross revenue generated</p>
-          </CardContent>
-        </Card>
-         <Card className="shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-5 w-5 text-primary" />
-          </CardHeader>
-          <CardContent>
-             {isLoadingAnalytics ? (
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            ) : (
-              <div className="text-2xl font-bold">{formatNumber(analyticsData.total_users)}</div>
-            )}
-            <p className="text-xs text-muted-foreground">Registered users</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-lg">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Revenue/Order</CardTitle>
-            <TrendingUp className="h-5 w-5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            {isLoadingAnalytics ? (
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            ) : (
-             <div className="text-2xl font-bold">{formatCurrency(analyticsData.avg_revenue)}</div>
-            )}
-            <p className="text-xs text-muted-foreground">Average order value</p>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <AdminOrdersTable />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="shadow-lg">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+                    <Package className="h-5 w-5 text-primary" />
+                </CardHeader>
+                <CardContent>
+                    {isLoadingAnalytics ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    ) : (
+                    <div className="text-2xl font-bold">{formatNumber(analyticsData.total_orders)}</div>
+                    )}
+                    <p className="text-xs text-muted-foreground">All processed orders</p>
+                </CardContent>
+            </Card>
+            <Card className="shadow-lg">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                    <DollarSign className="h-5 w-5 text-primary" />
+                </CardHeader>
+                <CardContent>
+                    {isLoadingAnalytics ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    ) : (
+                    <div className="text-2xl font-bold">{formatCurrency(analyticsData.total_revenue)}</div>
+                    )}
+                    <p className="text-xs text-muted-foreground">Gross revenue generated</p>
+                </CardContent>
+            </Card>
+            <Link href="/admin/users" className="group">
+                <Card className="shadow-lg h-full transition-all duration-300 group-hover:shadow-xl group-hover:border-primary/50 group-hover:-translate-y-1">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                        <Users className="h-5 w-5 text-primary" />
+                    </CardHeader>
+                    <CardContent>
+                        {isLoadingAnalytics ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        ) : (
+                        <div className="text-2xl font-bold">{formatNumber(analyticsData.total_users)}</div>
+                        )}
+                        <p className="text-xs text-muted-foreground">Registered users (non-admin)</p>
+                    </CardContent>
+                </Card>
+            </Link>
+            <Card className="shadow-lg">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg. Revenue/Order</CardTitle>
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                </CardHeader>
+                <CardContent>
+                    {isLoadingAnalytics ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    ) : (
+                    <div className="text-2xl font-bold">{formatCurrency(analyticsData.avg_revenue)}</div>
+                    )}
+                    <p className="text-xs text-muted-foreground">Average order value</p>
+                </CardContent>
+            </Card>
+        </div>
+        
+        <AdminOrdersTable />
     </div>
   );
 }
