@@ -96,14 +96,14 @@ export const InvoiceProvider = ({ children }: { children: ReactNode }) => {
   }, [toast, logoutUser]);
 
   const fetchUserShipmentsForInvoices = useCallback(async () => {
-    if (!isAuthenticated || !user) { 
+    if (!isAuthenticated || !user?.email) { 
       setDisplayInvoices([]);
       return;
     }
     setIsLoading(true);
     try {
       // API returns array of snake_case shipments
-      const shipmentsDataFromApi = await apiClient<any[]>('/api/shipments'); 
+      const shipmentsDataFromApi = await apiClient<any[]>(`/api/shipments?email=${encodeURIComponent(user.email)}`); 
       // Map to frontend camelCase (or hybrid) Shipment objects
       const mappedShipmentsData: Shipment[] = shipmentsDataFromApi.map(mapApiShipmentToFrontend);
       // Transform these mapped shipments into DisplayInvoice objects
