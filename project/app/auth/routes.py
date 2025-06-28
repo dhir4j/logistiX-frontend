@@ -22,7 +22,7 @@ def signup():
     hashed_password = generate_password_hash(user_data["password"])
     new_user = User(
         email=user_data["email"],
-        password_hash=hashed_password,
+        password=hashed_password,
         first_name=user_data["firstName"],
         last_name=user_data["lastName"],
         is_admin=False
@@ -41,7 +41,7 @@ def login():
         return jsonify({"error": "Invalid input"}), 400
 
     user = User.query.filter_by(email=credentials["email"]).first()
-    if not user or not check_password_hash(user.password_hash, credentials["password"]):
+    if not user or not check_password_hash(user.password, credentials["password"]):
         return jsonify({"error": "Invalid email or password"}), 401
 
     # You can still return some user info if you want
