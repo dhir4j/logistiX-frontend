@@ -151,6 +151,8 @@ def get_shipment_detail(shipment_id_str):
         "package_weight_kg": float(shipment.package_weight_kg),
         "booking_date": shipment.booking_date.isoformat(),
         "status": shipment.status,
+        "price_without_tax": float(shipment.price_without_tax),
+        "tax_amount_18_percent": float(shipment.tax_amount_18_percent),
         "total_with_tax_18_percent": float(shipment.total_with_tax_18_percent),
         "tracking_history": shipment.tracking_history,
     }), 200
