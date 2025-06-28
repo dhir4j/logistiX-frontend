@@ -176,7 +176,7 @@ export function BookShipmentForm() {
           mode: effectiveServiceType.toLowerCase() as "express" | "standard",
           weight: data.packageWeightKg,
         };
-        priceResponseData = await apiClient<DomesticPriceResponse>(`/domestic/price`, {
+        priceResponseData = await apiClient<DomesticPriceResponse>(`/api/domestic/price`, {
           method: 'POST',
           body: JSON.stringify(domesticPayload),
         });
@@ -194,7 +194,7 @@ export function BookShipmentForm() {
           country: data.receiverAddressCountry,
           weight: data.packageWeightKg,
         };
-        priceResponseData = await apiClient<InternationalPriceResponse>(`/international/price`, {
+        priceResponseData = await apiClient<InternationalPriceResponse>(`/api/international/price`, {
           method: 'POST',
           body: JSON.stringify(internationalPayload),
         });
@@ -298,6 +298,7 @@ export function BookShipmentForm() {
         pickup_date: format(data.pickupDate, 'yyyy-MM-dd'),
         service_type: effectiveServiceType,
         final_total_price_with_tax: paymentStep.numericAmount,
+        user_email: user.email,
     };
 
     try {
