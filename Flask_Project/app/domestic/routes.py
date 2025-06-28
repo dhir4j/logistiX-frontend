@@ -1,3 +1,4 @@
+
 import math
 from flask import Blueprint, request, jsonify
 
@@ -53,13 +54,16 @@ def get_price(mode: str, state_name: str, weight_kg: float) -> dict:
     total_price = per_kg_price * weight_int
     total_with_tax = round(total_price * 1.18, 2)
     
+    # Apply 30% discount
+    final_price = round(total_with_tax * 0.7, 2)
+    
     return {
         "destination_state": dest_state.title(),
         "mode": mode.title(),
         "weight_kg": weight_kg,
         "price_per_kg": f"₹{per_kg_price}",
         "rounded_weight": weight_int,
-        "total_price": total_with_tax
+        "total_price": final_price
     }
 
 domestic_bp = Blueprint("domestic", __name__, url_prefix="/api/domestic")

@@ -1,3 +1,4 @@
+
 from flask import Blueprint, request, jsonify
 from app.models import Shipment, User, PaymentRequest
 from app.extensions import db
@@ -39,6 +40,8 @@ def get_all_shipments():
             "receiver_name": s.receiver_name,
             "booking_date": s.booking_date.isoformat(),
             "status": s.status,
+            "price_without_tax": float(s.price_without_tax),
+            "tax_amount_18_percent": float(s.tax_amount_18_percent),
             "total_with_tax_18_percent": float(s.total_with_tax_18_percent),
         })
     return jsonify({

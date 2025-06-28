@@ -1,3 +1,4 @@
+
 import math
 from flask import Blueprint, request, jsonify
 
@@ -64,6 +65,9 @@ def intl_price():
         total_price = per_kg * weight_kg
         total_with_tax = round(total_price * 1.18, 2)
 
+        # Apply 30% discount
+        final_price = round(total_with_tax * 0.7, 2)
+
 
         return jsonify({
             "country": country.title(),
@@ -72,7 +76,7 @@ def intl_price():
             "weight_kg": weight,
             "rounded_weight": weight_kg,
             "price_per_kg": f"₹{per_kg}",
-            "total_price": total_with_tax
+            "total_price": final_price
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
