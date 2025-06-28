@@ -256,3 +256,5 @@ def get_user_details(user_id):
         "shipments": shipments_result,
         "payments": payments_result
     }), 200
+
+    
