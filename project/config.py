@@ -12,7 +12,8 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")  # <-- REMOVED!
-    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "").split(",")
+    CORS_ORIGINS_ENV = os.environ.get("CORS_ORIGINS")
+    CORS_ORIGINS = CORS_ORIGINS_ENV.split(',') if CORS_ORIGINS_ENV else "*"
 
 class DevelopmentConfig(Config):
     DEBUG = True
