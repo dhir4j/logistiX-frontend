@@ -84,7 +84,7 @@ export const siteConfig = {
     legalName: "SHEDLOAD OVERSEAS LLP",
     address: "Showroom no. 30, B Block, LGF, CHD, Citi Center, Zirakpur, Mohali, SAS Nagar, Punjab, 140603",
     email: "SHEDLOADOVERSEAS@GMAIL.COM",
-    phone: "+91 9779572547",
+    phone: "9779572547",
     gstin: "03AFPFS8245B1ZY",
     pan: "AFPFS8245B"
   },

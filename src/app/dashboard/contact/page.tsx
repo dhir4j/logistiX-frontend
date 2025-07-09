@@ -40,7 +40,7 @@ export default function ContactPage() {
                 <div>
                   <h4 className="font-semibold">Phone Support</h4>
                   <p className="text-muted-foreground">Call us for immediate assistance.</p>
-                  <a href="tel:+919779572547" className="text-primary hover:underline">+91 97795 72547</a>
+                  <a href="tel:9779572547" className="text-primary hover:underline">9779572547</a>
                 </div>
               </div>
               <div className="flex items-start gap-4">
