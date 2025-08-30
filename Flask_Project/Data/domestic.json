@@ -1,0 +1,63 @@
+{
+    "1": [
+        "Haryana",
+        "Punjab",
+        "Himachal Pradesh",
+        "Chandigarh"
+    ],
+    "2": [
+        "Jammu & Kashmir"
+    ],
+    "3": [
+        "Delhi"
+    ],
+    "4": [
+        "Rajasthan",
+        "Uttar Pradesh",
+        "Uttarakhand"
+    ],
+    "5": [
+        "Srinagar"
+    ],
+    "6": [
+        "Bihar",
+        "Jharkhand"
+    ],
+    "7": [
+        "Mumbai",
+        "Ahmedabad",
+        "Pune",
+        "Kolkata",
+        "Chennai",
+        "Hyderabad",
+        "Bangalore"
+    ],
+    "8": [
+        "Odisha",
+        "Goa",
+        "Tamil Nadu",
+        "Telangana",
+        "Karnataka",
+        "West Bengal",
+        "Maharashtra",
+        "Gujarat",
+        "Lakshadweep",
+        "Puducherry",
+        "Andhra Pradesh",
+        "Madhya Pradesh",
+        "Kerala",
+        "Chhattisgarh",
+        "Dadra and Nagar Haveli",
+        "Daman and Diu",
+        "Ladakh"
+    ],
+    "9": [
+        "Port Blair",
+        "Arunachal Pradesh",
+        "Assam",
+        "Manipur",
+        "Meghalaya",
+        "Mizoram",
+        "Nagaland"
+    ]
+}
