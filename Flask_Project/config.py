@@ -7,8 +7,8 @@ class Config:
     # Database connection details
     db_user = "dhir4j"
     db_password = "m4dc0d3r"
-    db_host = "hard4j-4630.postgres.pythonanywhere-services.com"
-    db_port = "14630"
+    db_host = "simple4j-4739.postgres.pythonanywhere-services.com"
+    db_port = "14739"
     db_name = "shedload"
 
     # SQLAlchemy Configuration
@@ -19,7 +19,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # CORS Configuration
-    CORS_ORIGINS_ENV = "https://www.shedloadoverseas.com,https://logisti-x-frontend.vercel.app,https://server.shedloadoverseas.com,https://6000-firebase-studio-1749958562544.cluster-fdkw7vjj7bgguspe3fbbc25tra.cloudworkstations.dev"
+    CORS_ORIGINS_ENV = "https://www.shedloadoverseas.com,https://logisti-x-frontend.vercel.app,https://server.shedloadoverseas.com,https://6000-firebase-studio-1749958562544.cluster-fdkw7vjj7bgguspe3fbbc25tra.cloudworkstations.dev,https://rs-swift-frontend.vercel.app,https://www.rsswiftcouriers.com,https://rsswiftcouriers.com,https://www.crossmapvisaconsultants.com"
     CORS_ORIGINS = CORS_ORIGINS_ENV.split(',')
 
 
