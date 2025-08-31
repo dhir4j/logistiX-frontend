@@ -1,3 +1,4 @@
+
 // Matches API structure for Address
 export interface AddressDetail {
   street: string;
@@ -16,7 +17,7 @@ export interface User {
   isAdmin: boolean;  
 }
 
-export type ServiceType = "Standard" | "Express";
+export type ServiceType = "Standard" | "Express" | "Air" | "Surface";
 export type TrackingStage = "Pending Payment" | "Booked" | "In Transit" | "Out for Delivery" | "Delivered" | "Cancelled";
 
 // Matches API structure for Tracking History entries
@@ -177,7 +178,8 @@ export type ShipmentTypeOption = "Domestic" | "International";
 
 export interface DomesticPriceRequest {
   state: string;
-  mode: "express" | "standard";
+  city: string;
+  mode: "express" | "standard" | "air" | "surface";
   weight: number;
 }
 
@@ -203,7 +205,8 @@ export interface InternationalPriceResponse {
   weight_kg: number;
   rounded_weight: number;
   price_per_kg: string;
-  total_price: number; 
+  total_price: number;
+  formatted_total?: string;
   error?: string;
 }
 
@@ -319,3 +322,5 @@ export interface AdminUserDetailsResponse {
     shipments: UserShipmentSummary[];
     payments: UserPayment[];
 }
+
+    

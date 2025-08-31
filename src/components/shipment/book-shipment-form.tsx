@@ -55,7 +55,7 @@ const shipmentFormSchema = z.object({
   packageLengthCm: z.coerce.number().min(1, "Length must be at least 1cm").max(200, "Max 200cm"),
   pickupDate: z.date({ required_error: "Pickup date is required." }),
 
-  serviceType: z.enum(["Standard", "Express"], {errorMap: (issue, ctx) => {
+  serviceType: z.enum(["Standard", "Express", "Air", "Surface"], {errorMap: (issue, ctx) => {
     if (issue.code === z.ZodIssueCode.invalid_enum_value && issue.received === '') {
       return { message: "Service type is required. Please select one." };
     }
@@ -117,6 +117,7 @@ export function BookShipmentForm() {
   });
 
   const shipmentTypeOption = form.watch("shipmentTypeOption");
+  const packageWeight = form.watch("packageWeightKg");
 
   useEffect(() => {
     if (user && user.firstName && user.lastName && !form.getValues('senderName')) {
@@ -148,11 +149,9 @@ export function BookShipmentForm() {
     let displayAmountForQR = "Rs. 0.00";
     let priceResponseData: PriceApiResponse;
 
-    // Ensure serviceType is correctly set for International before proceeding
     let effectiveServiceType = data.serviceType;
     if (data.shipmentTypeOption === "International") {
         effectiveServiceType = "Express";
-        // Optionally, update form state if it somehow diverged, though useEffect should handle this
         if (form.getValues("serviceType") !== "Express") {
             form.setValue("serviceType", "Express", {shouldValidate: true});
         }
@@ -166,14 +165,15 @@ export function BookShipmentForm() {
 
     try {
       if (data.shipmentTypeOption === "Domestic") {
-        if (!data.receiverAddressState) {
-          form.setError("receiverAddressState", { type: "manual", message: "Receiver state is required for domestic pricing."});
+        if (!data.receiverAddressState || !data.receiverAddressCity) {
+          form.setError("receiverAddressState", { type: "manual", message: "Receiver city and state are required for domestic pricing."});
           setIsLoadingPricing(false);
           return;
         }
         const domesticPayload: DomesticPriceRequest = {
           state: data.receiverAddressState,
-          mode: effectiveServiceType.toLowerCase() as "express" | "standard",
+          city: data.receiverAddressCity,
+          mode: effectiveServiceType.toLowerCase() as "express" | "standard" | "air" | "surface",
           weight: data.packageWeightKg,
         };
         priceResponseData = await apiClient<DomesticPriceResponse>(`/api/domestic/price`, {
@@ -407,7 +407,7 @@ export function BookShipmentForm() {
               <p className="text-sm text-muted-foreground mt-1">Zone: {(paymentStep.priceResponse as InternationalPriceResponse).zone}</p>
             )}
              {paymentStep.shipmentType === "Domestic" && (paymentStep.priceResponse as DomesticPriceResponse)?.price_per_kg && (
-              <p className="text-sm text-muted-foreground mt-1">Rate: {(paymentStep.priceResponse as DomesticPriceResponse).price_per_kg} (Rounded Weight: {(paymentStep.priceResponse as DomesticPriceResponse).rounded_weight}kg)</p>
+              <p className="text-sm text-muted-foreground mt-1">{(paymentStep.priceResponse as DomesticPriceResponse).price_per_kg} (Rounded Weight: {(paymentStep.priceResponse as DomesticPriceResponse).rounded_weight}kg)</p>
             )}
           </div>
           <div className="flex justify-center">
@@ -471,6 +471,21 @@ export function BookShipmentForm() {
       </Card>
     );
   }
+
+  const renderServiceTypeOptions = () => {
+    if (shipmentTypeOption === "Domestic") {
+        let options = ["Express", "Standard"];
+        if (packageWeight > 2) {
+            options.push("Air");
+        }
+        if (packageWeight > 5) {
+            options.push("Surface");
+        }
+        return options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>);
+    }
+    // International
+    return <SelectItem value="Express">Express</SelectItem>;
+  };
 
   return (
     <Card className="w-full shadow-xl">
@@ -650,17 +665,13 @@ export function BookShipmentForm() {
                   <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <Package className="h-5 w-5" /> Service </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField control={form.control} name="serviceType" render={({ field }) => {
-                       // Determine the actual value to be used by the Select component
-                       // Prioritize "Express" if international, otherwise use field value or default to "Standard"
                        const currentFieldValue = field.value;
                        let selectValueToShow: ServiceType;
 
                        if (shipmentTypeOption === "International") {
                          selectValueToShow = "Express";
-                       } else if (currentFieldValue === "Standard" || currentFieldValue === "Express") {
-                         selectValueToShow = currentFieldValue;
                        } else {
-                         selectValueToShow = "Standard"; // Fallback default
+                         selectValueToShow = currentFieldValue;
                        }
 
                       return (
@@ -672,8 +683,7 @@ export function BookShipmentForm() {
                           >
                             <FormControl><SelectTrigger><SelectValue placeholder="Select service type" /></SelectTrigger></FormControl>
                             <SelectContent>
-                                <SelectItem value="Standard">Standard</SelectItem>
-                                <SelectItem value="Express">Express</SelectItem>
+                                {renderServiceTypeOptions()}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -702,3 +712,5 @@ export function BookShipmentForm() {
     </Card>
   );
 }
+
+    
