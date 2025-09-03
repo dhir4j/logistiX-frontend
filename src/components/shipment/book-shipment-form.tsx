@@ -24,7 +24,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { indianStatesAndUTs } from '@/lib/indian-states';
-import { internationalCountryList } from '@/lib/country-list';
 import apiClient from '@/lib/api-client';
 import Link from 'next/link';
 
@@ -55,8 +54,8 @@ const shipmentFormSchema = z.object({
   packageLengthCm: z.coerce.number().min(1, "Length must be at least 1cm").max(200, "Max 200cm"),
   pickupDate: z.date({ required_error: "Pickup date is required." }),
 
-  serviceType: z.enum(["Standard", "Express", "Air", "Surface"], {errorMap: (issue, ctx) => {
-    if (issue.code === z.ZodIssueCode.invalid_enum_value && issue.received === '') {
+  serviceType: z.enum(["express", "air", "surface", "standard"], {errorMap: (issue, ctx) => {
+    if (issue.code === z.ZodIssueCode.invalid_enum_value) {
       return { message: "Service type is required. Please select one." };
     }
     return { message: ctx.defaultError };
@@ -112,7 +111,7 @@ export function BookShipmentForm() {
       packageWeightKg: 0.5,
       packageWidthCm: 10, packageHeightCm: 10, packageLengthCm: 10,
       pickupDate: new Date(),
-      serviceType: "Standard", // Default service type
+      serviceType: "standard", // Default service type
     },
   });
 
@@ -132,10 +131,10 @@ export function BookShipmentForm() {
 
     if (shipmentTypeOption === "Domestic") {
       form.setValue("receiverAddressCountry", "India", { shouldTouch: true });
-      form.setValue("serviceType", "Standard", { shouldTouch: true, shouldValidate: false }); // Set default for domestic
+      form.setValue("serviceType", "express", { shouldTouch: true, shouldValidate: true });
       form.setValue("receiverAddressPincode", "", { shouldTouch: true });
     } else if (shipmentTypeOption === "International") {
-      form.setValue("serviceType", "Express", { shouldTouch: true, shouldValidate: false }); // Force Express for international
+      form.setValue("serviceType", "express", { shouldTouch: true, shouldValidate: true });
       form.setValue("receiverAddressCountry", "", { shouldTouch: true });
       form.setValue("receiverAddressPincode", "", { shouldTouch: true });
     }
@@ -151,9 +150,9 @@ export function BookShipmentForm() {
 
     let effectiveServiceType = data.serviceType;
     if (data.shipmentTypeOption === "International") {
-        effectiveServiceType = "Express";
-        if (form.getValues("serviceType") !== "Express") {
-            form.setValue("serviceType", "Express", {shouldValidate: true});
+        effectiveServiceType = "express";
+        if (form.getValues("serviceType") !== "express") {
+            form.setValue("serviceType", "express", {shouldValidate: true});
         }
     }
      if (!effectiveServiceType) {
@@ -210,7 +209,7 @@ export function BookShipmentForm() {
         
         numericTotalPrice = parsePriceStringToNumber(rawPriceValue);
         
-        if (intlResp.error && numericTotalPrice === null) { // Only throw if error and price is still null
+        if (intlResp.error && numericTotalPrice === null) {
              toast({ title: "Pricing Error", description: intlResp.error, variant: "destructive" });
              setIsLoadingPricing(false);
              return;
@@ -263,7 +262,7 @@ export function BookShipmentForm() {
     const data = paymentStep.formData;
     let effectiveServiceType = data.serviceType;
     if (data.shipmentTypeOption === "International") {
-        effectiveServiceType = "Express";
+        effectiveServiceType = "express";
     }
 
     const senderStreetCombined = data.senderAddressLine2
@@ -296,7 +295,7 @@ export function BookShipmentForm() {
         package_height_cm: data.packageHeightCm,
         package_length_cm: data.packageLengthCm,
         pickup_date: format(data.pickupDate, 'yyyy-MM-dd'),
-        service_type: effectiveServiceType,
+        service_type: effectiveServiceType.charAt(0).toUpperCase() + effectiveServiceType.slice(1),
         final_total_price_with_tax: paymentStep.numericAmount,
         user_email: user.email,
     };
@@ -347,7 +346,7 @@ export function BookShipmentForm() {
             packageWeightKg: 0.5,
             packageWidthCm: 10, packageHeightCm: 10, packageLengthCm: 10,
             pickupDate: new Date(),
-            serviceType: "Standard",
+            serviceType: "standard",
         });
         setPaymentStep({ show: false, amount: "Rs. 0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
         setUtr('');
@@ -473,18 +472,21 @@ export function BookShipmentForm() {
   }
 
   const renderServiceTypeOptions = () => {
-    if (shipmentTypeOption === "Domestic") {
-        let options = ["Express", "Standard"];
-        if (packageWeight > 2) {
-            options.push("Air");
-        }
-        if (packageWeight > 5) {
-            options.push("Surface");
-        }
-        return options.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>);
+    const options: { value: 'express' | 'air' | 'surface', label: string }[] = [{ value: 'express', label: 'Express' }];
+
+    if (packageWeight > 2) {
+      options.push({ value: 'air', label: 'Air Cargo' });
     }
+    if (packageWeight > 5) {
+      options.push({ value: 'surface', label: 'Surface Cargo' });
+    }
+
+    if (shipmentTypeOption === "Domestic") {
+      return options.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>);
+    }
+
     // International
-    return <SelectItem value="Express">Express</SelectItem>;
+    return <SelectItem value="express">Express</SelectItem>;
   };
 
   return (
@@ -596,13 +598,8 @@ export function BookShipmentForm() {
                         <FormItem>
                           <FormLabel>Country</FormLabel>
                           {shipmentTypeOption === "International" ? (
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select Country" /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                {internationalCountryList.map(country => <SelectItem key={country} value={country}>{country}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                            ) : (
+                            <Input placeholder="Enter destination country" {...field} />
+                          ) : (
                             <Input placeholder="India" {...field} defaultValue="India" disabled={true} />
                           )}
                           <FormMessage />
@@ -665,20 +662,11 @@ export function BookShipmentForm() {
                   <h3 className="font-headline text-lg sm:text-xl font-semibold border-b pb-2 flex items-center gap-2 text-primary"> <Package className="h-5 w-5" /> Service </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField control={form.control} name="serviceType" render={({ field }) => {
-                       const currentFieldValue = field.value;
-                       let selectValueToShow: ServiceType;
-
-                       if (shipmentTypeOption === "International") {
-                         selectValueToShow = "Express";
-                       } else {
-                         selectValueToShow = currentFieldValue;
-                       }
-
                       return (
                         <FormItem> <FormLabel>Service Type</FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            value={selectValueToShow} // Use the derived value
+                            value={field.value}
                             disabled={shipmentTypeOption === "International"}
                           >
                             <FormControl><SelectTrigger><SelectValue placeholder="Select service type" /></SelectTrigger></FormControl>
@@ -712,5 +700,3 @@ export function BookShipmentForm() {
     </Card>
   );
 }
-
-    

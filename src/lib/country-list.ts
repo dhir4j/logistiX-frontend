@@ -1,4 +1,5 @@
 
+
 export const COUNTRY_TO_ZONE: Record<string, string> = {
     'afghanistan': '11',
     'albania': '11',
@@ -199,14 +200,5 @@ export const COUNTRY_TO_ZONE: Record<string, string> = {
     'zambia': '11',
     'zimbabwe': '11'
 };
-
-const capitalizeCountryName = (name: string): string => {
-  return name
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-};
-
-export const internationalCountryList: string[] = Object.keys(COUNTRY_TO_ZONE)
-  .map(capitalizeCountryName)
-  .sort((a, b) => a.localeCompare(b));
+// This file is now primarily for backend reference, not a frontend dropdown.
+// The internationalCountryList export can be removed if it's no longer used anywhere else.
