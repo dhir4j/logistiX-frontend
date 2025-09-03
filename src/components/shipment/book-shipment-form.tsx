@@ -111,7 +111,7 @@ export function BookShipmentForm() {
       packageWeightKg: 0.5,
       packageWidthCm: 10, packageHeightCm: 10, packageLengthCm: 10,
       pickupDate: new Date(),
-      serviceType: "standard", // Default service type
+      serviceType: "express", 
     },
   });
 
@@ -346,7 +346,7 @@ export function BookShipmentForm() {
             packageWeightKg: 0.5,
             packageWidthCm: 10, packageHeightCm: 10, packageLengthCm: 10,
             pickupDate: new Date(),
-            serviceType: "standard",
+            serviceType: "express",
         });
         setPaymentStep({ show: false, amount: "Rs. 0.00", numericAmount: 0, priceResponse: null, formData: null, shipmentType: null });
         setUtr('');
@@ -472,17 +472,12 @@ export function BookShipmentForm() {
   }
 
   const renderServiceTypeOptions = () => {
-    const options: { value: 'express' | 'air' | 'surface', label: string }[] = [{ value: 'express', label: 'Express' }];
-
-    if (packageWeight > 2) {
-      options.push({ value: 'air', label: 'Air Cargo' });
-    }
-    if (packageWeight > 5) {
-      options.push({ value: 'surface', label: 'Surface Cargo' });
-    }
-
     if (shipmentTypeOption === "Domestic") {
-      return options.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>);
+      return [
+        <SelectItem key="express" value="express">Express</SelectItem>,
+        <SelectItem key="air" value="air">Air Cargo</SelectItem>,
+        <SelectItem key="surface" value="surface">Surface Cargo</SelectItem>
+      ];
     }
 
     // International
@@ -546,18 +541,7 @@ export function BookShipmentForm() {
                   <FormField control={form.control} name="senderAddressLine2" render={({ field }) => ( <FormItem><FormLabel>Address Line 2 (Optional)</FormLabel><FormControl><Input placeholder="Apt 4B, Near City Park" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={form.control} name="senderAddressCity" render={({ field }) => ( <FormItem><FormLabel>City</FormLabel><FormControl><Input placeholder="Mumbai" {...field} /></FormControl><FormMessage /></FormItem> )} />
-                    <FormField control={form.control} name="senderAddressState" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>State</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                              {indianStatesAndUTs.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
+                    <FormField control={form.control} name="senderAddressState" render={({ field }) => ( <FormItem><FormLabel>State</FormLabel><FormControl><Input placeholder="e.g., Maharashtra" {...field} /></FormControl><FormMessage /></FormItem> )} />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField control={form.control} name="senderAddressPincode" render={({ field }) => ( <FormItem><FormLabel>Pincode</FormLabel><FormControl><Input placeholder="400001" {...field} /></FormControl><FormMessage /></FormItem> )} />
@@ -579,14 +563,9 @@ export function BookShipmentForm() {
                         <FormItem>
                           <FormLabel>State / Province</FormLabel>
                           {shipmentTypeOption === "Domestic" ? (
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl><SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger></FormControl>
-                                <SelectContent>
-                                {indianStatesAndUTs.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
-                                </SelectContent>
-                            </Select>
+                            <FormControl><Input placeholder="e.g., Delhi" {...field} /></FormControl>
                           ) : (
-                            <Input placeholder="e.g., California" {...field} />
+                            <FormControl><Input placeholder="e.g., California" {...field} /></FormControl>
                           )}
                           <FormMessage />
                         </FormItem>
