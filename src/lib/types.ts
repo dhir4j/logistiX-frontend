@@ -179,7 +179,7 @@ export type ShipmentTypeOption = "Domestic" | "International";
 export interface DomesticPriceRequest {
   state: string;
   city: string;
-  mode: "express" | "standard" | "air" | "surface";
+  mode: "express" | "air" | "surface";
   weight: number;
 }
 
@@ -236,7 +236,7 @@ export interface AddShipmentPayload {
     package_height_cm: number;
     package_length_cm: number;
     pickup_date: string; // Formatted as "yyyy-MM-dd"
-    service_type: ServiceType; // "Express" or "Standard"
+    service_type: ServiceType;
     
     final_total_price_with_tax: number;
     user_email: string;
@@ -322,5 +322,3 @@ export interface AdminUserDetailsResponse {
     shipments: UserShipmentSummary[];
     payments: UserPayment[];
 }
-
-    

@@ -23,7 +23,6 @@ import type { ServiceType, CreateShipmentResponse, ShipmentTypeOption, DomesticP
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
-import { indianStatesAndUTs } from '@/lib/indian-states';
 import apiClient from '@/lib/api-client';
 import Link from 'next/link';
 
@@ -54,7 +53,7 @@ const shipmentFormSchema = z.object({
   packageLengthCm: z.coerce.number().min(1, "Length must be at least 1cm").max(200, "Max 200cm"),
   pickupDate: z.date({ required_error: "Pickup date is required." }),
 
-  serviceType: z.enum(["express", "air", "surface", "standard"], {errorMap: (issue, ctx) => {
+  serviceType: z.enum(["express", "air", "surface"], {errorMap: (issue, ctx) => {
     if (issue.code === z.ZodIssueCode.invalid_enum_value) {
       return { message: "Service type is required. Please select one." };
     }
@@ -72,19 +71,6 @@ interface PaymentStepData {
   formData: ShipmentFormValues | null;
   shipmentType: ShipmentTypeOption | null;
 }
-
-const parsePriceStringToNumber = (priceStr: string | number | undefined | null): number | null => {
-  if (typeof priceStr === 'number') {
-    return priceStr;
-  }
-  if (typeof priceStr === 'string') {
-    const numericString = priceStr.replace(/[^0-9.-]+/g,"");
-    const parsed = parseFloat(numericString);
-    return isNaN(parsed) ? null : parsed;
-  }
-  return null;
-};
-
 
 export function BookShipmentForm() {
   const [submissionStatus, setSubmissionStatus] = useState<Partial<CreateShipmentResponse> | null>(null);
@@ -131,14 +117,18 @@ export function BookShipmentForm() {
 
     if (shipmentTypeOption === "Domestic") {
       form.setValue("receiverAddressCountry", "India", { shouldTouch: true });
-      form.setValue("serviceType", "express", { shouldTouch: true, shouldValidate: true });
+      if(packageWeight > 5) {
+          form.setValue("serviceType", "air", { shouldTouch: true, shouldValidate: true });
+      } else {
+          form.setValue("serviceType", "express", { shouldTouch: true, shouldValidate: true });
+      }
       form.setValue("receiverAddressPincode", "", { shouldTouch: true });
     } else if (shipmentTypeOption === "International") {
       form.setValue("serviceType", "express", { shouldTouch: true, shouldValidate: true });
       form.setValue("receiverAddressCountry", "", { shouldTouch: true });
       form.setValue("receiverAddressPincode", "", { shouldTouch: true });
     }
-  }, [shipmentTypeOption, form]);
+  }, [shipmentTypeOption, form, packageWeight]);
 
 
   const onSubmitToPayment = async (data: ShipmentFormValues) => {
@@ -152,7 +142,7 @@ export function BookShipmentForm() {
     if (data.shipmentTypeOption === "International") {
         effectiveServiceType = "express";
         if (form.getValues("serviceType") !== "express") {
-            form.setValue("serviceType", "express", {shouldValidate: true});
+            form.setValue("serviceType", "express",{shouldValidate: true});
         }
     }
      if (!effectiveServiceType) {
@@ -172,7 +162,7 @@ export function BookShipmentForm() {
         const domesticPayload: DomesticPriceRequest = {
           state: data.receiverAddressState,
           city: data.receiverAddressCity,
-          mode: effectiveServiceType.toLowerCase() as "express" | "standard" | "air" | "surface",
+          mode: effectiveServiceType.toLowerCase() as "express" | "air" | "surface",
           weight: data.packageWeightKg,
         };
         priceResponseData = await apiClient<DomesticPriceResponse>(`/api/domestic/price`, {
@@ -181,7 +171,7 @@ export function BookShipmentForm() {
         });
         const domesticResp = priceResponseData as DomesticPriceResponse;
         if (domesticResp.error) throw new Error(domesticResp.error);
-        numericTotalPrice = parsePriceStringToNumber(domesticResp.total_price);
+        numericTotalPrice = domesticResp.total_price;
 
       } else if (data.shipmentTypeOption === "International") {
          if (!data.receiverAddressCountry || data.receiverAddressCountry === "India") {
@@ -199,31 +189,21 @@ export function BookShipmentForm() {
         });
         
         const intlResp = priceResponseData as InternationalPriceResponse;
-        let rawPriceValue: string | number | undefined | null = null;
-
-        if (intlResp.formatted_total && intlResp.formatted_total.trim() !== "") {
-            rawPriceValue = intlResp.formatted_total;
-        } else if (intlResp.total_price !== undefined && intlResp.total_price !== null) {
-            rawPriceValue = intlResp.total_price;
-        }
         
-        numericTotalPrice = parsePriceStringToNumber(rawPriceValue);
-        
-        if (intlResp.error && numericTotalPrice === null) {
+        if (intlResp.error) {
              toast({ title: "Pricing Error", description: intlResp.error, variant: "destructive" });
              setIsLoadingPricing(false);
              return;
         }
-        if (numericTotalPrice === null && intlResp.error) {
-             toast({ title: "Pricing Error", description: `Received error: ${intlResp.error}. Could not determine price.`, variant: "destructive" });
-             setIsLoadingPricing(false);
-             return;
-        }
-        if (numericTotalPrice === null) {
-            toast({ title: "Pricing Error", description: "Invalid pricing data received for international shipment. Could not parse a valid number.", variant: "destructive" });
+
+        numericTotalPrice = intlResp.total_price;
+        
+        if (numericTotalPrice === null || typeof numericTotalPrice !== 'number') {
+            toast({ title: "Pricing Error", description: "Invalid pricing data received. Could not determine a valid price.", variant: "destructive" });
             setIsLoadingPricing(false);
             return;
         }
+
       } else {
         throw new Error("Invalid shipment type selected.");
       }
@@ -295,7 +275,7 @@ export function BookShipmentForm() {
         package_height_cm: data.packageHeightCm,
         package_length_cm: data.packageLengthCm,
         pickup_date: format(data.pickupDate, 'yyyy-MM-dd'),
-        service_type: effectiveServiceType.charAt(0).toUpperCase() + effectiveServiceType.slice(1),
+        service_type: effectiveServiceType.charAt(0).toUpperCase() + effectiveServiceType.slice(1) as ServiceType,
         final_total_price_with_tax: paymentStep.numericAmount,
         user_email: user.email,
     };
@@ -472,17 +452,23 @@ export function BookShipmentForm() {
   }
 
   const renderServiceTypeOptions = () => {
-    if (shipmentTypeOption === "Domestic") {
-      return [
-        <SelectItem key="express" value="express">Express</SelectItem>,
-        <SelectItem key="air" value="air">Air Cargo</SelectItem>,
-        <SelectItem key="surface" value="surface">Surface Cargo</SelectItem>
-      ];
+    if (shipmentTypeOption !== "Domestic") {
+        return <SelectItem value="express">Express</SelectItem>;
     }
 
-    // International
-    return <SelectItem value="express">Express</SelectItem>;
-  };
+    const expressDisabled = packageWeight > 5;
+    
+    return [
+        <SelectItem key="express" value="express" disabled={expressDisabled}>
+            <div className="flex items-center justify-between w-full">
+                <span>Express</span>
+                {expressDisabled && <span className="text-xs text-muted-foreground ml-2">(Only supported up to 5kg)</span>}
+            </div>
+        </SelectItem>,
+        <SelectItem key="air" value="air">Air Cargo</SelectItem>,
+        <SelectItem key="surface" value="surface">Surface Cargo</SelectItem>
+    ];
+};
 
   return (
     <Card className="w-full shadow-xl">
@@ -562,11 +548,7 @@ export function BookShipmentForm() {
                     <FormField control={form.control} name="receiverAddressState" render={({ field }) => (
                         <FormItem>
                           <FormLabel>State / Province</FormLabel>
-                          {shipmentTypeOption === "Domestic" ? (
-                            <FormControl><Input placeholder="e.g., Delhi" {...field} /></FormControl>
-                          ) : (
-                            <FormControl><Input placeholder="e.g., California" {...field} /></FormControl>
-                          )}
+                           <FormControl><Input placeholder={shipmentTypeOption === "Domestic" ? "e.g., Delhi" : "e.g., California"} {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -576,11 +558,7 @@ export function BookShipmentForm() {
                      <FormField control={form.control} name="receiverAddressCountry" render={({ field }) => (
                         <FormItem>
                           <FormLabel>Country</FormLabel>
-                          {shipmentTypeOption === "International" ? (
-                            <Input placeholder="Enter destination country" {...field} />
-                          ) : (
-                            <Input placeholder="India" {...field} defaultValue="India" disabled={true} />
-                          )}
+                            <FormControl><Input placeholder={shipmentTypeOption === "Domestic" ? "India" : "Enter destination country"} {...field} disabled={shipmentTypeOption === "Domestic"} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
