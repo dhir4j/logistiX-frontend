@@ -26,7 +26,7 @@ export default function TermsOfServicePage() {
           <p>By accessing this website we assume you accept these terms and conditions. Do not continue to use SHEDLOAD OVERSEAS LLP if you do not agree to take all of the terms and conditions stated on this page.</p>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">1. Prototype Nature</h2>
-          <p>This application is a prototype for demonstration purposes. Features, data storage, and functionalities are subject to change and may not represent a final product. The primary login (demo@rswift.com / 123456) is for evaluation only. All shipment data entered is stored locally in your browser and is not processed or stored on a server.</p>
+          <p>This application is a prototype for demonstration purposes. Features, data storage, and functionalities are subject to change and may not represent a final product. The primary login (shedload / 123456) is for evaluation only. All shipment data entered is stored locally in your browser and is not processed or stored on a server.</p>
 
           <h2 className="text-xl font-semibold text-foreground pt-4">2. License</h2>
           <p>Unless otherwise stated, SHEDLOAD OVERSEAS LLP and/or its licensors own the intellectual property rights for all material on SHEDLOAD OVERSEAS LLP. All intellectual property rights are reserved. You may access this from SHEDLOAD OVERSEAS LLP for your own personal use subjected to restrictions set in these terms and conditions.</p>
