@@ -43,7 +43,7 @@ const shipmentFormSchema = z.object({
   receiverAddressLine2: z.string().optional(),
   receiverAddressCity: z.string().min(2, "City is required"),
   receiverAddressState: z.string().min(2, "State/Province is required"),
-  receiverAddressPincode: z.string().regex(/^\d{3,10}$/, "Pincode/ZIP must be 3-10 digits"),
+  receiverAddressPincode: z.string().min(3, "Pincode/ZIP is required").max(10, "Pincode/ZIP cannot exceed 10 characters"),
   receiverAddressCountry: z.string().min(2, "Country is required"),
   receiverPhone: z.string().regex(/^(\+?[1-9]\d{1,14})?$/, "Invalid phone number format"),
 
@@ -59,7 +59,16 @@ const shipmentFormSchema = z.object({
     }
     return { message: ctx.defaultError };
   }}),
+}).refine(data => {
+    if (data.shipmentTypeOption === "Domestic") {
+        return /^\d{6}$/.test(data.receiverAddressPincode);
+    }
+    return true;
+}, {
+    message: "Indian pincode must be exactly 6 digits.",
+    path: ["receiverAddressPincode"],
 });
+
 
 type ShipmentFormValues = z.infer<typeof shipmentFormSchema>;
 
@@ -458,16 +467,18 @@ export function BookShipmentForm() {
 
     const expressDisabled = packageWeight > 5;
     
-    return [
-        <SelectItem key="express" value="express" disabled={expressDisabled}>
-            <div className="flex items-center justify-between w-full">
-                <span>Express</span>
-                {expressDisabled && <span className="text-xs text-muted-foreground ml-2">(Only supported up to 5kg)</span>}
-            </div>
-        </SelectItem>,
-        <SelectItem key="air" value="air">Air Cargo</SelectItem>,
-        <SelectItem key="surface" value="surface">Surface Cargo</SelectItem>
-    ];
+    return (
+        <>
+            <SelectItem value="express" disabled={expressDisabled}>
+                <div className="flex items-center justify-between w-full">
+                    <span>Express</span>
+                    {expressDisabled && <span className="text-xs text-muted-foreground ml-2">(Only supported up to 5kg)</span>}
+                </div>
+            </SelectItem>
+            <SelectItem value="air">Air Cargo</SelectItem>
+            <SelectItem value="surface">Surface Cargo</SelectItem>
+        </>
+    );
 };
 
   return (
