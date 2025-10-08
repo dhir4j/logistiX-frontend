@@ -160,8 +160,10 @@ export function AdminOrdersTable() {
     }
     const headers = [
       "Order Number (shipment_id_str)",
-      "Customer Name (sender_name)",
-      "Description",
+      "Sender Name",
+      "Receiver Name",
+      "Destination",
+      "Weight (kg)",
       "Price (w/o Tax)",
       "Tax (18%)",
       "Total Price",
@@ -170,12 +172,13 @@ export function AdminOrdersTable() {
     ];
 
     const rows = allShipments.map(order => {
-        const description = `${order.service_type || 'N/A'} (${order.package_weight_kg || 'N/A'}kg) to ${order.receiver_address_city || 'N/A'}`;
         const bookingDate = order.booking_date && isValid(parseISO(order.booking_date)) ? format(parseISO(order.booking_date), 'yyyy-MM-dd HH:mm') : 'N/A';
         return [
             `"${order.shipment_id_str || 'Unknown ID'}"`,
             `"${order.sender_name || 'N/A'}"`,
-            `"${description}"`,
+            `"${order.receiver_name || 'N/A'}"`,
+            `"${order.receiver_address_city || 'N/A'}"`,
+            typeof order.package_weight_kg === 'number' ? order.package_weight_kg.toFixed(2) : 'N/A',
             typeof order.price_without_tax === 'number' ? order.price_without_tax.toFixed(2) : 'N/A',
             typeof order.tax_amount_18_percent === 'number' ? order.tax_amount_18_percent.toFixed(2) : 'N/A',
             typeof order.total_with_tax_18_percent === 'number' ? order.total_with_tax_18_percent.toFixed(2) : 'N/A',
@@ -283,8 +286,10 @@ export function AdminOrdersTable() {
                 <TableHeader>
                     <TableRow>
                     <TableHead>Order #</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Description</TableHead>
+                    <TableHead>Sender</TableHead>
+                    <TableHead>Receiver</TableHead>
+                    <TableHead>Destination</TableHead>
+                    <TableHead>Weight</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Booking Date</TableHead>
@@ -293,13 +298,14 @@ export function AdminOrdersTable() {
                 </TableHeader>
                 <TableBody>
                     {allShipments.map((order) => {
-                        const description = `${order.service_type || 'N/A'} (${order.package_weight_kg || 'N/A'}kg) to ${order.receiver_address_city || 'N/A'}`;
                         const bookingDate = order.booking_date && isValid(parseISO(order.booking_date)) ? format(parseISO(order.booking_date), 'dd MMM yyyy, HH:mm') : 'N/A';
                         return (
                             <TableRow key={order.shipment_id_str || order.id}>
                                 <TableCell className="font-medium text-primary">{order.shipment_id_str || 'Unknown ID'}</TableCell>
                                 <TableCell>{order.sender_name || 'N/A'}</TableCell>
-                                <TableCell>{description}</TableCell>
+                                <TableCell>{order.receiver_name || 'N/A'}</TableCell>
+                                <TableCell>{order.receiver_address_city || 'N/A'}</TableCell>
+                                <TableCell>{order.package_weight_kg ? `${order.package_weight_kg.toFixed(2)} kg` : 'N/A'}</TableCell>
                                 <TableCell className="text-right font-semibold">
                                     <span className="inline-flex items-center justify-end">
                                         <IndianRupee className="h-4 w-4 mr-0.5" />
@@ -370,3 +376,5 @@ export function AdminOrdersTable() {
     </Card>
   );
 }
+
+    
