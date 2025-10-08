@@ -83,6 +83,35 @@ def create_app(env="development"):
         </html>
         """)
 
+    @app.route("/api/company-details", methods=["GET"])
+    def company_details():
+        details = {
+          "rs_swift": {
+            "company_name": "RS Swift Couriers LLP",
+            "company_address": "18AX MODEL TOWN EXTENSION LUDHIANA NEAR PUNJAB & SIND BANK",
+            "company_city": "LUDHIANA",
+            "company_state": "PUNJAB",
+            "company_country": "India",
+            "company_phone": "+91 8544970282",
+            "company_email": "RSSWIFTCOURIERS@GMAIL.COM",
+            "company_website": "www.rsswiftcouriers.com",
+            "company_gst": "03ABLFR5077L1ZQ"
+          },
+          "hk_speed": {
+            "company_name": "HK SPEED COURIERS",
+            "company_address": "SCF-148, FIRST FLOOR, URBAN ESTATE, PHASE-1",
+            "company_city": "JALANDHAR",
+            "company_state": "PUNJAB",
+            "company_country": "India",
+            "company_phone": "+91 8968927612",
+            "company_email": "Hkspeedcouriersprivatelimited@gmail.com",
+            "company_website": "www.hkspeedcouriers.com",
+            "company_gst": "03AANCH1234F1Z5"
+          }
+        }
+        return jsonify(details), 200
+
+
     @app.route("/api/destination-suggestion", methods=["POST"])
     def destination_suggestion():
         data = request.get_json()
