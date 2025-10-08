@@ -1,5 +1,4 @@
-
-from flask import Flask, jsonify, render_template_string, request
+from flask import Flask, jsonify, render_template_string
 from .extensions import db, cors
 from .auth.routes import auth_bp
 from .shipments.routes import shipments_bp
@@ -82,30 +81,6 @@ def create_app(env="development"):
         </body>
         </html>
         """)
-
-    @app.route("/api/destination-suggestion", methods=["POST"])
-    def destination_suggestion():
-        data = request.get_json()
-        amount = data.get("amount")
-
-        if amount is None:
-            return jsonify({"error": "Amount is required"}), 400
-        
-        try:
-            amount = float(amount)
-        except (ValueError, TypeError):
-            return jsonify({"error": "Invalid amount format"}), 400
-
-        with app.test_request_context('/api/domestic/reverse-price', method='POST', json={'amount': amount}):
-            if amount < 5000:
-                # Call domestic reverse price logic
-                from .domestic.routes import reverse_price
-                return reverse_price()
-            else:
-                # Call international reverse price logic
-                from .international.routes import reverse_price
-                return reverse_price()
-
 
     # Register blueprints
     app.register_blueprint(auth_bp)

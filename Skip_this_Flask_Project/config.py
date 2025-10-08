@@ -19,7 +19,8 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # CORS Configuration
-    CORS_ORIGINS = "*"
+    CORS_ORIGINS_ENV = "https://www.shedloadoverseas.com,https://logisti-x-frontend.vercel.app,https://server.shedloadoverseas.com,https://6000-firebase-studio-1749958562544.cluster-fdkw7vjj7bgguspe3fbbc25tra.cloudworkstations.dev,https://rs-swift-frontend.vercel.app,https://www.rsswiftcouriers.com,https://rsswiftcouriers.com,https://www.crossmapvisaconsultants.com"
+    CORS_ORIGINS = CORS_ORIGINS_ENV.split(',')
 
 
 class DevelopmentConfig(Config):

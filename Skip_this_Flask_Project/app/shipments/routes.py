@@ -4,7 +4,6 @@ from app.extensions import db
 from app.schemas import ShipmentCreateSchema, PaymentSubmitSchema
 from app.utils import generate_shipment_id_str
 from datetime import datetime
-from werkzeug.security import generate_password_hash
 
 shipments_bp = Blueprint("shipments", __name__, url_prefix="/api")
 
@@ -66,115 +65,6 @@ def create_shipment():
             "tracking_history": new_shipment.tracking_history
         }
     }), 201
-
-@shipments_bp.route("/create-invoice-from-payment", methods=["POST"])
-def create_invoice_from_payment():
-    data = request.get_json()
-    if not data or "transaction" not in data or "sender" not in data or "receiver" not in data:
-        return jsonify({"error": "Invalid request body. Missing transaction, sender, or receiver."}), 400
-
-    transaction = data['transaction']
-    sender = data['sender']
-    receiver = data['receiver']
-
-    # --- User Handling ---
-    # Since there's no user session, we need a user to associate the shipment with.
-    # We will create a dummy email based on the sender's name and check if it exists.
-    # This is a simplified approach for this use case.
-    sender_name_slug = "".join(filter(str.isalnum, sender.get('name', ''))).lower()
-    if not sender_name_slug:
-        return jsonify({"error": "Sender name is required to associate a user."}), 400
-        
-    dummy_email = f"{sender_name_slug}@desktop-app-user.local"
-    user = User.query.filter_by(email=dummy_email).first()
-
-    if not user:
-        name_parts = sender.get('name', 'Placeholder').split(' ')
-        first_name = name_parts[0]
-        last_name = ' '.join(name_parts[1:]) if len(name_parts) > 1 else 'User'
-
-        user = User(
-            email=dummy_email,
-            password=generate_password_hash(generate_shipment_id_str()), # Random password
-            first_name=first_name,
-            last_name=last_name,
-            is_admin=False
-        )
-        db.session.add(user)
-        db.session.flush() # Flush to get the user ID before committing
-
-    # --- Price Calculation ---
-    total_amount = float(transaction.get('amount', 0))
-    if total_amount <= 0:
-        return jsonify({"error": "Transaction amount must be positive."}), 400
-    
-    price_without_tax = round(total_amount / 1.18, 2)
-    tax_amount = round(total_amount - price_without_tax, 2)
-
-    # --- Shipment Creation ---
-    now_iso = datetime.utcnow().isoformat()
-    tracking_history = [{
-        "stage": "Booked",
-        "date": now_iso,
-        "location": sender.get("city", "Origin"),
-        "activity": "Shipment booked and payment confirmed via desktop app."
-    }]
-
-    new_shipment = Shipment(
-        user_id=user.id,
-        user_email=user.email,
-        shipment_id_str=generate_shipment_id_str(),
-        status="Booked",  # Directly set to "Booked"
-        tracking_history=tracking_history,
-        price_without_tax=price_without_tax,
-        tax_amount_18_percent=tax_amount,
-        total_with_tax_18_percent=total_amount,
-        sender_name=sender.get('name'),
-        sender_address_street=f"{sender.get('address_line1', '')}, {sender.get('address_line2', '')}",
-        sender_address_city=sender.get('city'),
-        sender_address_state=sender.get('state'),
-        sender_address_pincode=sender.get('pincode'),
-        sender_address_country=sender.get('country'),
-        sender_phone=sender.get('phone'),
-        receiver_name=receiver.get('name'),
-        receiver_address_street=f"{receiver.get('address_line1', '')}, {receiver.get('address_line2', '')}",
-        receiver_address_city=receiver.get('city'),
-        receiver_address_state=receiver.get('state'),
-        receiver_address_pincode=receiver.get('pincode'),
-        receiver_address_country=receiver.get('country'),
-        receiver_phone=receiver.get('phone'),
-        package_weight_kg=transaction.get('weight', 1),
-        # Using dummy values for dimensions as they are not in the request
-        package_width_cm=10,
-        package_height_cm=10,
-        package_length_cm=10,
-        pickup_date=datetime.strptime(transaction.get('date'), '%Y-%m-%d').date(),
-        service_type="Express" # Defaulting to Express, can be changed if needed
-    )
-    db.session.add(new_shipment)
-    db.session.flush() # Flush to get the shipment ID
-
-    # --- Payment Request Creation ---
-    new_payment_request = PaymentRequest(
-        user_id=user.id,
-        shipment_id=new_shipment.id,
-        amount=total_amount,
-        utr=transaction.get('utr', 'N/A'),
-        status='Approved'  # Directly set to "Approved"
-    )
-    db.session.add(new_payment_request)
-    
-    # --- Final Commit ---
-    db.session.commit()
-
-    return jsonify({
-        "message": "Invoice and shipment created successfully from payment.",
-        "shipment_id_str": new_shipment.shipment_id_str,
-        "payment_id": new_payment_request.id,
-        "shipment_status": new_shipment.status,
-        "payment_status": new_payment_request.status
-    }), 201
-
 
 @shipments_bp.route("/payments", methods=["POST"])
 def submit_payment():
@@ -297,5 +187,3 @@ def get_user_payments():
             "created_at": payment.created_at.isoformat()
         })
     return jsonify(result), 200
-
-    
