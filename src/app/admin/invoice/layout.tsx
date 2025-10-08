@@ -52,7 +52,7 @@ export default function AdminInvoiceLayout({
   
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40 print:bg-white">
-      <main className="flex-1 p-4 md:p-6 lg:p-8 print:p-0 print:m-0">
+      <main className="flex-1 print:p-0 print:m-0">
         {children}
       </main>
       <footer className="py-4 px-6 md:px-10 text-center border-t bg-background text-xs text-muted-foreground print:hidden">
