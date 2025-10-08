@@ -9,14 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { IndianRupee, PackageSearch, FileDown, Search, ListOrdered, Filter, Loader2 } from 'lucide-react';
+import { IndianRupee, PackageSearch, FileDown, Search, ListOrdered, Filter, Loader2, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO, isValid } from 'date-fns';
 import apiClient from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { mapApiShipmentToFrontend } from '@/contexts/shipment-context'; // Import the mapper
+import { mapApiShipmentToFrontend } from '@/contexts/shipment-context'; 
+import Link from 'next/link';
 
 const statusColors: Record<TrackingStage, string> = {
   "Pending Payment": "bg-gray-100 text-gray-700 border-gray-300",
@@ -98,7 +99,7 @@ export function AdminOrdersTable() {
       setTotalPages(1);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, user?.isAdmin]); // Removed fetchAdminShipments, searchTerm, statusFilter from deps to call manually
+  }, [isAuthenticated, user?.isAdmin]); 
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -128,20 +129,17 @@ export function AdminOrdersTable() {
       });
       toast({ title: "Success", description: `Shipment ${shipment_id_str_to_update} status updated to ${newStatus}.` });
 
-      const apiPartialUpdate = response.updatedShipment; // This is the snake_case object from API
+      const apiPartialUpdate = response.updatedShipment; 
 
       setAllShipments(prevShipments =>
         prevShipments.map(s => {
           if (s.shipment_id_str === shipment_id_str_to_update) {
-            // Create a new object by taking the existing shipment 's'
-            // and overwriting only the fields known to be returned and relevant from the status update API.
             const updatedVersion = {
-              ...s, // Preserve all existing fields from the full frontend object 's'
-              status: apiPartialUpdate.status, // Update status from API response
-              tracking_history: apiPartialUpdate.tracking_history || s.tracking_history, // Update tracking_history from API
-              last_updated_at: apiPartialUpdate.last_updated_at || s.last_updated_at, // Update last_updated_at if provided
+              ...s, 
+              status: apiPartialUpdate.status, 
+              tracking_history: apiPartialUpdate.tracking_history || s.tracking_history, 
+              last_updated_at: apiPartialUpdate.last_updated_at || s.last_updated_at, 
 
-              // Update corresponding camelCase fields in the frontend model
               trackingHistory: apiPartialUpdate.tracking_history || s.tracking_history,
             };
             return updatedVersion;
@@ -287,12 +285,10 @@ export function AdminOrdersTable() {
                     <TableHead>Order #</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Price (Net)</TableHead>
-                    <TableHead className="text-right">Tax (18%)</TableHead>
                     <TableHead className="text-right">Total</TableHead>
-                    <TableHead>Current Status</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Booking Date</TableHead>
-                    <TableHead className="text-center">Update Status</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -304,18 +300,6 @@ export function AdminOrdersTable() {
                                 <TableCell className="font-medium text-primary">{order.shipment_id_str || 'Unknown ID'}</TableCell>
                                 <TableCell>{order.sender_name || 'N/A'}</TableCell>
                                 <TableCell>{description}</TableCell>
-                                <TableCell className="text-right">
-                                    <span className="inline-flex items-center justify-end">
-                                        <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
-                                        {typeof order.price_without_tax === 'number' ? order.price_without_tax.toFixed(2) : 'N/A'}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <span className="inline-flex items-center justify-end">
-                                        <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-muted-foreground" />
-                                        {typeof order.tax_amount_18_percent === 'number' ? order.tax_amount_18_percent.toFixed(2) : 'N/A'}
-                                    </span>
-                                </TableCell>
                                 <TableCell className="text-right font-semibold">
                                     <span className="inline-flex items-center justify-end">
                                         <IndianRupee className="h-4 w-4 mr-0.5" />
@@ -328,21 +312,28 @@ export function AdminOrdersTable() {
                                 </Badge>
                                 </TableCell>
                                 <TableCell>{bookingDate}</TableCell>
-                                <TableCell className="text-center min-w-[180px]">
-                                <Select
-                                    value={order.status}
-                                    onValueChange={(newStatus) => handleStatusUpdate(order.shipment_id_str, newStatus as TrackingStage, order)}
-                                    disabled={!order.shipment_id_str || order.shipment_id_str === 'Unknown ID' || order.status === 'Pending Payment'}
-                                >
-                                    <SelectTrigger className="h-9 text-xs">
-                                    <SelectValue placeholder="Update Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                    {(Object.keys(statusColors) as TrackingStage[]).map(statusVal => (
-                                        <SelectItem key={statusVal} value={statusVal} className="text-xs" disabled={statusVal === 'Pending Payment'}>{statusVal}</SelectItem>
-                                    ))}
-                                    </SelectContent>
-                                </Select>
+                                <TableCell className="text-center min-w-[280px]">
+                                <div className="flex gap-2 justify-center items-center">
+                                    <Select
+                                        value={order.status}
+                                        onValueChange={(newStatus) => handleStatusUpdate(order.shipment_id_str, newStatus as TrackingStage, order)}
+                                        disabled={!order.shipment_id_str || order.shipment_id_str === 'Unknown ID' || order.status === 'Pending Payment'}
+                                    >
+                                        <SelectTrigger className="h-9 text-xs w-[140px]">
+                                        <SelectValue placeholder="Update Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                        {(Object.keys(statusColors) as TrackingStage[]).map(statusVal => (
+                                            <SelectItem key={statusVal} value={statusVal} className="text-xs" disabled={statusVal === 'Pending Payment'}>{statusVal}</SelectItem>
+                                        ))}
+                                        </SelectContent>
+                                    </Select>
+                                     <Button asChild variant="outline" size="sm">
+                                        <Link href={`/admin/invoice/${order.shipment_id_str}`}>
+                                            <Eye className="mr-1 h-4 w-4" /> View Invoice
+                                        </Link>
+                                    </Button>
+                                </div>
                                 </TableCell>
                             </TableRow>
                         );
@@ -379,6 +370,3 @@ export function AdminOrdersTable() {
     </Card>
   );
 }
-
-
-    
