@@ -4,6 +4,7 @@ from app.services.domestic_pricing_service import calculate_domestic_price
 import json
 import os
 import math
+import random
 
 domestic_bp = Blueprint("domestic", __name__, url_prefix="/api/domestic")
 
@@ -41,15 +42,6 @@ def price_calculator():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-def _load_json_data(filename):
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    json_path = os.path.join(base_dir, '..', 'Data', filename)
-    try:
-        with open(json_path, 'r') as f:
-            return json.load(f)
-    except (IOError, json.JSONDecodeError):
-        return None
-
 @domestic_bp.route("/reverse-price", methods=["POST"])
 def reverse_price():
     data = request.get_json()
@@ -63,63 +55,71 @@ def reverse_price():
     except ValueError:
         return jsonify({"error": "Invalid amount"}), 400
 
-    base_amount = target_amount / 1.18
-    
-    DOMESTIC_PRICES = _load_json_data('dom_prices.json')
-    DOMESTIC_ZONES = _load_json_data('domestic.json')
+    # Define price buckets and corresponding destination-weight combinations
+    price_buckets = {
+        500: [
+            {"destination": "Mumbai", "weight": 1},
+            {"destination": "Delhi", "weight": 1.5},
+            {"destination": "Pune", "weight": 1},
+            {"destination": "Bangalore", "weight": 2},
+            {"destination": "Chennai", "weight": 1.5},
+            {"destination": "Ahmedabad", "weight": 2},
+            {"destination": "Jaipur", "weight": 1.5},
+            {"destination": "Lucknow", "weight": 2},
+            {"destination": "Surat", "weight": 1},
+            {"destination": "Nagpur", "weight": 1.5}
+        ],
+        1000: [
+            {"destination": "Mumbai", "weight": 5},
+            {"destination": "Punjab", "weight": 6},
+            {"destination": "Odisha", "weight": 2},
+            {"destination": "Delhi", "weight": 4},
+            {"destination": "Bangalore", "weight": 5.5},
+            {"destination": "Kerala", "weight": 3},
+            {"destination": "Rajasthan", "weight": 4.5},
+            {"destination": "Gujarat", "weight": 5},
+            {"destination": "Kolkata", "weight": 3.5},
+            {"destination": "Hyderabad", "weight": 4}
+        ],
+        2000: [
+            {"destination": "Jammu & Kashmir", "weight": 8},
+            {"destination": "Assam", "weight": 10},
+            {"destination": "Mumbai", "weight": 12},
+            {"destination": "Punjab", "weight": 15},
+            {"destination": "Kerala", "weight": 9},
+            {"destination": "Goa", "weight": 8},
+            {"destination": "Andaman and Nicobar Islands", "weight": 7},
+            {"destination": "Delhi", "weight": 13},
+            {"destination": "Bangalore", "weight": 11},
+            {"destination": "Kolkata", "weight": 10}
+        ],
+        5000: [
+            {"destination": "Srinagar", "weight": 15},
+            {"destination": "Port Blair", "weight": 12},
+            {"destination": "Kerala", "weight": 20},
+            {"destination": "Jammu & Kashmir", "weight": 18},
+            {"destination": "Goa", "weight": 25},
+            {"destination": "Tamil Nadu", "weight": 17},
+            {"destination": "Assam", "weight": 14}
+        ]
+    }
 
-    if not DOMESTIC_PRICES or not DOMESTIC_ZONES:
-        return jsonify({"error": "Could not load pricing data"}), 500
+    # Find the appropriate bucket
+    bucket_key = None
+    if target_amount <= 750:
+        bucket_key = 500
+    elif target_amount <= 1500:
+        bucket_key = 1000
+    elif target_amount <= 3500:
+        bucket_key = 2000
+    else: # Amount > 3500 up to 5000
+        bucket_key = 5000
 
-    best_match = None
-    smallest_diff = float('inf')
-
-    for zone, rules in DOMESTIC_PRICES.items():
-        locations = DOMESTIC_ZONES.get(zone, [])
-        if not locations:
-            continue
-        
-        destination_name = locations[0] # Pick first as representative
-
-        for mode, pricing_table in rules.items():
-            if mode == "express":
-                for band, price in pricing_table.items():
-                    diff = abs(price - base_amount)
-                    if diff < smallest_diff:
-                        smallest_diff = diff
-                        best_match = {"destination": destination_name, "weight": int(band)}
-            
-            elif mode in ["air", "surface"]:
-                for band, rate_per_kg in pricing_table.items():
-                    if rate_per_kg > 0:
-                        estimated_weight = base_amount / rate_per_kg
-                        
-                        # Normalize weight based on mode for accurate check
-                        if mode == "air" and estimated_weight < 3:
-                            continue # Price won't match if normalized later
-                        if mode == "surface" and estimated_weight < 5:
-                            continue
-
-                        # Check if this weight falls into the current band
-                        weight_in_band = False
-                        if band == "<5" and estimated_weight < 5: weight_in_band = True
-                        elif band == "<10" and 5 <= estimated_weight < 10: weight_in_band = True
-                        elif band == "<25" and 10 <= estimated_weight < 25: weight_in_band = True
-                        elif band == "<50" and 25 <= estimated_weight < 50: weight_in_band = True
-                        elif band == ">50" and estimated_weight >= 50: weight_in_band = True
-                        
-                        if weight_in_band:
-                             # We found a direct match, smallest diff is 0
-                             smallest_diff = 0
-                             best_match = {"destination": destination_name, "weight": round(estimated_weight, 2)}
-                             # Break loops to return this perfect match
-                             break
-                if smallest_diff == 0: break
-        if smallest_diff == 0: break
-
-    if best_match:
-        return jsonify(best_match), 200
+    # Randomly select a suggestion from the bucket
+    suggestions = price_buckets.get(bucket_key)
+    if suggestions:
+        suggestion = random.choice(suggestions)
+        return jsonify(suggestion), 200
     else:
+        # Fallback if no bucket is found (should not happen with the logic above)
         return jsonify({"error": "No suitable domestic destination found for this amount."}), 404
-
-    
